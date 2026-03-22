@@ -1,0 +1,160 @@
+# ==========================================
+# Compiled Binaries & Objects
+# ==========================================
+*.main
+*.o
+*.obj
+*.elf
+*.pdb
+*.ilk
+*.exp
+*.lib
+*.a
+*.la
+*.lo
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.out
+*.app
+*.ipa
+*.apk
+*.pyc
+__pycache__/
+
+# ==========================================
+# CMake & Build Directories
+# ==========================================
+# Ignores all common build folder naming conventions
+[Bb]uild/
+[Bb]in/
+[Oo]ut/
+[Aa]rchive/
+cmake-build-*/
+.cmake/
+_deps/
+CMakeFiles/
+CMakeCache.txt
+CMakeUserPresets.json
+cmake_install.cmake
+install_manifest.txt
+Makefile
+compile_commands.json
+CPackConfig.cmake
+CPackSourceConfig.cmake
+_CPack_Packages/
+*.cmake
+# Exception: keep your actual source CMake files
+!**/CMakeLists.txt
+!**/cmake/*.cmake
+
+# ==========================================
+# IDE Specifics (CLion, VS Code, Visual Studio)
+# ==========================================
+# JetBrains (CLion)
+.idea/
+*.iws
+*.iml
+*.ipr
+cmake-build-debug/
+cmake-build-release/
+
+# Visual Studio Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/
+*.code-workspace
+
+# Visual Studio (Windows)
+.vs/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa]rm/
+[Aa]rm64/
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.suo
+*.db
+*.opendb
+
+# ==========================================
+# Operating System Junk
+# ==========================================
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.Spotlight-V100
+.Trashes
+.VolumeIcon.icns
+.fseventsd
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ==========================================
+# Dependencies & External
+# ==========================================
+# In case you use other managers later
+node_modules/
+vcpkg_installed/
+.vcpkg-root
+conan.lock
+conanfile.txt.bak
+external/
+third_party/*
+# Exception: Allow the folders but ignore contents if needed,
+# though FetchContent stays in the build dir usually.
+!third_party/.gitkeep
+
+# ==========================================
+# Documentation & Logs
+# ==========================================
+docs/html/
+docs/latex/
+docs/xml/
+Doxyfile.bak
+*.log
+*.tlog
+*.lastbuildstate
+
+# ==========================================
+# Temporary & Backup Files
+# ==========================================
+*.tmp
+*.temp
+*.swp
+*.bak
+*.orig
+*.rej
+.orig/
+
+# ==========================================
+# Local/Private Configuration
+# ==========================================
+.env
+.env.local
+*.user
+*.local
