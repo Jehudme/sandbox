@@ -50,6 +50,9 @@ add_library(sandbox STATIC
         include/sandbox/utilities/properties.h
         include/sandbox/utilities/properties.inl
         source/utilities/properties.cpp
+        source/core/logger.cpp
+        include/sandbox/core/logger.h
+        include/sandbox/core/logger.inl
 )
 
 target_include_directories(sandbox
