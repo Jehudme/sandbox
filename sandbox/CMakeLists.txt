@@ -1,14 +1,22 @@
 cmake_minimum_required(VERSION 3.20)
-
 project(sandbox LANGUAGES CXX)
 
-set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(BUILD_UNIT_TESTS OFF CACHE BOOL "" FORCE)
-set(BUILD_DOCUMENTATION OFF CACHE BOOL "" FORCE)
-set(BUILD_INSTALLER OFF CACHE BOOL "" FORCE)
-set(BUILD_RTTR_DYNAMIC OFF CACHE BOOL "" FORCE)
-
 include(FetchContent)
+
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+set(BUILD_EXAMPLES      OFF CACHE BOOL "" FORCE)
+set(BUILD_UNIT_TESTS    OFF CACHE BOOL "" FORCE)
+set(BUILD_DOCUMENTATION OFF CACHE BOOL "" FORCE)
+set(BUILD_INSTALLER     OFF CACHE BOOL "" FORCE)
+
+# Prefer static RTTR
+set(RTTR_BUILD_STATIC ON  CACHE BOOL "" FORCE)
+set(RTTR_BUILD_SHARED OFF CACHE BOOL "" FORCE)
+
+# Avoid install/packaging when embedded
+set(RTTR_ENABLE_INSTALL OFF CACHE BOOL "" FORCE)
 
 FetchContent_Declare(
         rttr
@@ -38,20 +46,23 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(rttr spdlog glaze flecs)
 
 add_library(sandbox STATIC
-    include/sandbox/sandbox.h
-)
-
-target_link_libraries(sandbox
-        PRIVATE
-        flecs
-        spdlog::spdlog
-        glaze::glaze
-        rttr_core
+        include/sandbox/sandbox.h
+        include/sandbox/utilities/properties.h
+        include/sandbox/utilities/properties.inl
+        source/utilities/properties.cpp
 )
 
 target_include_directories(sandbox
-        PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        PRIVATE "source"
+        PUBLIC  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/source
+)
+
+target_link_libraries(sandbox
+        PUBLIC
+        flecs_static
+        spdlog::spdlog
+        glaze::glaze
+        RTTR::Core
 )
 
 add_library(sandbox::library ALIAS sandbox)
