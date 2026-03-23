@@ -1,5 +1,5 @@
 #include "sandbox/core/registry.h"
-#include "sandbox/core/scoped_logger.h"
+#include "../../include/sandbox/utilities/scoped_logger.h"
 #include <rttr/type.h>
 
 namespace sandbox

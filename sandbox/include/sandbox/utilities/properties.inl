@@ -1,5 +1,5 @@
 #include <glaze/glaze.hpp>
-#include "sandbox/core/scoped_logger.h"
+#include "scoped_logger.h"
 
 namespace sandbox
 {
@@ -41,7 +41,6 @@ namespace sandbox
             current_node_ptr = &current_node_ptr->get_object()[path_segment];
         }
 
-        // Glaze directly assigns the value to the node
         *current_node_ptr = value_to_set;
     }
 }

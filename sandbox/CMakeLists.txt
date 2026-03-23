@@ -54,8 +54,8 @@ add_library(sandbox STATIC
         include/sandbox/core/logger.h
         include/sandbox/core/logger.inl
         source/core/scoped_logger.cpp
-        include/sandbox/core/scoped_logger.h
-        include/sandbox/core/scoped_logger.inl
+        include/sandbox/utilities/scoped_logger.h
+        include/sandbox/utilities/scoped_logger.inl
         source/core/registry.cpp
         include/sandbox/core/registry.h
         include/sandbox/core/registry.inl
