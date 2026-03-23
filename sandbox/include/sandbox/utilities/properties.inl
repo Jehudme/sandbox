@@ -1,4 +1,5 @@
 #include <glaze/glaze.hpp>
+#include "sandbox/core/scoped_logger.h"
 
 namespace sandbox
 {
@@ -10,17 +11,21 @@ namespace sandbox
         {
             if (!current_node_ptr->is_object() || !current_node_ptr->get_object().contains(path_segment))
             {
+                SANDBOX_LOG_WARN("Properties: Path segment '{}' not found in tree.", path_segment);
                 return std::nullopt;
             }
             current_node_ptr = &current_node_ptr->get_object().at(path_segment);
         }
 
         target_type result_value{};
-        if (glz::read<glz::opts{}>(result_value, *current_node_ptr) == glz::error_code::none)
+        auto error = glz::read<glz::opts{}>(result_value, *current_node_ptr);
+        if (error)
         {
-            return result_value;
+            SANDBOX_LOG_ERROR("Properties: Type conversion failed for path. Glaze Error: {}", static_cast<int>(error.ec));
+            return std::nullopt;
         }
-        return std::nullopt;
+
+        return result_value;
     }
 
     template<typename target_type>
@@ -35,6 +40,8 @@ namespace sandbox
             }
             current_node_ptr = &current_node_ptr->get_object()[path_segment];
         }
+
+        // Glaze directly assigns the value to the node
         *current_node_ptr = value_to_set;
     }
 }
