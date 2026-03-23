@@ -45,8 +45,6 @@ namespace sandbox
         template<typename... argument_types>
         void critical(std::string_view format_string, argument_types&&... arguments);
 
-        static logger& get_default_logger();
-
     private:
         void _internal_log(level log_level, std::string_view formatted_message);
 

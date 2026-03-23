@@ -1,12 +1,12 @@
 #include <sandbox/sandbox.h>
 #include <iostream>
 
-#include "sandbox/core/logger.h"
 
 int main()
 {
+    SANDBOX_LOG_INFO("Sandbox application started.");
     sandbox::logger logger("SandboxLogger", sandbox::logger::level::debug, true);
-    logger.debug("Hello, world! {}", "This is a test log message.");
+
 
     sandbox::properties properties = sandbox::properties();
 

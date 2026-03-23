@@ -45,12 +45,6 @@ namespace sandbox
     logger::logger(logger&&) noexcept = default;
     logger& logger::operator=(logger&&) noexcept = default;
 
-    logger& logger::get_default_logger()
-    {
-        static logger default_logger{"default", logger::level::info, false};
-        return default_logger;
-    }
-
     void logger::_internal_log(level log_level, std::string_view formatted_message)
     {
         _implementation->spd_logger->log(convert_level(log_level), formatted_message);
