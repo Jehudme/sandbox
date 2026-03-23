@@ -45,6 +45,9 @@ namespace sandbox
         template<typename... argument_types>
         void critical(std::string_view format_string, argument_types&&... arguments);
 
+        static std::string level_to_string(level log_level);
+        static level string_to_level(std::string_view log_level_string);
+
     private:
         void _internal_log(level log_level, std::string_view formatted_message);
 

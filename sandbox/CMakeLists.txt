@@ -60,6 +60,8 @@ add_library(sandbox STATIC
         include/sandbox/core/registry.h
         include/sandbox/core/registry.inl
         include/sandbox/core/registration.h
+        source/core/extension.cpp
+        include/sandbox/core/extension.h
 )
 
 target_include_directories(sandbox
