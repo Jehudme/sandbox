@@ -1,7 +1,7 @@
 #pragma once
 
-#include "sandbox/utilities/properties.h"
-#include "sandbox/utilities/scoped_logger.h"
+#include "../filesystem/properties.h"
+#include "../diagnostics/scoped_logger.h"
 #include <memory>
 
 namespace sandbox

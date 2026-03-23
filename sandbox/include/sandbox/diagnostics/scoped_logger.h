@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <functional>
-#include "sandbox/core/logger.h"
+#include "logger.h"
 
 namespace sandbox
 {
@@ -27,4 +27,4 @@ namespace sandbox
 }
 
 
-#include "scoped_logger.inl"
+#include "../utilities/scoped_logger.inl"

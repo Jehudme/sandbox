@@ -1,5 +1,5 @@
-#include "sandbox/utilities/properties.h"
-#include "../../include/sandbox/utilities/scoped_logger.h"
+#include "../../include/sandbox/filesystem/properties.h"
+#include "../../include/sandbox/diagnostics/scoped_logger.h"
 #include <glaze/json/write.hpp>
 #include <glaze/json/read.hpp>
 #include <fstream>

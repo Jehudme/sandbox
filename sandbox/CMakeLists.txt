@@ -47,19 +47,19 @@ FetchContent_MakeAvailable(rttr spdlog glaze flecs)
 
 add_library(sandbox STATIC
         include/sandbox/sandbox.h
-        include/sandbox/utilities/properties.h
-        include/sandbox/utilities/properties.inl
-        source/utilities/properties.cpp
-        source/core/logger.cpp
-        include/sandbox/core/logger.h
-        include/sandbox/core/logger.inl
-        source/core/scoped_logger.cpp
-        include/sandbox/utilities/scoped_logger.h
-        include/sandbox/utilities/scoped_logger.inl
-        source/core/registry.cpp
-        include/sandbox/core/registry.h
-        include/sandbox/core/registry.inl
-        include/sandbox/core/registration.h
+        include/sandbox/filesystem/properties.h
+        include/sandbox/filesystem/properties.inl
+        source/filesystem/properties.cpp
+        source/diagnostics/logger.cpp
+        include/sandbox/diagnostics/logger.h
+        include/sandbox/diagnostics/logger.inl
+        source/diagnostics/scoped_logger.cpp
+        include/sandbox/diagnostics/scoped_logger.h
+        include/sandbox/diagnostics/scoped_logger.inl
+        source/reflections/registry.cpp
+        include/sandbox/reflections/registry.h
+        include/sandbox/reflections/registry.inl
+        include/sandbox/reflections/registration.h
         source/core/extension.cpp
         include/sandbox/core/extension.h
 )

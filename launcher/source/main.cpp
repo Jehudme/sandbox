@@ -19,7 +19,7 @@ namespace sandbox {
 
 // 2. Register the class so the Registry can find it by string
 // Usually, you put this in the .cpp of your component
-#include "sandbox/core/registration.h"
+#include "../../sandbox/include/sandbox/reflections/registration.h"
 SANDBOX_REGISTER_CLASS(sandbox::test_component, "test_component")
 
 int main()

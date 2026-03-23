@@ -1,8 +1,14 @@
 #pragma once
 
-// Utilities
-#include "sandbox/utilities/properties.h"
+// filesystem
+#include "filesystem/properties.h"
 
-// Core
-#include "utilities/scoped_logger.h"
-#include "sandbox/core/registry.h"
+// diagnostics
+#include "diagnostics/logger.h"
+#include "diagnostics/scoped_logger.h"
+
+// reflections
+#include "reflections/registry.h"
+
+// core
+#include "core/extension.h"

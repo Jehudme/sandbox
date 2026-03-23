@@ -1,5 +1,5 @@
 #include <glaze/glaze.hpp>
-#include "scoped_logger.h"
+#include "../diagnostics/scoped_logger.h"
 
 namespace sandbox
 {
