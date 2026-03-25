@@ -47,25 +47,33 @@ FetchContent_MakeAvailable(rttr spdlog glaze flecs)
 
 add_library(sandbox STATIC
         include/sandbox/sandbox.h
+
         include/sandbox/filesystem/properties.h
         include/sandbox/filesystem/properties.inl
         source/filesystem/properties.cpp
+
         source/diagnostics/logger.cpp
         include/sandbox/diagnostics/logger.h
         include/sandbox/diagnostics/logger.inl
+
         source/diagnostics/scoped_logger.cpp
         include/sandbox/diagnostics/scoped_logger.h
         include/sandbox/diagnostics/scoped_logger.inl
+
         source/reflections/registry.cpp
         include/sandbox/reflections/registry.h
         include/sandbox/reflections/registry.inl
         include/sandbox/reflections/registration.h
+
         source/core/extension.cpp
         include/sandbox/core/extension.h
+
         include/sandbox/core/engine.cpp
         include/sandbox/core/engine.h
         include/sandbox/core/engine.inl
 )
+
+target_compile_features(sandbox PUBLIC cxx_std_23)
 
 target_include_directories(sandbox
         PUBLIC  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -78,6 +86,11 @@ target_link_libraries(sandbox
         spdlog::spdlog
         glaze::glaze
         RTTR::Core
+)
+
+target_precompile_headers(sandbox
+        PRIVATE
+        "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/pch.h>"
 )
 
 add_library(sandbox::library ALIAS sandbox)

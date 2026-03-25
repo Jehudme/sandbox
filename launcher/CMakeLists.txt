@@ -8,3 +8,8 @@ add_executable(launcher
 add_executable(sandbox::launcher ALIAS launcher)
 
 target_link_libraries(launcher PRIVATE sandbox::library)
+
+target_precompile_headers(launcher
+        PRIVATE
+        "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/include/launcher/pch.h>"
+)
