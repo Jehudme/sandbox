@@ -1,27 +1,29 @@
 #pragma once
 
-#include "../filesystem/properties.h"
-#include "../diagnostics/scoped_logger.h"
+#include "sandbox/filesystem/properties.h"
 #include <memory>
 
 namespace sandbox
 {
+    class engine; // Forward declaration
+
+    /**
+     * @brief Base class for all engine modules.
+     * Enforces a unique identity by disabling all copy and move operations.
+     */
     class extension
     {
     public:
         explicit extension() = default;
         virtual ~extension() = default;
 
-        void initialize(const properties& extension_properties);
+        // --- Non-Copyable & Non-Movable ---
+        extension(const extension&) = delete;
+        extension& operator=(const extension&) = delete;
+        extension(extension&&) = delete;
+        extension& operator=(extension&&) = delete;
 
-        void finalize();
-
-        logger& get_logger() const;
-
-    private:
-        virtual void on_initialize(const properties& extension_properties) = 0;
-        virtual void on_finalize() = 0;
-
-        std::unique_ptr<logger> _logger;
+        virtual void initialize(engine& app, const properties& props) = 0;
+        virtual void finalize(engine& app) = 0;
     };
 }

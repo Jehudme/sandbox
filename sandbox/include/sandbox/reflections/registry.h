@@ -2,39 +2,41 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
+#include <vector>
+
+namespace rttr
+{
+    class argument;
+    class variant;
+}
 
 namespace sandbox
 {
-    /**
-     * @brief Static registry for creating engine objects by string identifier.
-     * This class uses RTTR internally but hides all reflection dependencies from the user.
-     */
     class registry
     {
     public:
         registry() = delete;
         ~registry() = delete;
 
-        /**
-         * @brief Creates a heap-allocated instance of a registered type and wraps it in a unique_ptr.
-         * @tparam base_type The expected base class (e.g., component, system).
-         * @param type_identifier The string name registered in RTTR.
-         * @return std::unique_ptr<base_type> A managed pointer to the new instance, or nullptr if failed.
-         */
-        template<typename base_type>
-        static std::unique_ptr<base_type> create_type(const std::string& type_identifier);
+        template<typename base_type, typename... argument_types>
+        static std::unique_ptr<base_type> create_type(std::string_view type_identifier, argument_types&&... constructor_arguments);
 
-        static bool is_type_registered(const std::string& type_identifier);
+        template<typename... argument_types>
+        static rttr::variant invoke(std::string_view identifier, void* instance, argument_types&&... args);
 
-        /**
-         * @brief Returns the official registered name of a type identifier.
-         */
-        static std::string get_registered_name(const std::string& type_identifier);
+        template<typename... argument_types>
+        static rttr::variant invoke_static(std::string_view class_identifier, std::string_view function_identifier, argument_types&&... args);
+
+        static bool is_type_registered(std::string_view type_identifier);
+
+        static std::string get_registered_name(std::string_view type_identifier);
 
     private:
-        // This is the "bridge" function that allows us to hide RTTR in the .cpp file.
-        static void* _internal_create_instance(const std::string& type_identifier);
+        static void* _internal_create_instance(std::string_view type_identifier, std::vector<rttr::argument> args);
+        static rttr::variant _internal_invoke(std::string_view identifier, void* instance, std::vector<rttr::argument> args);
+        static rttr::variant _internal_invoke_static(std::string_view class_identifier, std::string_view function_identifier, std::vector<rttr::argument> args);
     };
 }
 
-#include "../core/registry.inl"
+#include "registry.inl"

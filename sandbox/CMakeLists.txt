@@ -62,6 +62,9 @@ add_library(sandbox STATIC
         include/sandbox/reflections/registration.h
         source/core/extension.cpp
         include/sandbox/core/extension.h
+        include/sandbox/core/engine.cpp
+        include/sandbox/core/engine.h
+        include/sandbox/core/engine.inl
 )
 
 target_include_directories(sandbox

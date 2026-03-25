@@ -28,6 +28,9 @@ namespace sandbox
         logger& operator=(logger&&) noexcept;
 
         template<typename... argument_types>
+        void log(level lvl, std::string_view format_string, argument_types&&... arguments);
+
+        template<typename... argument_types>
         void trace(std::string_view format_string, argument_types&&... arguments);
 
         template<typename... argument_types>
@@ -56,4 +59,4 @@ namespace sandbox
     };
 }
 
-#include "../core/logger.inl"
+#include "logger.inl"

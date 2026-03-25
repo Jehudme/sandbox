@@ -1,68 +1,123 @@
 #include <sandbox/sandbox.h>
 #include <iostream>
+#include <thread>
+#include <chrono>
 
-// 1. Define a dummy class to test the Registry
-namespace sandbox {
-    class test_component {
-    public:
-        test_component() {
-            // This will use the "Active" logger from the scope below!
-            SANDBOX_LOG_INFO("test_component: Constructor called.");
-        }
-        virtual ~test_component() = default;
+#include "sandbox/core/engine.h"
+#include "sandbox/reflections/registration.h"
 
-        void do_something() {
-            SANDBOX_LOG_DEBUG("test_component: Doing some work...");
-        }
-    };
+struct position
+{
+    float x;
+    float y;
+};
+
+void my_global_function()
+{
+    SANDBOX_LOG_INFO("Registry: Global function invoked successfully!");
 }
 
-// 2. Register the class so the Registry can find it by string
-// Usually, you put this in the .cpp of your component
-#include "../../sandbox/include/sandbox/reflections/registration.h"
-SANDBOX_REGISTER_CLASS(sandbox::test_component, "test_component")
+struct math_utility
+{
+    static int multiply(int a, int b)
+    {
+        return a * b;
+    }
+};
+
+class test_extension : public sandbox::extension
+{
+public:
+    void initialize(sandbox::engine& app, const sandbox::properties& props) override
+    {
+        SANDBOX_LOG_INFO("Extension 'test_extension' initialized.");
+
+        app.create_system(
+            "timer_system",
+            "",
+            [](auto& builder) {
+                builder.interval(5.0f);
+            },
+            [](flecs::iter& it) {
+                SANDBOX_LOG_INFO("--> Extension: 5 seconds have elapsed!");
+            }
+        );
+    }
+
+    void finalize(sandbox::engine& app) override
+    {
+        SANDBOX_LOG_INFO("Extension 'test_extension' finalized.");
+    }
+};
+
+SANDBOX_REGISTRATION {
+    SANDBOX_REGISTER_GLOBAL_FUNCTION(&my_global_function, "my_global_function")
+    SANDBOX_REGISTER_STATIC_FUNCTION(math_utility, &math_utility::multiply, "math_multiply")
+    SANDBOX_REGISTER_CLASS(test_extension, "test_extension")
+}
 
 int main()
 {
-    // --- STEP 1: Setup Global Logger ---
-    sandbox::logger engine_logger("Harmony", sandbox::logger::level::trace, false);
+    SANDBOX_LOG_INFO("=== Starting Engine Tests ===");
 
-    // --- STEP 2: Enter a Scoped Context ---
-    // All logs inside this { } block will now use 'engine_logger' automatically
-    SANDBOX_LOGGER_SCOPE(engine_logger);
-
-    SANDBOX_LOG_INFO("=== Starting Engine Core Test ===");
-
-    // --- STEP 3: Test Properties (JSON Tree) ---
     sandbox::properties config;
-    config.set({"engine", "version"}, "0.1.0-alpha");
+    config.set({"logger", "name"}, std::string("engine_core"));
+    config.set({"logger", "level"}, std::string("trace"));
     config.set({"window", "resolution", "width"}, 1920);
     config.set({"window", "resolution", "height"}, 1080);
-    config.set({"window", "fullscreen"}, true);
 
-    SANDBOX_LOG_INFO("Configuration loaded:");
-    std::cout << config.show() << std::endl;
+    sandbox::engine app;
+    app.initialize(config);
 
-    // --- STEP 4: Test Registry (RTTR Factory) ---
-    SANDBOX_LOG_INFO("Attempting to spawn 'test_component' via Registry...");
+    SANDBOX_LOG_INFO("=== Testing Registry ===");
 
-    auto my_comp = sandbox::registry::create_type<sandbox::test_component>("test_component");
+    sandbox::registry::invoke("my_global_function", nullptr);
 
-    if (my_comp)
+    rttr::variant math_result = sandbox::registry::invoke_static("math_utility", "math_multiply", 5, 4);
+    if (math_result.is_valid() && math_result.is_type<int>())
     {
-        my_comp->do_something();
-        SANDBOX_LOG_INFO("Registry test successful!");
-    }
-    else
-    {
-        SANDBOX_LOG_ERROR("Registry test failed! Could not create component.");
+        SANDBOX_LOG_INFO("Registry: Static math_multiply(5, 4) returned {}", math_result.get_value<int>());
     }
 
-    // --- STEP 5: Test Error Handling ---
-    SANDBOX_LOG_WARN("Testing an intentional registry failure...");
-    auto ghost = sandbox::registry::create_type<sandbox::test_component>("non_existent_type");
+    SANDBOX_LOG_INFO("=== Testing Engine Structure ===");
 
-    SANDBOX_LOG_INFO("=== Core Test Complete ===");
+    app.create_stage("physics_stage");
+
+    app.create_object<position>("player_1", 0.0f, 0.0f);
+    app.create_object<position>("player_2", 10.0f, 20.0f);
+
+    app.create_system<position>(
+        "movement_system",
+        "physics_stage",
+        [](position& pos) {
+            pos.x += 0.1f;
+            pos.y += 0.1f;
+        }
+    );
+
+    SANDBOX_LOG_INFO("=== Loading Extension ===");
+
+    app.create_extension("core_modules", "test_extension");
+
+    SANDBOX_LOG_INFO("=== Entering Main Loop (Press Ctrl+C to exit) ===");
+
+    int frame_count = 0;
+    while (true)
+    {
+        app.progress();
+
+        if (frame_count % 60 == 0)
+        {
+            auto* p1 = app.get_object<position>("player_1");
+            if (p1)
+            {
+                SANDBOX_LOG_DEBUG("Player 1 Position: x={:.2f}, y={:.2f}", p1->x, p1->y);
+            }
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(16));
+        frame_count++;
+    }
 
     return 0;
 }

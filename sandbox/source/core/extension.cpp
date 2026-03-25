@@ -2,7 +2,7 @@
 
 namespace sandbox
 {
-    void extension::initialize(const properties& extension_properties)
+    void extension::initialize(engine& app, const properties& extension_properties)
     {
         // 1. Extract logger configuration from the properties tree
         const properties logger_properties = extension_properties.sub_properties({"logger"});
@@ -19,27 +19,11 @@ namespace sandbox
             .get<bool>({"async"})
             .value_or(false);
 
-        _logger = std::make_unique<logger>(
-            logger_name,
-            logger::string_to_level(logger_level_string),
-            is_logger_async
-        );
-
-        {
-            SANDBOX_LOGGER_SCOPE(get_logger());
-            on_initialize(extension_properties);
-        }
 
     }
 
-    void extension::finalize()
+    void extension::finalize(engine& app)
     {
-        SANDBOX_LOGGER_SCOPE(get_logger());
-        on_finalize();
-    }
 
-    logger& extension::get_logger() const
-    {
-        return *_logger;
     }
 }

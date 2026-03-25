@@ -2,6 +2,12 @@
 
 namespace sandbox
 {
+    template <typename ... argument_types>
+    void logger::log(level lvl, std::string_view format_string, argument_types&&... arguments)
+    {
+        _internal_log(lvl, std::vformat(format_string, std::make_format_args(arguments...)));
+    }
+
     template<typename... argument_types>
     void logger::trace(std::string_view format_string, argument_types&&... arguments)
     {
