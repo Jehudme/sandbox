@@ -80,11 +80,10 @@ namespace sandbox
 
         void progress();
 
-    private:
         template<typename... argument_types>
         void _log(logger::level level, std::string_view format_string, argument_types&&... arguments);
 
-        flecs::world _world;
+        flecs::world world;
     };
 }
 

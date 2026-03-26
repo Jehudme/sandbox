@@ -13,6 +13,8 @@ namespace sandbox
      */
     class extension
     {
+        friend class engine;
+
     public:
         explicit extension() = default;
         virtual ~extension() = default;
@@ -25,5 +27,8 @@ namespace sandbox
 
         virtual void initialize(engine& app, const properties& props) = 0;
         virtual void finalize(engine& app) = 0;
+
+    protected:
+        engine* _app;
     };
 }

@@ -12,7 +12,7 @@ namespace sandbox
     {
         _log(logger::level::info, "engine: shutting down");
 
-        _world.each<std::unique_ptr<extension>>([this](flecs::entity extension_entity, std::unique_ptr<extension>& extension_pointer) {
+        world.each<std::unique_ptr<extension>>([this](flecs::entity extension_entity, std::unique_ptr<extension>& extension_pointer) {
             if (extension_pointer)
             {
                 _log(logger::level::debug, "engine: finalizing extension entity='{}'", extension_entity.path().c_str());
@@ -25,7 +25,7 @@ namespace sandbox
 
     void engine::initialize(const properties& configuration)
     {
-        _world = flecs::world();
+        world = flecs::world();
 
         const std::string logger_name = configuration.get<std::string>({"logger", "name"}).value_or("engine_core");
         const std::string logger_level_string = configuration.get<std::string>({"logger", "level"}).value_or("INFO");
@@ -34,7 +34,7 @@ namespace sandbox
         const logger::level logger_level = sandbox::logger::string_to_level(logger_level_string);
 
         // Create/store logger first (so _log works afterwards).
-        auto logger_entity = _world.entity("::internals::engine_logger");
+        auto logger_entity = world.entity("::internals::engine_logger");
 
         logger_entity.set<std::unique_ptr<logger>>(
             std::make_unique<logger>(logger_name, logger_level, is_logger_async)
@@ -58,10 +58,12 @@ namespace sandbox
         }
 
         properties extension_properties;
+
+        new_extension->_app = this;
         new_extension->initialize(*this, extension_properties);
 
         std::string absolute_path = "::extensions::" + std::string(category);
-        _world.entity(absolute_path.c_str()).set<std::unique_ptr<extension>>({std::move(new_extension)});
+        world.entity(absolute_path.c_str()).set<std::unique_ptr<extension>>({std::move(new_extension)});
 
         _log(logger::level::debug, "engine: extension created at entity='{}'", absolute_path);
     }
@@ -71,7 +73,7 @@ namespace sandbox
         const std::string absolute_path = "::extensions::" + std::string(category);
         _log(logger::level::info, "engine: deleting extension category='{}' entity='{}'", category, absolute_path);
 
-        auto extension_entity = _world.lookup(absolute_path.c_str());
+        auto extension_entity = world.lookup(absolute_path.c_str());
 
         if (extension_entity.is_valid() && extension_entity.has<std::unique_ptr<extension>>())
         {
@@ -96,12 +98,12 @@ namespace sandbox
         _log(logger::level::info, "engine: creating stage '{}'", name);
 
         std::string absolute_path = "::stages::" + std::string(name);
-        auto stage_entity = _world.entity(absolute_path.c_str()).add(flecs::Phase);
+        auto stage_entity = world.entity(absolute_path.c_str()).add(flecs::Phase);
 
         for (const auto& dependency_name : stage_dependencies)
         {
             std::string dependency_path = "::stages::" + std::string(dependency_name);
-            stage_entity.depends_on(_world.entity(dependency_path.c_str()));
+            stage_entity.depends_on(world.entity(dependency_path.c_str()));
             _log(logger::level::debug, "engine: stage '{}' depends_on '{}'", absolute_path, dependency_path);
         }
     }
@@ -109,87 +111,87 @@ namespace sandbox
     void engine::delete_stage(std::string_view name)
     {
         _log(logger::level::info, "engine: deleting stage '{}'", name);
-        _world.lookup(("::stages::" + std::string(name)).c_str()).destruct();
+        world.lookup(("::stages::" + std::string(name)).c_str()).destruct();
     }
 
     void engine::enable_stage(std::string_view name)
     {
         _log(logger::level::info, "engine: enabling stage '{}'", name);
-        _world.lookup(("::stages::" + std::string(name)).c_str()).enable();
+        world.lookup(("::stages::" + std::string(name)).c_str()).enable();
     }
 
     void engine::disable_stage(std::string_view name)
     {
         _log(logger::level::info, "engine: disabling stage '{}'", name);
-        _world.lookup(("::stages::" + std::string(name)).c_str()).disable();
+        world.lookup(("::stages::" + std::string(name)).c_str()).disable();
     }
 
     bool engine::is_stage_exists(std::string_view name) const
     {
-        return _world.lookup(("::stages::" + std::string(name)).c_str()).is_valid();
+        return world.lookup(("::stages::" + std::string(name)).c_str()).is_valid();
     }
 
     bool engine::is_stage_enabled(std::string_view name) const
     {
-        auto stage_entity = _world.lookup(("::stages::" + std::string(name)).c_str());
+        auto stage_entity = world.lookup(("::stages::" + std::string(name)).c_str());
         return stage_entity.is_valid() && stage_entity.enabled();
     }
 
     void engine::delete_system(std::string_view name)
     {
         _log(logger::level::info, "engine: deleting system '{}'", name);
-        _world.lookup(("::systems::" + std::string(name)).c_str()).destruct();
+        world.lookup(("::systems::" + std::string(name)).c_str()).destruct();
     }
 
     void engine::enable_system(std::string_view name)
     {
         _log(logger::level::info, "engine: enabling system '{}'", name);
-        _world.lookup(("::systems::" + std::string(name)).c_str()).enable();
+        world.lookup(("::systems::" + std::string(name)).c_str()).enable();
     }
 
     void engine::disable_system(std::string_view name)
     {
         _log(logger::level::info, "engine: disabling system '{}'", name);
-        _world.lookup(("::systems::" + std::string(name)).c_str()).disable();
+        world.lookup(("::systems::" + std::string(name)).c_str()).disable();
     }
 
     bool engine::is_system_exists(std::string_view name) const
     {
-        return _world.lookup(("::systems::" + std::string(name)).c_str()).is_valid();
+        return world.lookup(("::systems::" + std::string(name)).c_str()).is_valid();
     }
 
     bool engine::is_system_enabled(std::string_view name) const
     {
-        auto system_entity = _world.lookup(("::systems::" + std::string(name)).c_str());
+        auto system_entity = world.lookup(("::systems::" + std::string(name)).c_str());
         return system_entity.is_valid() && system_entity.enabled();
     }
 
     void engine::delete_trigger(std::string_view name)
     {
         _log(logger::level::info, "engine: deleting trigger '{}'", name);
-        _world.lookup(("::triggers::" + std::string(name)).c_str()).destruct();
+        world.lookup(("::triggers::" + std::string(name)).c_str()).destruct();
     }
 
     void engine::enable_trigger(std::string_view name)
     {
         _log(logger::level::info, "engine: enabling trigger '{}'", name);
-        _world.lookup(("::triggers::" + std::string(name)).c_str()).enable();
+        world.lookup(("::triggers::" + std::string(name)).c_str()).enable();
     }
 
     void engine::disable_trigger(std::string_view name)
     {
         _log(logger::level::info, "engine: disabling trigger '{}'", name);
-        _world.lookup(("::triggers::" + std::string(name)).c_str()).disable();
+        world.lookup(("::triggers::" + std::string(name)).c_str()).disable();
     }
 
     bool engine::is_trigger_exists(std::string_view name) const
     {
-        return _world.lookup(("::triggers::" + std::string(name)).c_str()).is_valid();
+        return world.lookup(("::triggers::" + std::string(name)).c_str()).is_valid();
     }
 
     bool engine::is_trigger_enabled(std::string_view name) const
     {
-        auto trigger_entity = _world.lookup(("::triggers::" + std::string(name)).c_str());
+        auto trigger_entity = world.lookup(("::triggers::" + std::string(name)).c_str());
         return trigger_entity.is_valid() && trigger_entity.enabled();
     }
 
@@ -201,12 +203,12 @@ namespace sandbox
     void engine::delete_object(std::string_view name)
     {
         _log(logger::level::info, "engine: deleting object '{}'", name);
-        _world.lookup(("::objects::" + std::string(name)).c_str()).destruct();
+        world.lookup(("::objects::" + std::string(name)).c_str()).destruct();
     }
 
     bool engine::is_object_exists(std::string_view name) const
     {
-        return _world.lookup(("::objects::" + std::string(name)).c_str()).is_valid();
+        return world.lookup(("::objects::" + std::string(name)).c_str()).is_valid();
     }
 
     void engine::set_scope(const scope_path& path)
@@ -219,7 +221,7 @@ namespace sandbox
         }
 
         _log(logger::level::debug, "engine: set_scope '{}'", result);
-        _world.set_scope(_world.entity(result.c_str()));
+        world.set_scope(world.entity(result.c_str()));
     }
 
     void engine::push_scope(const scope_path& path)
@@ -232,11 +234,11 @@ namespace sandbox
         }
 
         _log(logger::level::debug, "engine: push_scope '{}'", result);
-        _world.set_scope(_world.entity(result.c_str()));
+        world.set_scope(world.entity(result.c_str()));
     }
 
     void engine::progress()
     {
-        _world.progress();
+        world.progress();
     }
 }

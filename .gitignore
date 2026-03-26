@@ -58,7 +58,7 @@ _CPack_Packages/
 *.iws
 *.iml
 *.ipr
-cmake-build-debug/
+.cmake-build-debug/
 cmake-build-release/
 
 # Visual Studio Code
