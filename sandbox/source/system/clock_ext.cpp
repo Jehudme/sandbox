@@ -1,9 +1,8 @@
-#include "../../include/sandbox/extensions/clock.h"
-
-#include "sandbox/extensions/logger.h"
-#include "sandbox/extensions/systems.h"
+#include "sandbox/system/clock_ext.h"
+#include "sandbox/diagnostics/logger.h"
+#include "sandbox/ecs/systems_ext.h"
 #include "sandbox/core/engine.h"
-#include "../../include/sandbox/core/properties.h"
+#include "sandbox/core/properties.h"
 
 #include <algorithm>
 #include <vector>
@@ -21,7 +20,7 @@ namespace sandbox::extensions
             return iter_dt > 0.0f ? iter_dt : world_dt;
         }
 
-        void process_time_scale_requests(flecs::world world, clock::state& data, float dt, sandbox::extensions::logger* log)
+        void process_time_scale_requests(flecs::world world, clock::state& data, float dt, sandbox::logger* log)
         {
             std::vector<flecs::entity> completed_requests;
             const auto request_id = flecs::_::type<clock::time_scale_request>::id(world);

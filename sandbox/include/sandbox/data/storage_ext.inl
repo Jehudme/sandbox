@@ -1,7 +1,7 @@
 #pragma once
 
-#include "logger.h"
-#include "caches.h"
+#include "sandbox/diagnostics/logger.h"
+#include "sandbox/data/caches_ext.h"
 #include "sandbox/core/engine.h"
 
 namespace sandbox::extensions

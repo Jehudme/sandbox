@@ -1,22 +1,21 @@
 #include "sandbox/core/engine.h"
 #include "sandbox/core/extension.h"
-#include "sandbox/extensions/caches.h"
-#include "../../include/sandbox/core/properties.h"
-#include "sandbox/reflections/registry.h"
-#include "sandbox/reflections/registration.h"
-#include "sandbox/extensions/logger.h"
-#include "sandbox/extensions/scopes.h"
-#include "sandbox/extensions/stages.h"
-#include "sandbox/extensions/systems.h"
-#include "sandbox/extensions/triggers.h"
-#include "sandbox/extensions/storage.h"
-#include "sandbox/extensions/events.h"
-#include "sandbox/extensions/caches.h"
-#include "sandbox/extensions/clock.h"
-#include "sandbox/extensions/filesystems.h"
-#include "sandbox/extensions/dependencies.h"
-#include "sandbox/extensions/serializer.h"
-#include "sandbox/extensions/diagnostics.h"
+#include "sandbox/core/properties.h"
+#include "sandbox/data/registry.h"
+#include "sandbox/data/registration.h"
+#include "sandbox/data/caches_ext.h"
+#include "sandbox/data/storage_ext.h"
+#include "sandbox/ecs/scopes_ext.h"
+#include "sandbox/ecs/stages_ext.h"
+#include "sandbox/ecs/systems_ext.h"
+#include "sandbox/ecs/triggers_ext.h"
+#include "sandbox/ecs/events_ext.h"
+#include "sandbox/io/filesystem_ext.h"
+#include "sandbox/io/serializer_ext.h"
+#include "sandbox/system/clock_ext.h"
+#include "sandbox/system/dependencies_ext.h"
+#include "sandbox/diagnostics/diagnostics_ext.h"
+#include "sandbox/diagnostics/logger_ext.h"
 
 namespace sandbox
 {
@@ -153,7 +152,7 @@ namespace sandbox
         if (get_logger()) get_logger()->error("engine: extension not found for finalize: '{}'", name);
     }
 
-    extensions::logger* engine::get_logger()        { return get_extension<extensions::logger>("logger"); }
+    sandbox::logger* engine::get_logger()        { auto* ext = get_extension<extensions::logger>("logger"); return ext ? ext->get() : nullptr; }
     extensions::scopes* engine::get_scopes()        { return get_extension<extensions::scopes>("scopes"); }
     extensions::storage* engine::get_storage()      { return get_extension<extensions::storage>("storage"); }
     extensions::systems* engine::get_systems()      { return get_extension<extensions::systems>("systems"); }

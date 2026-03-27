@@ -1,7 +1,7 @@
 #pragma once
 
-#include "sandbox/extensions/logger.h"
-#include "sandbox/extensions/systems.h"
+#include "sandbox/diagnostics/logger.h"
+#include "sandbox/ecs/systems_ext.h"
 #include "sandbox/core/engine.h"
 
 #include <type_traits>

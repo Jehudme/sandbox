@@ -1,8 +1,7 @@
-#include "sandbox/extensions/stages.h"
-
-#include "sandbox/extensions/logger.h"
+#include "sandbox/ecs/stages_ext.h"
+#include "sandbox/diagnostics/logger.h"
 #include "sandbox/core/engine.h"
-#include "../../include/sandbox/core/properties.h"
+#include "sandbox/core/properties.h"
 
 namespace sandbox::extensions
 {

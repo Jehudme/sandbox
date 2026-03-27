@@ -1,5 +1,5 @@
-#include "../../include/sandbox/reflections/registry.h"
-#include "../../include/sandbox/diagnostics/scoped_logger.h"
+#include "sandbox/data/registry.h"
+#include "sandbox/diagnostics/scoped_logger.h"
 #include <rttr/type.h>
 
 namespace sandbox

@@ -23,4 +23,4 @@ namespace sandbox::extensions
     };
 }
 
-#include "triggers.inl"
+#include "triggers_ext.inl"

@@ -1,10 +1,9 @@
-#include "../../include/sandbox/extensions/serializer.h"
-
-#include "sandbox/extensions/logger.h"
-#include "sandbox/extensions/systems.h"
-#include "sandbox/extensions/filesystems.h"
+#include "sandbox/io/serializer_ext.h"
+#include "sandbox/diagnostics/logger.h"
+#include "sandbox/ecs/systems_ext.h"
+#include "sandbox/io/filesystem_ext.h"
 #include "sandbox/core/engine.h"
-#include "../../include/sandbox/core/properties.h"
+#include "sandbox/core/properties.h"
 
 #include <glaze/json/read.hpp>
 #include <glaze/json/write.hpp>
@@ -64,7 +63,7 @@ namespace sandbox::extensions
             return false;
         }
 
-        std::optional<glz::json_t> serialize_entity(flecs::entity entity, sandbox::extensions::logger* log)
+        std::optional<glz::json_t> serialize_entity(flecs::entity entity, sandbox::logger* log)
         {
             glz::json_t root = glz::json_t::object_t{};
             root["name"] = entity.name() ? entity.name() : "";

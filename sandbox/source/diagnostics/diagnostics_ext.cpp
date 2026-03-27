@@ -1,9 +1,8 @@
-#include "../../include/sandbox/extensions/diagnostics.h"
-
-#include "sandbox/extensions/logger.h"
-#include "sandbox/extensions/systems.h"
+#include "sandbox/diagnostics/diagnostics_ext.h"
+#include "sandbox/diagnostics/logger.h"
+#include "sandbox/ecs/systems_ext.h"
 #include "sandbox/core/engine.h"
-#include "../../include/sandbox/core/properties.h"
+#include "sandbox/core/properties.h"
 
 namespace sandbox::extensions
 {

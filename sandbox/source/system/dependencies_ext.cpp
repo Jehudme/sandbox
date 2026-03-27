@@ -1,8 +1,7 @@
-#include "../../include/sandbox/extensions/dependencies.h"
-
-#include "sandbox/extensions/logger.h"
+#include "sandbox/system/dependencies_ext.h"
+#include "sandbox/diagnostics/logger.h"
 #include "sandbox/core/engine.h"
-#include "../../include/sandbox/core/properties.h"
+#include "sandbox/core/properties.h"
 
 #include <algorithm>
 
