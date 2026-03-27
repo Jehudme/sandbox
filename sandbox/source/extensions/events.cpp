@@ -1,4 +1,5 @@
 #include "sandbox/extensions/events.h"
+#include "sandbox/extensions/caches.h"
 #include "sandbox/core/engine.h"
 #include "sandbox/filesystem/properties.h"
 
@@ -60,36 +61,79 @@ namespace sandbox::extensions
     void events::enable(std::string_view name)
     {
         const std::string absolute_path = "::events::" + std::string(name);
-        auto subscriber_entity = _app->world.lookup(absolute_path.c_str());
+
+        // Cache-aside lookup
+        flecs::entity subscriber_entity;
+        auto* cache = _app->get_extension<extensions::caches>("caches");
+        if (cache)
+            subscriber_entity = cache->get(name);
+
+        if (!subscriber_entity.is_valid())
+        {
+            subscriber_entity = _app->world.lookup(absolute_path.c_str());
+            if (subscriber_entity.is_valid() && cache)
+                cache->save(subscriber_entity);
+        }
 
         if (subscriber_entity.is_valid())
-        {
             subscriber_entity.enable();
-        }
     }
 
     void events::disable(std::string_view name)
     {
         const std::string absolute_path = "::events::" + std::string(name);
-        auto subscriber_entity = _app->world.lookup(absolute_path.c_str());
+
+        // Cache-aside lookup
+        flecs::entity subscriber_entity;
+        auto* cache = _app->get_extension<extensions::caches>("caches");
+        if (cache)
+            subscriber_entity = cache->get(name);
+
+        if (!subscriber_entity.is_valid())
+        {
+            subscriber_entity = _app->world.lookup(absolute_path.c_str());
+            if (subscriber_entity.is_valid() && cache)
+                cache->save(subscriber_entity);
+        }
 
         if (subscriber_entity.is_valid())
-        {
             subscriber_entity.disable();
-        }
     }
 
     bool events::exists(std::string_view name) const
     {
         // Check only the ::events:: namespace for observer subscriptions.
+        auto* cache = _app->get_extension<extensions::caches>("caches");
+        if (cache)
+        {
+            auto cached_entity = cache->get(name);
+            if (cached_entity.is_valid())
+                return true;
+        }
+
         const std::string absolute_path = "::events::" + std::string(name);
-        return _app->world.lookup(absolute_path.c_str()).is_valid();
+        auto subscriber_entity = _app->world.lookup(absolute_path.c_str());
+        if (subscriber_entity.is_valid() && cache)
+            cache->save(subscriber_entity);
+        return subscriber_entity.is_valid();
     }
 
     bool events::enabled(std::string_view name) const
     {
-        const std::string absolute_path = "::events::" + std::string(name);
-        auto subscriber_entity = _app->world.lookup(absolute_path.c_str());
+        // Cache-aside lookup
+        flecs::entity subscriber_entity;
+        auto* cache = _app->get_extension<extensions::caches>("caches");
+        if (cache)
+            subscriber_entity = cache->get(name);
+
+        if (!subscriber_entity.is_valid())
+        {
+            const std::string absolute_path = "::events::" + std::string(name);
+            subscriber_entity = _app->world.lookup(absolute_path.c_str());
+            if (subscriber_entity.is_valid() && cache)
+                cache->save(subscriber_entity);
+        }
+
         return subscriber_entity.is_valid() && subscriber_entity.enabled();
     }
 }

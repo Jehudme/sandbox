@@ -22,3 +22,4 @@
 #include "extensions/triggers.h"
 #include "extensions/storage.h"
 #include "extensions/events.h"
+#include "extensions/caches.h"
