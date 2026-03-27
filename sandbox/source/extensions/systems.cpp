@@ -1,4 +1,5 @@
 #include "sandbox/extensions/systems.h"
+#include "sandbox/extensions/caches.h"
 #include "sandbox/core/engine.h"
 #include "sandbox/filesystem/properties.h"
 
@@ -37,7 +38,19 @@ namespace sandbox::extensions
         if (!_app) return;
 
         const std::string absolute_path = "::systems::" + std::string(name);
-        auto system_entity = _app->world.lookup(absolute_path.c_str());
+
+        // Cache-aside lookup
+        flecs::entity system_entity;
+        auto* cache = _app->get_extension<extensions::caches>("caches");
+        if (cache)
+            system_entity = cache->get(name);
+
+        if (!system_entity.is_valid())
+        {
+            system_entity = _app->world.lookup(absolute_path.c_str());
+            if (system_entity.is_valid() && cache)
+                cache->save(system_entity);
+        }
 
         if (!system_entity.is_valid())
         {
@@ -57,7 +70,19 @@ namespace sandbox::extensions
         if (!_app) return;
 
         const std::string absolute_path = "::systems::" + std::string(name);
-        auto system_entity = _app->world.lookup(absolute_path.c_str());
+
+        // Cache-aside lookup
+        flecs::entity system_entity;
+        auto* cache = _app->get_extension<extensions::caches>("caches");
+        if (cache)
+            system_entity = cache->get(name);
+
+        if (!system_entity.is_valid())
+        {
+            system_entity = _app->world.lookup(absolute_path.c_str());
+            if (system_entity.is_valid() && cache)
+                cache->save(system_entity);
+        }
 
         if (!system_entity.is_valid())
         {
@@ -76,16 +101,40 @@ namespace sandbox::extensions
     {
         if (!_app) return false;
 
+        // Cache-aside lookup
+        auto* cache = _app->get_extension<extensions::caches>("caches");
+        if (cache)
+        {
+            auto cached_entity = cache->get(name);
+            if (cached_entity.is_valid())
+                return true;
+        }
+
         const std::string absolute_path = "::systems::" + std::string(name);
-        return _app->world.lookup(absolute_path.c_str()).is_valid();
+        auto system_entity = _app->world.lookup(absolute_path.c_str());
+        if (system_entity.is_valid() && cache)
+            cache->save(system_entity);
+        return system_entity.is_valid();
     }
 
     bool systems::enabled(std::string_view name) const
     {
         if (!_app) return false;
 
-        const std::string absolute_path = "::systems::" + std::string(name);
-        auto system_entity = _app->world.lookup(absolute_path.c_str());
+        // Cache-aside lookup
+        flecs::entity system_entity;
+        auto* cache = _app->get_extension<extensions::caches>("caches");
+        if (cache)
+            system_entity = cache->get(name);
+
+        if (!system_entity.is_valid())
+        {
+            const std::string absolute_path = "::systems::" + std::string(name);
+            system_entity = _app->world.lookup(absolute_path.c_str());
+            if (system_entity.is_valid() && cache)
+                cache->save(system_entity);
+        }
+
         return system_entity.is_valid() && system_entity.enabled();
     }
 }

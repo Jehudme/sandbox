@@ -36,13 +36,13 @@ namespace sandbox
         create_extension("caches", "default_caches_extension");
 
         initialize_extension("logger", configuration.sub_properties({"logger"}));
-        initialize_extension("caches");
         initialize_extension("scopes");
         initialize_extension("stages");
         initialize_extension("systems");
         initialize_extension("triggers");
         initialize_extension("storage");
         initialize_extension("events");
+        initialize_extension("caches");
         
         get_extension<extensions::logger>("logger")->info("engine: initialized");
     }
@@ -60,6 +60,7 @@ namespace sandbox
         delete_extension("systems");
         delete_extension("stages");
         delete_extension("scopes");
+        delete_extension("caches");
         delete_extension("logger");
     }
 
