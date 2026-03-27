@@ -13,11 +13,13 @@ namespace sandbox
         auto extension_entity = world.lookup(absolute_path.c_str());
 
         if (extension_entity.is_valid()
-            && extension_entity.template has<std::unique_ptr<sandbox::extension>>()
-            && extension_entity.template get<std::unique_ptr<sandbox::extension>>()->_app == this)
+            && extension_entity.template has<std::unique_ptr<sandbox::extension>>())
         {
-            auto& extension_pointer = extension_entity.template get_mut<std::unique_ptr<sandbox::extension>>();
-            return static_cast<derived_type*>(extension_pointer.get());
+            const auto& extension_pointer = extension_entity.template get<std::unique_ptr<sandbox::extension>>();
+            if (extension_pointer && extension_pointer->_app == this)
+            {
+                return static_cast<derived_type*>(extension_pointer.get());
+            }
         }
         return nullptr;
     }

@@ -1,4 +1,4 @@
-#include "../../include/sandbox/diagnostics/logger.h"
+#include "sandbox/diagnostics/logger.h"
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/async.h>

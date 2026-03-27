@@ -90,7 +90,6 @@ add_library(sandbox STATIC
         source/extensions/storage.cpp
         include/sandbox/extensions/storage.h
         include/sandbox/extensions/storage.inl
-        source/extensions/logger.cpp
 )
 
 target_compile_features(sandbox PUBLIC cxx_std_23)

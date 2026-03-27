@@ -21,9 +21,12 @@ namespace sandbox::extensions
             "event_automatic_cleanup",
             "PostUpdate",
             [](flecs::iter& iterator) {
-                for (auto i : iterator)
+                while (iterator.next())
                 {
-                    iterator.entity(i).destruct();
+                    for (auto i : iterator)
+                    {
+                        iterator.entity(i).destruct();
+                    }
                 }
             }
         );
