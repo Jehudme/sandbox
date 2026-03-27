@@ -167,18 +167,11 @@ int main()
             }
         );
 
-        ext_events->subscribe<player_spawned_event>("on_player_spawned_staged", "physics_stage",
-            [](player_spawned_event& event_data) {
-                SANDBOX_LOG_INFO("staged event received in physics_stage: player='{}' at ({:.2f}, {:.2f})",
-                    event_data.player_name, event_data.spawn_x, event_data.spawn_y);
-            }
-        );
-
         SANDBOX_LOG_INFO("publishing player_spawned_event for player_3");
         ext_events->publish<player_spawned_event>({"player_3", 200.0f, 150.0f});
     }
 
-    SANDBOX_LOG_INFO("=== Running 5 frames to exercise systems and staged events ===");
+    SANDBOX_LOG_INFO("=== Running 5 frames to exercise systems ===");
 
     for (int frame_index = 0; frame_index < 5; ++frame_index)
     {
@@ -219,7 +212,6 @@ int main()
     if (ext_events)
     {
         SANDBOX_LOG_INFO("on_player_spawned subscriber exists: {}", ext_events->exists("on_player_spawned"));
-        SANDBOX_LOG_INFO("on_player_spawned_staged subscriber exists: {}", ext_events->exists("on_player_spawned_staged"));
     }
 
     SANDBOX_LOG_INFO("=== Extension Tests Complete ===");
