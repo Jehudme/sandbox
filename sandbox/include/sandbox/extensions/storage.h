@@ -1,25 +1,26 @@
 #pragma once
 
 #include "sandbox/core/extension.h"
+#include <string_view>
 
-namespace sanbox::extensions
+namespace sandbox::extensions
 {
     class storage : public sandbox::extension
     {
     public:
-        template<typename type, typename... arguments_types>
-        void create(std::string_view name, arguments_types&&... constructor_arguments);
+        void initialize(sandbox::engine& app, const sandbox::properties& props) override;
+        void finalize(sandbox::engine& app) override;
 
-        template<typename... arguments_types>
-        void create(std::string_view name, std::string_view type, arguments_types&&... constructor_arguments); // build from registry
+        template<typename base_type, typename... constructor_arguments>
+        void create(std::string_view name, constructor_arguments&&... arguments);
 
         void destroy(std::string_view name);
 
-        template<typename type>
-        type* get(std::string_view name);
-        bool exists(std::string_view name) const;
+        template<typename base_type>
+        base_type* get(std::string_view name);
 
-    private:
-        void* _get(std::string_view name);
+        bool exists(std::string_view name) const;
     };
 }
+
+#include "storage.inl"

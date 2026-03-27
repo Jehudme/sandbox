@@ -12,3 +12,13 @@
 
 // core
 #include "core/extension.h"
+#include "core/engine.h"
+
+// extensions
+#include "extensions/logger.h"
+#include "extensions/scopes.h"
+#include "extensions/stages.h"
+#include "extensions/systems.h"
+#include "extensions/triggers.h"
+#include "extensions/storage.h"
+#include "extensions/events.h"
