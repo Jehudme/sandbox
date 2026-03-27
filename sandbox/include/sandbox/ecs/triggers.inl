@@ -1,6 +1,6 @@
 #pragma once
 
-#include "logger.h"
+#include "sandbox/diagnostics/logger.h"
 #include "sandbox/core/engine.h"
 
 namespace sandbox::extensions

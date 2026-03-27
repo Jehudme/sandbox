@@ -10,7 +10,6 @@ namespace sandbox
     namespace extensions
     {
         class triggers;
-        class logger;
         class scopes;
         class storage;
         class systems;
@@ -48,7 +47,7 @@ namespace sandbox
         template<typename derived_type>
         derived_type* get_extension(std::string_view category);
 
-        extensions::logger* get_logger();
+        sandbox::logger* get_logger();
         extensions::scopes* get_scopes();
         extensions::storage* get_storage();
         extensions::systems* get_systems();

@@ -1,8 +1,7 @@
-#include "sandbox/extensions/scopes.h"
-
-#include "sandbox/extensions/logger.h"
+#include "sandbox/ecs/scopes.h"
+#include "sandbox/diagnostics/logger.h"
 #include "sandbox/core/engine.h"
-#include "../../include/sandbox/core/properties.h"
+#include "sandbox/core/properties.h"
 
 namespace sandbox::extensions
 {

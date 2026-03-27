@@ -1,8 +1,8 @@
-#include "sandbox/extensions/caches.h"
+#include "sandbox/data/caches.h"
 #include "sandbox/core/engine.h"
-#include "sandbox/extensions/logger.h"
-#include "sandbox/extensions/triggers.h"
-#include "sandbox/extensions/systems.h"
+#include "sandbox/diagnostics/logger.h"
+#include "sandbox/ecs/triggers.h"
+#include "sandbox/ecs/systems.h"
 
 #include <vector>
 

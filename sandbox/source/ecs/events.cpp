@@ -1,7 +1,7 @@
-#include "sandbox/extensions/events.h"
-#include "sandbox/extensions/caches.h"
+#include "sandbox/ecs/events.h"
+#include "sandbox/data/caches.h"
 #include "sandbox/core/engine.h"
-#include "../../include/sandbox/core/properties.h"
+#include "sandbox/core/properties.h"
 
 #include <vector>
 

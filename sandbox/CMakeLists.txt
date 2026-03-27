@@ -50,6 +50,7 @@ add_library(sandbox STATIC
         include/sandbox/pch.h
 
         # CORE
+        include/sandbox/core/sandbox_fwd.h
         include/sandbox/core/extension.h
         source/core/extension.cpp
         include/sandbox/core/engine.h

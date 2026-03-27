@@ -1,6 +1,6 @@
-#include "sandbox/extensions/storage.h"
+#include "sandbox/data/storage.h"
 #include "sandbox/core/engine.h"
-#include "../../include/sandbox/core/properties.h"
+#include "sandbox/core/properties.h"
 
 namespace sandbox::extensions
 {
