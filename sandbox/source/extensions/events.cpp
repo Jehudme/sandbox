@@ -1,35 +1,44 @@
 #include "sandbox/extensions/events.h"
 #include "sandbox/core/engine.h"
 #include "sandbox/filesystem/properties.h"
-#include "sandbox/extensions/logger.h"
-#include "sandbox/extensions/systems.h"
+
+#include <vector>
 
 namespace sandbox::extensions
 {
     void events::initialize(const sandbox::properties& properties)
     {
-        auto* systems_extension = _app->get_systems();
-        if (!systems_extension)
-        {
-            return;
-        }
-
-        // Register the tag explicitly
+        // Register the transient event tag explicitly.
         _app->world.template component<transient_event_tag>();
 
-        systems_extension->create<transient_event_tag>(
-            "event_automatic_cleanup",
-            "PostUpdate",
-            [](flecs::iter& iterator) {
+        // Create the cleanup system under a reserved internal path that does not collide
+        // with user-controlled names.  Using the ::__internal:: scope keeps it out of
+        // both ::events:: (managed by events::destroy/enable/disable) and ::systems::
+        // (managed by systems::destroy/enable/disable), so it cannot be accidentally
+        // removed or disabled by user code.
+        //
+        // The system runs at flecs::PostUpdate so transient entities live for exactly
+        // one frame: they are created and emitted during the frame, then cleaned up
+        // before the next frame begins.
+        //
+        // Entities are collected into a vector before destruction to avoid modifying
+        // the iteration table while the iterator is still active.
+        _app->world.template system<transient_event_tag>("::__internal::events_transient_cleanup")
+            .kind(flecs::PostUpdate)
+            .run([](flecs::iter& iterator) {
+                std::vector<flecs::entity> to_destroy;
                 while (iterator.next())
                 {
                     for (auto i : iterator)
                     {
-                        iterator.entity(i).destruct();
+                        to_destroy.push_back(iterator.entity(i));
                     }
                 }
-            }
-        );
+                for (auto& entity : to_destroy)
+                {
+                    entity.destruct();
+                }
+            });
     }
 
     void events::finalize()
@@ -38,18 +47,13 @@ namespace sandbox::extensions
 
     void events::destroy(std::string_view name)
     {
+        // Operate only on the ::events:: namespace where observer subscriptions live.
         const std::string absolute_path = "::events::" + std::string(name);
         auto subscriber_entity = _app->world.lookup(absolute_path.c_str());
 
         if (subscriber_entity.is_valid())
         {
             subscriber_entity.destruct();
-        }
-
-        auto* systems_extension = _app->get_systems();
-        if (systems_extension && systems_extension->exists(name))
-        {
-            systems_extension->destroy(name);
         }
     }
 
@@ -62,12 +66,6 @@ namespace sandbox::extensions
         {
             subscriber_entity.enable();
         }
-
-        auto* systems_extension = _app->get_systems();
-        if (systems_extension && systems_extension->exists(name))
-        {
-            systems_extension->enable(name);
-        }
     }
 
     void events::disable(std::string_view name)
@@ -79,42 +77,19 @@ namespace sandbox::extensions
         {
             subscriber_entity.disable();
         }
-
-        auto* systems_extension = _app->get_systems();
-        if (systems_extension && systems_extension->exists(name))
-        {
-            systems_extension->disable(name);
-        }
     }
 
     bool events::exists(std::string_view name) const
     {
+        // Check only the ::events:: namespace for observer subscriptions.
         const std::string absolute_path = "::events::" + std::string(name);
-        bool immediate_exists = _app->world.lookup(absolute_path.c_str()).is_valid();
-
-        auto* systems_extension = _app->get_systems();
-        bool staged_exists = systems_extension && systems_extension->exists(name);
-
-        return immediate_exists || staged_exists;
+        return _app->world.lookup(absolute_path.c_str()).is_valid();
     }
 
     bool events::enabled(std::string_view name) const
     {
         const std::string absolute_path = "::events::" + std::string(name);
         auto subscriber_entity = _app->world.lookup(absolute_path.c_str());
-
-        bool is_enabled = false;
-        if (subscriber_entity.is_valid() && subscriber_entity.enabled())
-        {
-            is_enabled = true;
-        }
-
-        auto* systems_extension = _app->get_systems();
-        if (systems_extension && systems_extension->exists(name) && systems_extension->enabled(name))
-        {
-            is_enabled = true;
-        }
-
-        return is_enabled;
+        return subscriber_entity.is_valid() && subscriber_entity.enabled();
     }
 }

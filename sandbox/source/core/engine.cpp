@@ -90,6 +90,7 @@ namespace sandbox
             {
                 if(get_logger()) get_logger()->debug("engine: finalizing extension category='{}'", category);
                 extension_pointer->finalize();
+                extension_pointer->_app = nullptr;
             }
 
             extension_entity.destruct();
