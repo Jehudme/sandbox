@@ -30,16 +30,6 @@ namespace sandbox::extensions
         auto entity =_app->world.entity("::extension::logger").disable();
     }
 
-    bool sandbox::extensions::logger::exists() const
-    {
-        if (this->_app == nullptr) return false;
-
-        flecs::entity extension_logger_entity = this->_app->world.lookup("::extension::logger");
-        return extension_logger_entity.is_valid()
-            && extension_logger_entity.has<std::unique_ptr<sandbox::logger>>()
-            && static_cast<bool>(extension_logger_entity.get<std::unique_ptr<sandbox::logger>>());
-    }
-
     bool logger::enabled() const
     {
         return _app->world.lookup("::extension::logger").enabled();

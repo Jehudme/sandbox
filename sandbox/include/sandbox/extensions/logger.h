@@ -34,7 +34,6 @@ namespace sandbox::extensions
         void enable() const;
         void disable() const;
 
-        bool exists() const;
         bool enabled() const;
     };
 }
