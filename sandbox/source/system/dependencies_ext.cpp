@@ -1,4 +1,4 @@
-#include "sandbox/system/dependencies.h"
+#include "sandbox/system/dependencies_ext.h"
 #include "sandbox/diagnostics/logger.h"
 #include "sandbox/core/engine.h"
 #include "sandbox/core/properties.h"

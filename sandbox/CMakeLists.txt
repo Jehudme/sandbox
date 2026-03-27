@@ -61,44 +61,44 @@ add_library(sandbox STATIC
         source/core/properties.cpp
 
         # ECS (Automated Flecs Wrappers)
-        include/sandbox/ecs/systems.h
-        include/sandbox/ecs/systems.inl
-        source/ecs/systems.cpp
-        include/sandbox/ecs/triggers.h
-        include/sandbox/ecs/triggers.inl
-        source/ecs/triggers.cpp
-        include/sandbox/ecs/events.h
-        include/sandbox/ecs/events.inl
-        source/ecs/events.cpp
-        include/sandbox/ecs/stages.h
-        source/ecs/stages.cpp
-        include/sandbox/ecs/scopes.h
-        source/ecs/scopes.cpp
+        include/sandbox/ecs/systems_ext.h
+        include/sandbox/ecs/systems_ext.inl
+        source/ecs/systems_ext.cpp
+        include/sandbox/ecs/triggers_ext.h
+        include/sandbox/ecs/triggers_ext.inl
+        source/ecs/triggers_ext.cpp
+        include/sandbox/ecs/events_ext.h
+        include/sandbox/ecs/events_ext.inl
+        source/ecs/events_ext.cpp
+        include/sandbox/ecs/stages_ext.h
+        source/ecs/stages_ext.cpp
+        include/sandbox/ecs/scopes_ext.h
+        source/ecs/scopes_ext.cpp
 
         # DATA (Memory & Reflection)
-        include/sandbox/data/caches.h
-        include/sandbox/data/caches.inl
-        source/data/caches.cpp
-        include/sandbox/data/storage.h
-        include/sandbox/data/storage.inl
-        source/data/storage.cpp
+        include/sandbox/data/caches_ext.h
+        include/sandbox/data/caches_ext.inl
+        source/data/caches_ext.cpp
+        include/sandbox/data/storage_ext.h
+        include/sandbox/data/storage_ext.inl
+        source/data/storage_ext.cpp
         include/sandbox/data/registry.h
         include/sandbox/data/registry.inl
         source/data/registry.cpp
         include/sandbox/data/registration.h
 
         # IO (Files & Serialization)
-        include/sandbox/io/filesystem.h
-        source/io/filesystem.cpp
-        include/sandbox/io/serializer.h
-        include/sandbox/io/serializer.inl
-        source/io/serializer.cpp
+        include/sandbox/io/filesystem_ext.h
+        source/io/filesystem_ext.cpp
+        include/sandbox/io/serializer_ext.h
+        include/sandbox/io/serializer_ext.inl
+        source/io/serializer_ext.cpp
 
         # SYSTEM (Engine Services)
-        include/sandbox/system/clock.h
-        source/system/clock.cpp
-        include/sandbox/system/dependencies.h
-        source/system/dependencies.cpp
+        include/sandbox/system/clock_ext.h
+        source/system/clock_ext.cpp
+        include/sandbox/system/dependencies_ext.h
+        source/system/dependencies_ext.cpp
 
         # DIAGNOSTICS
         include/sandbox/diagnostics/logger.h
@@ -107,8 +107,8 @@ add_library(sandbox STATIC
         include/sandbox/diagnostics/scoped_logger.h
         include/sandbox/diagnostics/scoped_logger.inl
         source/diagnostics/scoped_logger.cpp
-        include/sandbox/diagnostics/diagnostics.h
-        source/diagnostics/diagnostics.cpp
+        include/sandbox/diagnostics/diagnostics_ext.h
+        source/diagnostics/diagnostics_ext.cpp
 )
 
 target_compile_features(sandbox PUBLIC cxx_std_23)

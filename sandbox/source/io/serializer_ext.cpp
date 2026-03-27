@@ -1,7 +1,7 @@
-#include "sandbox/io/serializer.h"
+#include "sandbox/io/serializer_ext.h"
 #include "sandbox/diagnostics/logger.h"
-#include "sandbox/ecs/systems.h"
-#include "sandbox/io/filesystem.h"
+#include "sandbox/ecs/systems_ext.h"
+#include "sandbox/io/filesystem_ext.h"
 #include "sandbox/core/engine.h"
 #include "sandbox/core/properties.h"
 

@@ -27,4 +27,4 @@ namespace sandbox::extensions
     };
 }
 
-#include "serializer.inl"
+#include "serializer_ext.inl"

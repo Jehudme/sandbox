@@ -1,6 +1,6 @@
-#include "sandbox/system/clock.h"
+#include "sandbox/system/clock_ext.h"
 #include "sandbox/diagnostics/logger.h"
-#include "sandbox/ecs/systems.h"
+#include "sandbox/ecs/systems_ext.h"
 #include "sandbox/core/engine.h"
 #include "sandbox/core/properties.h"
 

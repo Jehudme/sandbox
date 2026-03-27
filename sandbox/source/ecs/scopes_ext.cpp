@@ -1,4 +1,4 @@
-#include "sandbox/ecs/scopes.h"
+#include "sandbox/ecs/scopes_ext.h"
 #include "sandbox/diagnostics/logger.h"
 #include "sandbox/core/engine.h"
 #include "sandbox/core/properties.h"

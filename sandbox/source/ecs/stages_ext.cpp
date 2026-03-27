@@ -1,4 +1,4 @@
-#include "sandbox/ecs/stages.h"
+#include "sandbox/ecs/stages_ext.h"
 #include "sandbox/diagnostics/logger.h"
 #include "sandbox/core/engine.h"
 #include "sandbox/core/properties.h"

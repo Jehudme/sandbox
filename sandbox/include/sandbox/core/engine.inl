@@ -3,7 +3,7 @@
 #include <flecs.h>
 
 #include "extension.h"
-#include "sandbox/data/caches.h"
+#include "sandbox/data/caches_ext.h"
 
 namespace sandbox
 {

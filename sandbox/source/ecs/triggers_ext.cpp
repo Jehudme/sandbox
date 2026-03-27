@@ -1,5 +1,5 @@
-#include "sandbox/ecs/triggers.h"
-#include "sandbox/data/caches.h"
+#include "sandbox/ecs/triggers_ext.h"
+#include "sandbox/data/caches_ext.h"
 #include "sandbox/core/engine.h"
 #include "sandbox/core/properties.h"
 
