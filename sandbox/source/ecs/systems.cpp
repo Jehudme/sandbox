@@ -1,7 +1,7 @@
 #include "sandbox/extensions/systems.h"
 #include "sandbox/extensions/caches.h"
 #include "sandbox/core/engine.h"
-#include "sandbox/filesystem/properties.h"
+#include "../../include/sandbox/core/properties.h"
 
 namespace sandbox::extensions
 {

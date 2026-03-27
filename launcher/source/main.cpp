@@ -3,7 +3,7 @@
 #include <chrono>
 #include <filesystem>
 
-#include "sandbox/reflections/registration.h"
+#include "sandbox/sandbox.h"
 
 struct position
 {

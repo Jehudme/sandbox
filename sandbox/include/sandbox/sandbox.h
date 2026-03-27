@@ -1,30 +1,37 @@
 #pragma once
 
-// filesystem
-#include "filesystem/properties.h"
+/**
+ * Sandbox Meta-Engine Master Header
+ * Version: 0.1.0
+ */
 
-// diagnostics
-#include "diagnostics/logger.h"
-#include "diagnostics/scoped_logger.h"
+// --- CORE ---
+#include "sandbox/core/engine.h"
+#include "sandbox/core/extension.h"
+#include "sandbox/core/properties.h"
 
-// reflections
-#include "reflections/registry.h"
+// --- ECS (Automated Flecs Wrappers) ---
+#include "sandbox/ecs/systems.h"
+#include "sandbox/ecs/triggers.h"
+#include "sandbox/ecs/events.h"
+#include "sandbox/ecs/stages.h"
+#include "sandbox/ecs/scopes.h"
 
-// core
-#include "core/extension.h"
-#include "core/engine.h"
+// --- DATA (Memory & Metadata) ---
+#include "sandbox/data/caches.h"
+#include "sandbox/data/storage.h"
+#include "sandbox/data/registry.h"
+#include "sandbox/data/registration.h"
 
-// extensions
-#include "extensions/logger.h"
-#include "extensions/scopes.h"
-#include "extensions/stages.h"
-#include "extensions/systems.h"
-#include "extensions/triggers.h"
-#include "extensions/storage.h"
-#include "extensions/events.h"
-#include "extensions/caches.h"
-#include "extensions/clock.h"
-#include "extensions/filesystems.h"
-#include "extensions/dependencies.h"
-#include "extensions/serializer.h"
-#include "extensions/diagnostics.h"
+// --- IO (Files & Serialization) ---
+#include "sandbox/io/filesystem.h"
+#include "sandbox/io/serializer.h"
+
+// --- SYSTEM (Engine Services) ---
+#include "sandbox/system/clock.h"
+#include "sandbox/system/dependencies.h"
+
+// --- DIAGNOSTICS ---
+#include "sandbox/diagnostics/logger.h"
+#include "sandbox/diagnostics/scoped_logger.h"
+#include "sandbox/diagnostics/diagnostics.h"

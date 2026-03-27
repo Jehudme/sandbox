@@ -1,7 +1,7 @@
 #include "sandbox/core/engine.h"
 #include "sandbox/core/extension.h"
 #include "sandbox/extensions/caches.h"
-#include "sandbox/filesystem/properties.h"
+#include "../../include/sandbox/core/properties.h"
 #include "sandbox/reflections/registry.h"
 #include "sandbox/reflections/registration.h"
 #include "sandbox/extensions/logger.h"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sandbox/filesystem/properties.h"
+#include "properties.h"
 #include <memory>
 
 namespace sandbox

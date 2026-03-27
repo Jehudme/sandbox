@@ -3,7 +3,7 @@
 #include <string_view>
 #include <flecs.h>
 
-#include "sandbox/filesystem/properties.h"
+#include "properties.h"
 
 namespace sandbox
 {

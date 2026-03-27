@@ -47,62 +47,67 @@ FetchContent_MakeAvailable(rttr spdlog glaze flecs)
 
 add_library(sandbox STATIC
         include/sandbox/sandbox.h
+        include/sandbox/pch.h
 
-        include/sandbox/filesystem/properties.h
-        include/sandbox/filesystem/properties.inl
-        source/filesystem/properties.cpp
-
-        source/diagnostics/logger.cpp
-        include/sandbox/diagnostics/logger.h
-        include/sandbox/diagnostics/logger.inl
-
-        source/diagnostics/scoped_logger.cpp
-        include/sandbox/diagnostics/scoped_logger.h
-        include/sandbox/diagnostics/scoped_logger.inl
-
-        source/reflections/registry.cpp
-        include/sandbox/reflections/registry.h
-        include/sandbox/reflections/registry.inl
-        include/sandbox/reflections/registration.h
-
-        source/core/extension.cpp
+        # CORE
         include/sandbox/core/extension.h
-
-        source/core/engine.cpp
+        source/core/extension.cpp
         include/sandbox/core/engine.h
         include/sandbox/core/engine.inl
-        include/sandbox/extensions/logger.h
-        include/sandbox/extensions/logger.inl
-        source/extensions/logger.cpp
-        include/sandbox/extensions/scopes.h
-        source/extensions/scopes.cpp
-        source/extensions/systems.cpp
-        include/sandbox/extensions/systems.h
-        include/sandbox/extensions/systems.inl
-        source/extensions/stages.cpp
-        include/sandbox/extensions/stages.h
-        source/extensions/triggers.cpp
-        include/sandbox/extensions/triggers.h
-        include/sandbox/extensions/triggers.inl
-        source/extensions/events.cpp
-        include/sandbox/extensions/events.h
-        include/sandbox/extensions/events.inl
-        source/extensions/storage.cpp
-        include/sandbox/extensions/storage.h
-        include/sandbox/extensions/storage.inl
-        source/extensions/caches.cpp
-        include/sandbox/extensions/caches.h
-        include/sandbox/extensions/caches.inl
-        include/sandbox/extensions/filesystems.cpp
-        include/sandbox/extensions/filesystems.h
-        include/sandbox/extensions/clock.cpp
-        include/sandbox/extensions/clock.h
-        include/sandbox/extensions/dependencies.cpp
-        include/sandbox/extensions/dependencies.h
-        include/sandbox/extensions/serializer.cpp
-        include/sandbox/extensions/serializer.h
-        include/sandbox/extensions/diagnostics.cpp
-        include/sandbox/extensions/diagnostics.h
+        source/core/engine.cpp
+        include/sandbox/core/properties.h
+        include/sandbox/core/properties.inl
+        source/core/properties.cpp
+
+        # ECS (Automated Flecs Wrappers)
+        include/sandbox/ecs/systems.h
+        include/sandbox/ecs/systems.inl
+        source/ecs/systems.cpp
+        include/sandbox/ecs/triggers.h
+        include/sandbox/ecs/triggers.inl
+        source/ecs/triggers.cpp
+        include/sandbox/ecs/events.h
+        include/sandbox/ecs/events.inl
+        source/ecs/events.cpp
+        include/sandbox/ecs/stages.h
+        source/ecs/stages.cpp
+        include/sandbox/ecs/scopes.h
+        source/ecs/scopes.cpp
+
+        # DATA (Memory & Reflection)
+        include/sandbox/data/caches.h
+        include/sandbox/data/caches.inl
+        source/data/caches.cpp
+        include/sandbox/data/storage.h
+        include/sandbox/data/storage.inl
+        source/data/storage.cpp
+        include/sandbox/data/registry.h
+        include/sandbox/data/registry.inl
+        source/data/registry.cpp
+        include/sandbox/data/registration.h
+
+        # IO (Files & Serialization)
+        include/sandbox/io/filesystem.h
+        source/io/filesystem.cpp
+        include/sandbox/io/serializer.h
+        include/sandbox/io/serializer.inl
+        source/io/serializer.cpp
+
+        # SYSTEM (Engine Services)
+        include/sandbox/system/clock.h
+        source/system/clock.cpp
+        include/sandbox/system/dependencies.h
+        source/system/dependencies.cpp
+
+        # DIAGNOSTICS
+        include/sandbox/diagnostics/logger.h
+        include/sandbox/diagnostics/logger.inl
+        source/diagnostics/logger.cpp
+        include/sandbox/diagnostics/scoped_logger.h
+        include/sandbox/diagnostics/scoped_logger.inl
+        source/diagnostics/scoped_logger.cpp
+        include/sandbox/diagnostics/diagnostics.h
+        source/diagnostics/diagnostics.cpp
 )
 
 target_compile_features(sandbox PUBLIC cxx_std_23)
