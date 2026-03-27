@@ -161,14 +161,14 @@ int main()
     if (ext_events)
     {
         ext_events->subscribe<player_spawned_event>("on_player_spawned",
-            [](flecs::entity entity, player_spawned_event& event_data) {
+            [](player_spawned_event& event_data) {
                 SANDBOX_LOG_INFO("immediate event received: player='{}' at ({:.2f}, {:.2f})",
                     event_data.player_name, event_data.spawn_x, event_data.spawn_y);
             }
         );
 
         ext_events->subscribe<player_spawned_event>("on_player_spawned_staged", "physics_stage",
-            [](flecs::entity entity, player_spawned_event& event_data) {
+            [](player_spawned_event& event_data) {
                 SANDBOX_LOG_INFO("staged event received in physics_stage: player='{}' at ({:.2f}, {:.2f})",
                     event_data.player_name, event_data.spawn_x, event_data.spawn_y);
             }

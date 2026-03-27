@@ -32,13 +32,13 @@ namespace sandbox
         create_extension("storage", "default_storage_extension");
         create_extension("events", "default_events_extension");
 
-        initialize_extension("logger", configuration);
-        initialize_extension("scopes", configuration);
-        initialize_extension("stages", configuration);
-        initialize_extension("systems", configuration);
-        initialize_extension("triggers", configuration);
-        initialize_extension("storage", configuration);
-        initialize_extension("events", configuration);
+        initialize_extension("logger", configuration.sub_properties({"logger"}));
+        initialize_extension("scopes");
+        initialize_extension("stages");
+        initialize_extension("systems");
+        initialize_extension("triggers");
+        initialize_extension("storage");
+        initialize_extension("events");
         
         get_extension<extensions::logger>("logger")->info("engine: initialized");
     }

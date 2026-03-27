@@ -3,6 +3,8 @@
 #include <string_view>
 #include <flecs.h>
 
+#include "sandbox/filesystem/properties.h"
+
 namespace sandbox
 {
     namespace extensions
@@ -34,7 +36,7 @@ namespace sandbox
         void create_extension(std::string_view category, std::string_view identifier);
         void delete_extension(std::string_view category);
 
-        void initialize_extension(std::string_view name, const properties& configuration);
+        void initialize_extension(std::string_view name, const properties& props = properties());
         void finalize_extension(std::string_view name);
 
         template<typename derived_type>

@@ -1,11 +1,32 @@
 #include "sandbox/extensions/events.h"
 #include "sandbox/core/engine.h"
 #include "sandbox/filesystem/properties.h"
+#include "sandbox/extensions/logger.h"
+#include "sandbox/extensions/systems.h"
 
 namespace sandbox::extensions
 {
-    void events::initialize(const sandbox::properties& props)
+    void events::initialize(const sandbox::properties& properties)
     {
+        auto* systems_extension = _app->get_systems();
+        if (!systems_extension)
+        {
+            return;
+        }
+
+        // Register the tag explicitly
+        _app->world.template component<transient_event_tag>();
+
+        systems_extension->create<transient_event_tag>(
+            "event_automatic_cleanup",
+            "PostUpdate",
+            [](flecs::iter& iterator) {
+                for (auto i : iterator)
+                {
+                    iterator.entity(i).destruct();
+                }
+            }
+        );
     }
 
     void events::finalize()
@@ -15,16 +36,18 @@ namespace sandbox::extensions
     void events::destroy(std::string_view name)
     {
         const std::string absolute_path = "::events::" + std::string(name);
-        _app->get_logger()->info("extensions::events: destroying subscriber '{}'", absolute_path);
-
         auto subscriber_entity = _app->world.lookup(absolute_path.c_str());
-        if (!subscriber_entity.is_valid())
+
+        if (subscriber_entity.is_valid())
         {
-            _app->get_logger()->warn("extensions::events: subscriber '{}' not found", absolute_path);
-            return;
+            subscriber_entity.destruct();
         }
 
-        subscriber_entity.destruct();
+        auto* systems_extension = _app->get_systems();
+        if (systems_extension && systems_extension->exists(name))
+        {
+            systems_extension->destroy(name);
+        }
     }
 
     void events::enable(std::string_view name)
@@ -32,14 +55,16 @@ namespace sandbox::extensions
         const std::string absolute_path = "::events::" + std::string(name);
         auto subscriber_entity = _app->world.lookup(absolute_path.c_str());
 
-        if (!subscriber_entity.is_valid())
+        if (subscriber_entity.is_valid())
         {
-            _app->get_logger()->warn("extensions::events: subscriber '{}' not found for enable", absolute_path);
-            return;
+            subscriber_entity.enable();
         }
 
-        subscriber_entity.enable();
-        _app->get_logger()->debug("extensions::events: enabled subscriber '{}'", absolute_path);
+        auto* systems_extension = _app->get_systems();
+        if (systems_extension && systems_extension->exists(name))
+        {
+            systems_extension->enable(name);
+        }
     }
 
     void events::disable(std::string_view name)
@@ -47,26 +72,46 @@ namespace sandbox::extensions
         const std::string absolute_path = "::events::" + std::string(name);
         auto subscriber_entity = _app->world.lookup(absolute_path.c_str());
 
-        if (!subscriber_entity.is_valid())
+        if (subscriber_entity.is_valid())
         {
-            _app->get_logger()->warn("extensions::events: subscriber '{}' not found for disable", absolute_path);
-            return;
+            subscriber_entity.disable();
         }
 
-        subscriber_entity.disable();
-        _app->get_logger()->debug("extensions::events: disabled subscriber '{}'", absolute_path);
+        auto* systems_extension = _app->get_systems();
+        if (systems_extension && systems_extension->exists(name))
+        {
+            systems_extension->disable(name);
+        }
     }
 
     bool events::exists(std::string_view name) const
     {
         const std::string absolute_path = "::events::" + std::string(name);
-        return _app->world.lookup(absolute_path.c_str()).is_valid();
+        bool immediate_exists = _app->world.lookup(absolute_path.c_str()).is_valid();
+
+        auto* systems_extension = _app->get_systems();
+        bool staged_exists = systems_extension && systems_extension->exists(name);
+
+        return immediate_exists || staged_exists;
     }
 
     bool events::enabled(std::string_view name) const
     {
         const std::string absolute_path = "::events::" + std::string(name);
         auto subscriber_entity = _app->world.lookup(absolute_path.c_str());
-        return subscriber_entity.is_valid() && subscriber_entity.enabled();
+
+        bool is_enabled = false;
+        if (subscriber_entity.is_valid() && subscriber_entity.enabled())
+        {
+            is_enabled = true;
+        }
+
+        auto* systems_extension = _app->get_systems();
+        if (systems_extension && systems_extension->exists(name) && systems_extension->enabled(name))
+        {
+            is_enabled = true;
+        }
+
+        return is_enabled;
     }
 }

@@ -12,8 +12,8 @@ namespace sandbox::extensions
 
         auto logger = std::make_unique<sandbox::logger>(name, sandbox::logger::string_to_level(level), async);
 
-        _app->world.lookup("::extensions::logger").set(std::move(logger));
-        _app->get_logger()->info("extensions::logger: initialized name='{}' level='{}'", name, level); enable();
+        _app->world.lookup("::extensions::logger").set(std::move(logger)); enable();
+        _app->get_logger()->info("extensions::logger: initialized name='{}' level='{}'", name, level);
     }
 
     void logger::finalize()

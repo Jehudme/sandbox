@@ -5,10 +5,12 @@
 
 namespace sandbox::extensions
 {
+    struct transient_event_tag {};
+
     class events : public sandbox::extension
     {
     public:
-        void initialize(const sandbox::properties& props) override;
+        void initialize(const sandbox::properties& properties) override;
         void finalize() override;
 
         template<typename event_type>
