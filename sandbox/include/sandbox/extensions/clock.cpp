@@ -11,7 +11,7 @@ namespace sandbox::extensions
 {
     namespace
     {
-        constexpr float kDefaultFixedDt = 1.0f / 60.0f;
+        constexpr float kDefaultFixedDeltaTime = 1.0f / 60.0f;
 
         float compute_safe_delta_time(const flecs::iter& it, const ecs_world_info_t* info)
         {
@@ -57,7 +57,7 @@ namespace sandbox::extensions
 
         state initial {
             .dt          = 0.0f,
-            .fixed_dt    = props.get<float>({"fixed_dt"}).value_or(kDefaultFixedDt),
+            .fixed_dt    = props.get<float>({"fixed_dt"}).value_or(kDefaultFixedDeltaTime),
             .total_time  = 0.0f,
             .time_scale  = props.get<float>({"time_scale"}).value_or(1.0f),
             .accumulator = 0.0f
@@ -65,7 +65,7 @@ namespace sandbox::extensions
 
         if (initial.fixed_dt <= 0.0f)
         {
-            initial.fixed_dt = kDefaultFixedDt;
+            initial.fixed_dt = kDefaultFixedDeltaTime;
             if (log) log->warn("extensions::clock: invalid fixed_dt provided; defaulting to 1/60s");
         }
 

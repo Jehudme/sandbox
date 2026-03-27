@@ -99,6 +99,11 @@ namespace sandbox::extensions
                 // Snapshot component data to avoid mutating live ECS storage while reflecting.
                 // WARNING: this generic serializer expects components to be trivially copyable; complex components
                 // should supply specialized serialization to avoid undefined behavior.
+                if (!(comp_type.is_arithmetic() || comp_type.is_enumeration()))
+                {
+                    if (log) log->warn("extensions::serializer: '{}' is not trivially copyable; skipping generic serialization", comp_name);
+                    return;
+                }
                 std::vector<std::byte> component_snapshot(comp_size);
                 std::memcpy(component_snapshot.data(), data_ptr, comp_size);
 
