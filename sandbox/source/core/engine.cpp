@@ -113,9 +113,10 @@ namespace sandbox
             auto& extension_pointer = extension_entity.get_mut<std::unique_ptr<extension>>();
             if (extension_pointer)
             {
+                extension* raw_extension = extension_pointer.get();
                 if(get_logger()) get_logger()->debug("engine: finalizing extension category='{}'", category);
-                extension_pointer->finalize();
-                extension_pointer->_app = nullptr;
+                raw_extension->finalize();
+                raw_extension->_app = nullptr;
             }
 
             extension_entity.destruct();

@@ -6,6 +6,7 @@
 #include "sandbox/filesystem/properties.h"
 
 #include <algorithm>
+#include <vector>
 
 namespace sandbox::extensions
 {
@@ -22,11 +23,15 @@ namespace sandbox::extensions
 
         void process_time_scale_requests(flecs::world world, clock::state& data, float dt, sandbox::extensions::logger* log)
         {
-            auto request_query = world.query_builder<clock::time_scale_request>().build();
-
-            request_query.each(
-                [&](flecs::entity e, clock::time_scale_request& request)
+            std::vector<flecs::entity> completed_requests;
+            const auto request_id = flecs::_::type<clock::time_scale_request>::id(world);
+            ecs_iter_t request_it = ecs_each_id(world.c_ptr(), request_id);
+            while (ecs_each_next(&request_it))
+            {
+                auto* requests = ecs_field(&request_it, clock::time_scale_request, 0);
+                for (int i = 0; i < request_it.count; ++i)
                 {
+                    auto& request = requests[i];
                     const float delta_scale = request.lerp_speed * dt;
                     const float difference  = request.target_scale - data.time_scale;
 
@@ -34,14 +39,20 @@ namespace sandbox::extensions
                     {
                         data.time_scale = request.target_scale;
                         if (log) log->debug("extensions::clock: time scale snapped to target={}", request.target_scale);
-                        e.remove<clock::time_scale_request>();
+                        completed_requests.emplace_back(world, request_it.entities[i]);
                     }
                     else
                     {
                         data.time_scale += (difference > 0.0f ? delta_scale : -delta_scale);
                         if (log) log->debug("extensions::clock: time scale adjusted to {}", data.time_scale);
                     }
-                });
+                }
+            }
+
+            for (auto& entity : completed_requests)
+            {
+                entity.remove<clock::time_scale_request>();
+            }
         }
     }
 
@@ -87,41 +98,43 @@ namespace sandbox::extensions
             [](auto& builder) { builder.kind(flecs::PreUpdate); },
             [this](flecs::iter& it)
             {
-                auto states = it.field<state>(0);
                 auto* log = _app ? _app->get_logger() : nullptr;
-                auto* info = ecs_get_world_info(it.world());
-                for (auto row : it)
+                while (it.next())
                 {
-                    auto& data = states[row];
-                    const float raw_dt = compute_safe_delta_time(it, info);
-
-                    process_time_scale_requests(it.world(), data, raw_dt, log);
-
-                    data.dt = raw_dt * data.time_scale;
-                    data.total_time += data.dt;
-                    data.accumulator += data.dt;
-
-                    // Emit as many fixed pulses as needed to catch up
-                    constexpr int kMaxPulsesPerFrame = 8;
-                    int pulse_count = 0;
-                    while (data.accumulator >= data.fixed_dt && pulse_count < kMaxPulsesPerFrame)
+                    auto states = it.field<state>(0);
+                    auto* info = ecs_get_world_info(it.world());
+                    for (auto row : it)
                     {
-                        data.accumulator -= data.fixed_dt;
-                        it.world().event<fixed_update_tag>().id<fixed_update_tag>().emit();
-                        ++pulse_count;
-                    }
+                        auto& data = states[row];
+                        const float raw_dt = compute_safe_delta_time(it, info);
 
-                    if (pulse_count >= kMaxPulsesPerFrame && data.accumulator >= data.fixed_dt)
-                    {
-                        // Avoid spiral-of-death by discarding excessive backlog.
-                        data.accumulator = 0.0f;
-                        if (log) log->warn("extensions::clock: fixed-update pulses clamped to {} in one frame", kMaxPulsesPerFrame);
-                    }
+                        process_time_scale_requests(it.world(), data, raw_dt, log);
 
-                    if (log && pulse_count > 0)
-                    {
-                        log->debug("extensions::clock: emitted {} fixed pulses (dt={}, fixed_dt={})",
-                                   pulse_count, data.dt, data.fixed_dt);
+                        data.dt = raw_dt * data.time_scale;
+                        data.total_time += data.dt;
+                        data.accumulator += data.dt;
+
+                        // Emit as many fixed pulses as needed to catch up
+                        constexpr int kMaxPulsesPerFrame = 8;
+                        int pulse_count = 0;
+                        while (data.accumulator >= data.fixed_dt && pulse_count < kMaxPulsesPerFrame)
+                        {
+                            data.accumulator -= data.fixed_dt;
+                            ++pulse_count;
+                        }
+
+                        if (pulse_count >= kMaxPulsesPerFrame && data.accumulator >= data.fixed_dt)
+                        {
+                            // Avoid spiral-of-death by discarding excessive backlog.
+                            data.accumulator = 0.0f;
+                            if (log) log->warn("extensions::clock: fixed-update pulses clamped to {} in one frame", kMaxPulsesPerFrame);
+                        }
+
+                        if (log && pulse_count > 0)
+                        {
+                            log->debug("extensions::clock: emitted {} fixed pulses (dt={}, fixed_dt={})",
+                                       pulse_count, data.dt, data.fixed_dt);
+                        }
                     }
                 }
             }

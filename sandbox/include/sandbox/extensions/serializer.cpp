@@ -184,32 +184,41 @@ namespace sandbox::extensions
             [](auto& builder) { builder.kind(flecs::PostUpdate); },
             [this](flecs::iter& it)
             {
-                auto requests = it.field<save_request>(0);
                 auto* log = _app ? _app->get_logger() : nullptr;
                 auto cfg = load_config(it.world());
                 const auto root = std::filesystem::path(cfg.root_dir);
+                std::vector<flecs::entity> completed_requests;
 
-                for (auto row : it)
+                while (it.next())
                 {
-                    auto entity = it.entity(row);
-                    auto serialized = serialize_entity(entity, log);
-                    if (!serialized) continue;
-
-                    std::string output;
-                    auto err = glz::write_json(*serialized, output);
-                    if (err)
+                    auto requests = it.field<save_request>(0);
+                    for (auto row : it)
                     {
-                        if (log) log->error("extensions::serializer: failed to serialize entity '{}'", entity.name().c_str());
-                        continue;
+                        auto entity = it.entity(row);
+                        auto serialized = serialize_entity(entity, log);
+                        if (!serialized) continue;
+
+                        std::string output;
+                        auto err = glz::write_json(*serialized, output);
+                        if (err)
+                        {
+                            if (log) log->error("extensions::serializer: failed to serialize entity '{}'", entity.name().c_str());
+                            continue;
+                        }
+
+                        std::filesystem::path out_path = root / requests[row].filename;
+                        ensure_directory(out_path);
+
+                        std::ofstream stream(out_path, std::ios::binary);
+                        stream << output;
+
+                        if (log) log->info("extensions::serializer: saved entity '{}' -> '{}'", entity.name().c_str(), out_path.string());
+                        completed_requests.push_back(entity);
                     }
+                }
 
-                    std::filesystem::path out_path = root / requests[row].filename;
-                    ensure_directory(out_path);
-
-                    std::ofstream stream(out_path, std::ios::binary);
-                    stream << output;
-
-                    if (log) log->info("extensions::serializer: saved entity '{}' -> '{}'", entity.name().c_str(), out_path.string());
+                for (auto& entity : completed_requests)
+                {
                     entity.remove<save_request>();
                 }
             }
@@ -221,65 +230,74 @@ namespace sandbox::extensions
             [](auto& builder) { builder.kind(flecs::PostUpdate); },
             [this](flecs::iter& it)
             {
-                auto requests = it.field<load_request>(0);
                 auto* log = _app ? _app->get_logger() : nullptr;
                 auto cfg = load_config(it.world());
                 const auto root = std::filesystem::path(cfg.root_dir);
+                std::vector<flecs::entity> completed_requests;
 
-                for (auto row : it)
+                while (it.next())
                 {
-                    auto entity = it.entity(row);
-                    std::filesystem::path in_path = root / requests[row].filename;
-
-                    std::ifstream stream(in_path, std::ios::binary);
-                    if (!stream)
+                    auto requests = it.field<load_request>(0);
+                    for (auto row : it)
                     {
-                        if (log) log->warn("extensions::serializer: could not open '{}'", in_path.string());
-                        continue;
-                    }
+                        auto entity = it.entity(row);
+                        std::filesystem::path in_path = root / requests[row].filename;
 
-                    std::string json_content((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
-                    glz::json_t json_tree;
-                    if (auto err = glz::read_json(json_tree, json_content))
-                    {
-                        if (log) log->error("extensions::serializer: failed to parse '{}'", in_path.string());
-                        continue;
-                    }
-
-                    if (!json_tree.contains("components"))
-                        continue;
-
-                    for (const auto& [comp_name, comp_data] : json_tree["components"].get_object())
-                    {
-                        auto comp_type = rttr::type::get_by_name(comp_name.c_str());
-                        if (!comp_type.is_valid())
+                        std::ifstream stream(in_path, std::ios::binary);
+                        if (!stream)
                         {
-                            if (log) log->warn("extensions::serializer: component '{}' is not registered", comp_name);
+                            if (log) log->warn("extensions::serializer: could not open '{}'", in_path.string());
                             continue;
                         }
 
-                        auto comp_entity = it.world().lookup(comp_name.c_str());
-                        if (!comp_entity.is_valid())
+                        std::string json_content((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
+                        glz::json_t json_tree;
+                        if (auto err = glz::read_json(json_tree, json_content))
                         {
-                            comp_entity = it.world().component(comp_name.c_str());
+                            if (log) log->error("extensions::serializer: failed to parse '{}'", in_path.string());
+                            continue;
                         }
 
-                        void* comp_ptr = ecs_get_mut_id(it.world().c_ptr(), entity.id(), comp_entity.id());
-                        if (!comp_ptr)
+                        if (!json_tree.contains("components"))
                             continue;
 
-                        rttr::instance inst(comp_ptr);
-                        for (auto& prop : comp_type.get_properties())
+                        for (const auto& [comp_name, comp_data] : json_tree["components"].get_object())
                         {
-                            auto it_prop = comp_data.get_object().find(prop.get_name().to_string());
-                            if (it_prop != comp_data.get_object().end())
+                            auto comp_type = rttr::type::get_by_name(comp_name.c_str());
+                            if (!comp_type.is_valid())
                             {
-                                set_property_from_json(inst, prop, it_prop->second);
+                                if (log) log->warn("extensions::serializer: component '{}' is not registered", comp_name);
+                                continue;
+                            }
+
+                            auto comp_entity = it.world().lookup(comp_name.c_str());
+                            if (!comp_entity.is_valid())
+                            {
+                                comp_entity = it.world().component(comp_name.c_str());
+                            }
+
+                            void* comp_ptr = ecs_get_mut_id(it.world().c_ptr(), entity.id(), comp_entity.id());
+                            if (!comp_ptr)
+                                continue;
+
+                            rttr::instance inst(comp_ptr);
+                            for (auto& prop : comp_type.get_properties())
+                            {
+                                auto it_prop = comp_data.get_object().find(prop.get_name().to_string());
+                                if (it_prop != comp_data.get_object().end())
+                                {
+                                    set_property_from_json(inst, prop, it_prop->second);
+                                }
                             }
                         }
-                    }
 
-                    if (log) log->info("extensions::serializer: loaded entity '{}' from '{}'", entity.name().c_str(), in_path.string());
+                        if (log) log->info("extensions::serializer: loaded entity '{}' from '{}'", entity.name().c_str(), in_path.string());
+                        completed_requests.push_back(entity);
+                    }
+                }
+
+                for (auto& entity : completed_requests)
+                {
                     entity.remove<load_request>();
                 }
             }

@@ -203,7 +203,7 @@ int main()
         sandbox::extensions::request_load(loaded, "serial_entity.json");
         app.progress();
 
-        if (auto* pos = loaded.get_mut<position>())
+        if (auto* pos = loaded.try_get_mut<position>())
         {
             SANDBOX_LOG_INFO("serializer loaded position x={} y={}", pos->x, pos->y);
         }
