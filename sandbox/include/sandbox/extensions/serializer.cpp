@@ -92,12 +92,19 @@ namespace sandbox::extensions
                 }
 
                 const void* data_ptr = ecs_get_id(entity.world(), entity.id(), comp_entity.id());
-                if (!data_ptr)
+                const auto comp_size = comp_type.get_raw_type().get_sizeof();
+                if (!data_ptr || comp_size == 0)
                     return;
+
+                // Snapshot component data to avoid mutating live ECS storage while reflecting.
+                // WARNING: this generic serializer expects components to be trivially copyable; complex components
+                // should supply specialized serialization to avoid undefined behavior.
+                std::vector<std::byte> component_snapshot(comp_size);
+                std::memcpy(component_snapshot.data(), data_ptr, comp_size);
 
                 glz::json_t component_json = glz::json_t::object_t{};
 
-                rttr::instance instance(const_cast<void*>(data_ptr));
+                rttr::instance instance(component_snapshot.data());
                 for (auto& prop : comp_type.get_properties())
                 {
                     auto value = prop.get_value(instance);
@@ -226,9 +233,9 @@ namespace sandbox::extensions
                         continue;
                     }
 
-                    std::string buffer((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
+                    std::string json_content((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
                     glz::json_t json_tree;
-                    if (auto err = glz::read_json(json_tree, buffer))
+                    if (auto err = glz::read_json(json_tree, json_content))
                     {
                         if (log) log->error("extensions::serializer: failed to parse '{}'", in_path.string());
                         continue;

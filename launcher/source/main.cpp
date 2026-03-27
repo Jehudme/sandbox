@@ -41,7 +41,8 @@ int main()
 
     sandbox::properties config;
     config.set({"logger", "level"}, std::string("TRACE"));
-    config.set({"serializer", "root_dir"}, std::string("/tmp/sandbox_saves"));
+    const auto test_save_directory = std::filesystem::temp_directory_path() / "sandbox_saves";
+    config.set({"serializer", "root_dir"}, test_save_directory.string());
 
     sandbox::engine app;
     app.initialize(config);

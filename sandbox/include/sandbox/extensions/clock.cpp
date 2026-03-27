@@ -11,16 +11,18 @@ namespace sandbox::extensions
 {
     namespace
     {
-        float _safe_delta(const flecs::iter& it, const ecs_world_info_t* info)
+        constexpr float kDefaultFixedDt = 1.0f / 60.0f;
+
+        float compute_safe_delta_time(const flecs::iter& it, const ecs_world_info_t* info)
         {
             const float world_dt = info ? static_cast<float>(info->delta_time) : 0.0f;
             const float iter_dt  = static_cast<float>(it.delta_time());
             return iter_dt > 0.0f ? iter_dt : world_dt;
         }
 
-        void _apply_time_scale_requests(flecs::world world, clock::state& data, float dt, sandbox::extensions::logger* log)
+        void process_time_scale_requests(flecs::world world, clock::state& data, float dt, sandbox::extensions::logger* log)
         {
-            static flecs::query<clock::time_scale_request> request_query = world.query_builder<clock::time_scale_request>().build();
+            auto request_query = world.query_builder<clock::time_scale_request>().build();
 
             request_query.each(
                 [&](flecs::entity e, clock::time_scale_request& request)
@@ -55,7 +57,7 @@ namespace sandbox::extensions
 
         state initial {
             .dt          = 0.0f,
-            .fixed_dt    = props.get<float>({"fixed_dt"}).value_or(1.0f / 60.0f),
+            .fixed_dt    = props.get<float>({"fixed_dt"}).value_or(kDefaultFixedDt),
             .total_time  = 0.0f,
             .time_scale  = props.get<float>({"time_scale"}).value_or(1.0f),
             .accumulator = 0.0f
@@ -63,7 +65,7 @@ namespace sandbox::extensions
 
         if (initial.fixed_dt <= 0.0f)
         {
-            initial.fixed_dt = 1.0f / 60.0f;
+            initial.fixed_dt = kDefaultFixedDt;
             if (log) log->warn("extensions::clock: invalid fixed_dt provided; defaulting to 1/60s");
         }
 
@@ -91,21 +93,29 @@ namespace sandbox::extensions
                 for (auto row : it)
                 {
                     auto& data = states[row];
-                    const float raw_dt = _safe_delta(it, info);
+                    const float raw_dt = compute_safe_delta_time(it, info);
 
-                    _apply_time_scale_requests(it.world(), data, raw_dt, log);
+                    process_time_scale_requests(it.world(), data, raw_dt, log);
 
                     data.dt = raw_dt * data.time_scale;
                     data.total_time += data.dt;
                     data.accumulator += data.dt;
 
                     // Emit as many fixed pulses as needed to catch up
+                    constexpr int kMaxPulsesPerFrame = 8;
                     int pulse_count = 0;
-                    while (data.accumulator >= data.fixed_dt)
+                    while (data.accumulator >= data.fixed_dt && pulse_count < kMaxPulsesPerFrame)
                     {
                         data.accumulator -= data.fixed_dt;
                         it.world().event<fixed_update_tag>().id<fixed_update_tag>().emit();
                         ++pulse_count;
+                    }
+
+                    if (pulse_count >= kMaxPulsesPerFrame && data.accumulator >= data.fixed_dt)
+                    {
+                        // Avoid spiral-of-death by discarding excessive backlog.
+                        data.accumulator = 0.0f;
+                        if (log) log->warn("extensions::clock: fixed-update pulses clamped to {} in one frame", kMaxPulsesPerFrame);
                     }
 
                     if (log && pulse_count > 0)

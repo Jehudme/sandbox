@@ -10,16 +10,16 @@ namespace sandbox::extensions
 {
     namespace
     {
-        dependencies::state* _get_state(flecs::world world, const char* entity_path)
+        dependencies::state& get_or_create_state(flecs::world world, const char* entity_path)
         {
             auto dep_entity = world.lookup(entity_path);
             if (dep_entity.is_valid())
             {
-                return &dep_entity.get_mut<dependencies::state>();
+                return dep_entity.get_mut<dependencies::state>();
             }
 
             // Fallback to singleton storage on the world
-            return &world.get_mut<dependencies::state>();
+            return world.get_mut<dependencies::state>();
         }
     }
 
@@ -66,12 +66,11 @@ namespace sandbox::extensions
     {
         if (!_app) return;
 
-        auto* dep_state = _get_state(_app->world, "::extensions::dependencies");
-        if (!dep_state) return;
+        auto& dep_state = get_or_create_state(_app->world, "::extensions::dependencies");
 
-        if (std::find(dep_state->requirements.begin(), dep_state->requirements.end(), extension_name) == dep_state->requirements.end())
+        if (std::find(dep_state.requirements.begin(), dep_state.requirements.end(), extension_name) == dep_state.requirements.end())
         {
-            dep_state->requirements.emplace_back(extension_name);
+            dep_state.requirements.emplace_back(extension_name);
         }
 
         validate();
@@ -82,11 +81,9 @@ namespace sandbox::extensions
         if (!_app) return;
 
         auto* log = _app->get_logger();
-        auto* dep_state = _get_state(_app->world, "::extensions::dependencies");
-        if (!dep_state) return;
-
+        auto& dep_state = get_or_create_state(_app->world, "::extensions::dependencies");
         bool all_present = true;
-        for (const auto& requirement : dep_state->requirements)
+        for (const auto& requirement : dep_state.requirements)
         {
             const std::string absolute_path = "::extensions::" + requirement;
             auto ext_entity = _app->world.lookup(absolute_path.c_str());

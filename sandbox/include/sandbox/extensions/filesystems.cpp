@@ -34,7 +34,8 @@ namespace sandbox::extensions
         // Provide a sensible default if none were configured
         if (mounts_state.mounts.empty())
         {
-            mounts_state.mounts["res://"] = std::filesystem::current_path().string();
+            const auto default_res_root = std::filesystem::current_path() / "res";
+            mounts_state.mounts["res://"] = default_res_root.string();
             if (log) log->info("extensions::filesystem: default mount 'res://' -> '{}'", mounts_state.mounts["res://"]);
         }
 
@@ -68,7 +69,7 @@ namespace sandbox::extensions
 
         for (const auto& [virtual_prefix, physical_root] : mounts_state->mounts)
         {
-            if (incoming.rfind(virtual_prefix, 0) == 0)
+            if (incoming.compare(0, virtual_prefix.size(), virtual_prefix) == 0)
             {
                 std::filesystem::path resolved = physical_root;
                 resolved /= incoming.substr(virtual_prefix.size());

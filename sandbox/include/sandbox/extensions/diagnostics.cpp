@@ -50,19 +50,28 @@ namespace sandbox::extensions
                     auto& diag_state = states[row];
                     diag_state.fps = world_stats.performance.fps.gauge.avg[sample_index];
 
-                    // Track the movement_system if it exists and is marked for profiling
-                    if (auto system_entity = it.world().lookup("::systems::movement_system"); system_entity.is_valid() && system_entity.has<profile_tag>())
+                    ecs_query_desc_t desc{};
+                    desc.terms[0].id = flecs::_::type<profile_tag>::id(it.world());
+                    ecs_query_t* profile_query = ecs_query_init(it.world().c_ptr(), &desc);
+
+                    ecs_iter_t qit = ecs_query_iter(it.world().c_ptr(), profile_query);
+                    while (ecs_query_next(&qit))
                     {
-                        ecs_system_stats_t sys_stats{};
-                        if (ecs_system_stats_get(it.world().c_ptr(), system_entity.id(), &sys_stats))
+                        for (int i = 0; i < qit.count; ++i)
                         {
-                            const float last_ms = sys_stats.time_spent.gauge.avg[sample_index] * 1000.0f;
-                            std::string system_name = system_entity.path().c_str();
-                            auto& entry = diag_state.system_times[system_name.empty() ? "<unnamed>" : system_name];
-                            entry.last_ms = last_ms;
-                            entry.avg_ms = entry.avg_ms > 0.0f ? (entry.avg_ms * 0.9f + last_ms * 0.1f) : last_ms;
+                            flecs::entity system_entity = flecs::entity(it.world(), qit.entities[i]);
+                            ecs_system_stats_t sys_stats{};
+                            if (ecs_system_stats_get(qit.world, system_entity.id(), &sys_stats))
+                            {
+                                const float last_ms = sys_stats.time_spent.gauge.avg[sample_index] * 1000.0f;
+                                std::string system_name = system_entity.path().c_str();
+                                auto& entry = diag_state.system_times[system_name.empty() ? "<unnamed>" : system_name];
+                                entry.last_ms = last_ms;
+                                entry.avg_ms = entry.avg_ms > 0.0f ? (entry.avg_ms * 0.9f + last_ms * 0.1f) : last_ms;
+                            }
                         }
                     }
+                    ecs_query_fini(profile_query);
                 }
 
                 if (log) log->debug("extensions::diagnostics: sampled fps={}", world_stats.performance.fps.gauge.avg[sample_index]);
