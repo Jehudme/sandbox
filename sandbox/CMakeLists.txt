@@ -90,9 +90,19 @@ add_library(sandbox STATIC
         source/extensions/storage.cpp
         include/sandbox/extensions/storage.h
         include/sandbox/extensions/storage.inl
-        include/sandbox/extensions/caches.cpp
+        source/extensions/caches.cpp
         include/sandbox/extensions/caches.h
         include/sandbox/extensions/caches.inl
+        include/sandbox/extensions/filesystems.cpp
+        include/sandbox/extensions/filesystems.h
+        include/sandbox/extensions/clock.cpp
+        include/sandbox/extensions/clock.h
+        include/sandbox/extensions/dependencies.cpp
+        include/sandbox/extensions/dependencies.h
+        include/sandbox/extensions/serializer.cpp
+        include/sandbox/extensions/serializer.h
+        include/sandbox/extensions/diagnostics.cpp
+        include/sandbox/extensions/diagnostics.h
 )
 
 target_compile_features(sandbox PUBLIC cxx_std_23)
