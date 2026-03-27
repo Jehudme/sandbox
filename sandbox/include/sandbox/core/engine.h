@@ -15,6 +15,12 @@ namespace sandbox
         class storage;
         class systems;
         class events;
+        class caches;
+        class clock;
+        class filesystem;
+        class dependencies;
+        class serializer;
+        class diagnostics;
     }
 
     class properties;
@@ -48,6 +54,12 @@ namespace sandbox
         extensions::systems* get_systems();
         extensions::events* get_events();
         extensions::triggers* get_triggers();
+        extensions::caches* get_caches();
+        extensions::clock* get_clock();
+        extensions::filesystem* get_filesystem();
+        extensions::dependencies* get_dependencies();
+        extensions::serializer* get_serializer();
+        extensions::diagnostics* get_diagnostics();
 
         void progress();
 
