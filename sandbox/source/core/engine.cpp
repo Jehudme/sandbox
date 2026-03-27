@@ -15,7 +15,7 @@
 #include "sandbox/system/clock_ext.h"
 #include "sandbox/system/dependencies_ext.h"
 #include "sandbox/diagnostics/diagnostics_ext.h"
-#include "diagnostics/logger_ext.h"
+#include "sandbox/diagnostics/logger_ext.h"
 
 namespace sandbox
 {
