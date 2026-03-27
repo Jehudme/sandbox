@@ -1,5 +1,6 @@
 #pragma once
 
+#include "logger.h"
 #include "sandbox/core/engine.h"
 
 namespace sandbox::extensions
@@ -7,13 +8,9 @@ namespace sandbox::extensions
     template<typename... components>
     void systems::create(std::string_view name, std::string_view stage, auto&& configuration_lambda, auto&& logic_lambda)
     {
-        if (!_app)
-        {
-            return;
-        }
 
         const std::string absolute_path = "::systems::" + std::string(name);
-        _app->_log(sandbox::logger::level::info, "extensions::systems: creating system '{}'", absolute_path);
+        _app->get_logger()->info("extensions::systems: creating system '{}'", absolute_path);
 
         auto system_builder = _app->world.template system<components...>(absolute_path.c_str());
 
@@ -24,7 +21,7 @@ namespace sandbox::extensions
 
             if (!stage_entity.is_valid())
             {
-                _app->_log(sandbox::logger::level::warn, "extensions::systems: stage '{}' not found for system '{}'", stage_path, absolute_path);
+                _app->get_logger()->warn("extensions::systems: stage '{}' not found for system '{}'", stage_path, absolute_path);
             }
             else
             {
@@ -43,7 +40,7 @@ namespace sandbox::extensions
             system_builder.each(std::forward<decltype(logic_lambda)>(logic_lambda));
         }
 
-        _app->_log(sandbox::logger::level::debug, "extensions::systems: created system '{}'", absolute_path);
+        _app->get_logger()->debug("extensions::systems: created system '{}'", absolute_path);
     }
 
     template<typename... components>

@@ -3,10 +3,18 @@
 #include <string_view>
 #include <flecs.h>
 
-#include "sandbox/diagnostics/logger.h"
-
 namespace sandbox
 {
+    namespace extensions
+    {
+        class triggers;
+        class logger;
+        class scopes;
+        class storage;
+        class systems;
+        class events;
+    }
+
     class properties;
     class extension;
     class logger;
@@ -15,23 +23,31 @@ namespace sandbox
     {
     public:
         engine();
-        ~engine();
+        virtual ~engine();
 
         engine(const engine&) = delete;
         engine& operator=(const engine&) = delete;
 
-        void initialize(const properties& configuration);
+        virtual void initialize(const properties& configuration);
+        virtual void finalize();
 
         void create_extension(std::string_view category, std::string_view identifier);
         void delete_extension(std::string_view category);
 
+        void initialize_extension(std::string_view name, const properties& configuration);
+        void finalize_extension(std::string_view name);
+
         template<typename derived_type>
         derived_type* get_extension(std::string_view category);
 
-        void progress();
+        extensions::logger* get_logger();
+        extensions::scopes* get_scopes();
+        extensions::storage* get_storage();
+        extensions::systems* get_systems();
+        extensions::events* get_events();
+        extensions::triggers* get_triggers();
 
-        template<typename... argument_types>
-        void _log(logger::level level, std::string_view format_string, argument_types&&... arguments);
+        void progress();
 
         flecs::world world;
     };

@@ -10,8 +10,8 @@ namespace sandbox::extensions
     class logger : public sandbox::extension
     {
     public:
-        void initialize(sandbox::engine& app, const sandbox::properties& props) override;
-        void finalize(sandbox::engine& app) override;
+        void initialize(const sandbox::properties& props) override;
+        void finalize() override;
 
         template<typename... argument_types>
         void trace(std::string_view format_string, argument_types&&... arguments);
@@ -31,8 +31,11 @@ namespace sandbox::extensions
         template<typename... argument_types>
         void critical(std::string_view format_string, argument_types&&... arguments);
 
-    private:
-        std::unique_ptr<sandbox::logger> _logger;
+        void enable() const;
+        void disable() const;
+
+        bool exists() const;
+        bool enabled() const;
     };
 }
 

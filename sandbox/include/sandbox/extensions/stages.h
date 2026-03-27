@@ -11,8 +11,8 @@ namespace sandbox::extensions
     public:
         using dependencies = std::vector<std::string_view>;
 
-        void initialize(sandbox::engine& app, const sandbox::properties& props) override;
-        void finalize(sandbox::engine& app) override;
+        void initialize(const sandbox::properties& props) override;
+        void finalize() override;
 
         void create(std::string_view name, const dependencies& stage_dependencies = {});
         void destroy(std::string_view name);

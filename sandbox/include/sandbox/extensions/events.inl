@@ -1,5 +1,6 @@
 #pragma once
 
+#include "logger.h"
 #include "sandbox/core/engine.h"
 
 namespace sandbox::extensions
@@ -7,27 +8,19 @@ namespace sandbox::extensions
     template<typename event_type>
     void events::publish(event_type event_data)
     {
-        if (!_app)
-        {
-            return;
-        }
 
-        _app->_log(sandbox::logger::level::debug, "extensions::events: publishing event");
+        _app->get_logger()->debug("extensions::events: publishing event");
 
         auto event_entity = _app->world.entity();
-        event_entity.set<event_type>(std::move(event_data));
+        event_entity.template set<event_type>(std::move(event_data));
     }
 
     template<typename event_type>
     void events::subscribe(std::string_view name, auto&& callback)
     {
-        if (!_app)
-        {
-            return;
-        }
 
         const std::string absolute_path = "::events::" + std::string(name);
-        _app->_log(sandbox::logger::level::info, "extensions::events: subscribing immediate '{}' to event", absolute_path);
+        _app->get_logger()->info("extensions::events: subscribing immediate '{}' to event", absolute_path);
 
         _app->world.template observer<event_type>(absolute_path.c_str())
             .event(flecs::OnSet)
@@ -37,13 +30,9 @@ namespace sandbox::extensions
     template<typename event_type>
     void events::subscribe(std::string_view name, std::string_view stage, auto&& callback)
     {
-        if (!_app)
-        {
-            return;
-        }
 
         const std::string absolute_path = "::events::" + std::string(name);
-        _app->_log(sandbox::logger::level::info, "extensions::events: subscribing staged '{}' in stage '{}' to event", absolute_path, stage);
+        _app->get_logger()->info("extensions::events: subscribing staged '{}' in stage '{}' to event", absolute_path, stage);
 
         auto system_builder = _app->world.template system<event_type>(absolute_path.c_str());
 
@@ -54,7 +43,8 @@ namespace sandbox::extensions
 
             if (!stage_entity.is_valid())
             {
-                _app->_log(sandbox::logger::level::warn, "extensions::events: stage '{}' not found for subscriber '{}'", stage_path, absolute_path);
+                _app->template get_extension<extensions::logger>("logger")->warn("extensions::events: stage '{}' not found for subscriber '{}'", stage_path, absolute_path);
+                _app->get_logger()->warn("extensions::events: stage '{}' not found for subscriber '{}'", stage_path, absolute_path);
             }
             else
             {

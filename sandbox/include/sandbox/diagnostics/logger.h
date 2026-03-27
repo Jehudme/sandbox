@@ -28,31 +28,31 @@ namespace sandbox
         logger& operator=(logger&&) noexcept;
 
         template<typename... argument_types>
-        void log(level lvl, std::string_view format_string, argument_types&&... arguments);
+        void log(level lvl, std::string_view format_string, argument_types&&... arguments) const;
 
         template<typename... argument_types>
-        void trace(std::string_view format_string, argument_types&&... arguments);
+        void trace(std::string_view format_string, argument_types&&... arguments) const;
 
         template<typename... argument_types>
-        void debug(std::string_view format_string, argument_types&&... arguments);
+        void debug(std::string_view format_string, argument_types&&... arguments) const;
 
         template<typename... argument_types>
-        void info(std::string_view format_string, argument_types&&... arguments);
+        void info(std::string_view format_string, argument_types&&... arguments) const;
 
         template<typename... argument_types>
-        void warn(std::string_view format_string, argument_types&&... arguments);
+        void warn(std::string_view format_string, argument_types&&... arguments) const;
 
         template<typename... argument_types>
-        void error(std::string_view format_string, argument_types&&... arguments);
+        void error(std::string_view format_string, argument_types&&... arguments) const;
 
         template<typename... argument_types>
-        void critical(std::string_view format_string, argument_types&&... arguments);
+        void critical(std::string_view format_string, argument_types&&... arguments) const;
 
         static std::string level_to_string(level log_level);
         static level string_to_level(std::string_view log_level_string);
 
     private:
-        void _internal_log(level log_level, std::string_view formatted_message);
+        void _internal_log(level log_level, std::string_view formatted_message) const;
 
         struct implementation;
         std::unique_ptr<implementation> _implementation;

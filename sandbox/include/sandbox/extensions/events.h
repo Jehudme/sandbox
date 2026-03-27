@@ -8,8 +8,8 @@ namespace sandbox::extensions
     class events : public sandbox::extension
     {
     public:
-        void initialize(sandbox::engine& app, const sandbox::properties& props) override;
-        void finalize(sandbox::engine& app) override;
+        void initialize(const sandbox::properties& props) override;
+        void finalize() override;
 
         template<typename event_type>
         void publish(event_type event_data);

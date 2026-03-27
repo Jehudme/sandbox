@@ -8,8 +8,8 @@ namespace sandbox::extensions
     class triggers : public sandbox::extension
     {
     public:
-        void initialize(sandbox::engine& app, const sandbox::properties& props) override;
-        void finalize(sandbox::engine& app) override;
+        void initialize(const sandbox::properties& props) override;
+        void finalize() override;
 
         template<typename... components>
         void create(std::string_view name, auto&& configuration_lambda, auto&& logic_lambda);

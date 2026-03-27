@@ -23,50 +23,11 @@ struct player_spawned_event
     float spawn_y;
 };
 
-class logger_extension : public sandbox::extensions::logger
-{
-};
-
-class scopes_extension : public sandbox::extensions::scopes
-{
-};
-
-class stages_extension : public sandbox::extensions::stages
-{
-};
-
-class systems_extension : public sandbox::extensions::systems
-{
-};
-
-class triggers_extension : public sandbox::extensions::triggers
-{
-};
-
-class storage_extension : public sandbox::extensions::storage
-{
-};
-
-class events_extension : public sandbox::extensions::events
-{
-};
-
-SANDBOX_REGISTRATION {
-    SANDBOX_REGISTER_CLASS(logger_extension, "logger_extension")
-    SANDBOX_REGISTER_CLASS(scopes_extension, "scopes_extension")
-    SANDBOX_REGISTER_CLASS(stages_extension, "stages_extension")
-    SANDBOX_REGISTER_CLASS(systems_extension, "systems_extension")
-    SANDBOX_REGISTER_CLASS(triggers_extension, "triggers_extension")
-    SANDBOX_REGISTER_CLASS(storage_extension, "storage_extension")
-    SANDBOX_REGISTER_CLASS(events_extension, "events_extension")
-}
-
 int main()
 {
     SANDBOX_LOG_INFO("=== Starting Extension Tests ===");
 
     sandbox::properties config;
-    config.set({"logger", "name"}, std::string("engine_core"));
     config.set({"logger", "level"}, std::string("TRACE"));
 
     sandbox::engine app;
@@ -74,7 +35,6 @@ int main()
 
     SANDBOX_LOG_INFO("=== Testing extensions::logger ===");
 
-    app.create_extension("logger", "logger_extension");
     auto* ext_logger = app.get_extension<sandbox::extensions::logger>("logger");
     if (ext_logger)
     {
@@ -85,7 +45,6 @@ int main()
 
     SANDBOX_LOG_INFO("=== Testing extensions::scopes ===");
 
-    app.create_extension("scopes", "scopes_extension");
     auto* ext_scopes = app.get_extension<sandbox::extensions::scopes>("scopes");
     if (ext_scopes)
     {
@@ -96,7 +55,6 @@ int main()
 
     SANDBOX_LOG_INFO("=== Testing extensions::stages ===");
 
-    app.create_extension("stages", "stages_extension");
     auto* ext_stages = app.get_extension<sandbox::extensions::stages>("stages");
     if (ext_stages)
     {
@@ -116,7 +74,6 @@ int main()
 
     SANDBOX_LOG_INFO("=== Testing extensions::storage ===");
 
-    app.create_extension("storage", "storage_extension");
     auto* ext_storage = app.get_extension<sandbox::extensions::storage>("storage");
     if (ext_storage)
     {
@@ -144,7 +101,6 @@ int main()
 
     SANDBOX_LOG_INFO("=== Testing extensions::systems ===");
 
-    app.create_extension("systems", "systems_extension");
     auto* ext_systems = app.get_extension<sandbox::extensions::systems>("systems");
     if (ext_systems)
     {
@@ -177,7 +133,6 @@ int main()
 
     SANDBOX_LOG_INFO("=== Testing extensions::triggers ===");
 
-    app.create_extension("triggers", "triggers_extension");
     auto* ext_triggers = app.get_extension<sandbox::extensions::triggers>("triggers");
     if (ext_triggers)
     {
@@ -202,7 +157,6 @@ int main()
 
     SANDBOX_LOG_INFO("=== Testing extensions::events ===");
 
-    app.create_extension("events", "events_extension");
     auto* ext_events = app.get_extension<sandbox::extensions::events>("events");
     if (ext_events)
     {

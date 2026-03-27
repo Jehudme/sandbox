@@ -1,5 +1,6 @@
 #pragma once
 
+#include "logger.h"
 #include "sandbox/core/engine.h"
 
 namespace sandbox::extensions
@@ -7,13 +8,9 @@ namespace sandbox::extensions
     template<typename... components>
     void triggers::create(std::string_view name, auto&& configuration_lambda, auto&& logic_lambda)
     {
-        if (!_app)
-        {
-            return;
-        }
 
         const std::string absolute_path = "::triggers::" + std::string(name);
-        _app->_log(sandbox::logger::level::info, "extensions::triggers: creating trigger '{}'", absolute_path);
+        _app->get_logger()->info("extensions::triggers: creating trigger '{}'", absolute_path);
 
         auto observer_builder = _app->world.template observer<components...>(absolute_path.c_str());
 
@@ -31,6 +28,6 @@ namespace sandbox::extensions
             observer_builder.each(std::forward<decltype(logic_lambda)>(logic_lambda));
         }
 
-        _app->_log(sandbox::logger::level::debug, "extensions::triggers: created trigger '{}'", absolute_path);
+        _app->get_logger()->debug("extensions::triggers: created trigger '{}'", absolute_path);
     }
 }

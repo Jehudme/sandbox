@@ -68,28 +68,29 @@ add_library(sandbox STATIC
         source/core/extension.cpp
         include/sandbox/core/extension.h
 
-        include/sandbox/core/engine.cpp
+        source/core/engine.cpp
         include/sandbox/core/engine.h
         include/sandbox/core/engine.inl
         include/sandbox/extensions/logger.h
         include/sandbox/extensions/logger.inl
-        include/sandbox/extensions/logger.cpp
+        source/extensions/logger.cpp
         include/sandbox/extensions/scopes.h
-        include/sandbox/extensions/scopes.cpp
-        include/sandbox/extensions/systems.cpp
+        source/extensions/scopes.cpp
+        source/extensions/systems.cpp
         include/sandbox/extensions/systems.h
         include/sandbox/extensions/systems.inl
-        include/sandbox/extensions/stages.cpp
+        source/extensions/stages.cpp
         include/sandbox/extensions/stages.h
-        include/sandbox/extensions/triggers.cpp
+        source/extensions/triggers.cpp
         include/sandbox/extensions/triggers.h
         include/sandbox/extensions/triggers.inl
-        include/sandbox/extensions/events.cpp
+        source/extensions/events.cpp
         include/sandbox/extensions/events.h
         include/sandbox/extensions/events.inl
-        include/sandbox/extensions/storage.cpp
+        source/extensions/storage.cpp
         include/sandbox/extensions/storage.h
         include/sandbox/extensions/storage.inl
+        source/extensions/logger.cpp
 )
 
 target_compile_features(sandbox PUBLIC cxx_std_23)

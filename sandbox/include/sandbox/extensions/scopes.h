@@ -11,8 +11,8 @@ namespace sandbox::extensions
     public:
         using scope_path = std::vector<std::string_view>;
 
-        void initialize(sandbox::engine& app, const sandbox::properties& props) override;
-        void finalize(sandbox::engine& app) override;
+        void initialize(const sandbox::properties& props) override;
+        void finalize() override;
 
         void set_scope(const scope_path& desired_path);
         void push_scope(const scope_path& desired_path);

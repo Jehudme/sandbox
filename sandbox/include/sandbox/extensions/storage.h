@@ -8,8 +8,8 @@ namespace sandbox::extensions
     class storage : public sandbox::extension
     {
     public:
-        void initialize(sandbox::engine& app, const sandbox::properties& props) override;
-        void finalize(sandbox::engine& app) override;
+        void initialize(const sandbox::properties& props) override;
+        void finalize() override;
 
         template<typename base_type, typename... constructor_arguments>
         void create(std::string_view name, constructor_arguments&&... arguments);

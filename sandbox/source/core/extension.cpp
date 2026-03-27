@@ -2,7 +2,7 @@
 
 namespace sandbox
 {
-    void extension::initialize(engine& app, const properties& extension_properties)
+    void extension::initialize(const properties& extension_properties)
     {
         // 1. Extract logger configuration from the properties tree
         const properties logger_properties = extension_properties.sub_properties({"logger"});
@@ -22,7 +22,7 @@ namespace sandbox
 
     }
 
-    void extension::finalize(engine& app)
+    void extension::finalize()
     {
 
     }

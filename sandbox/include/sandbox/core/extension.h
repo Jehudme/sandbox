@@ -25,8 +25,8 @@ namespace sandbox
         extension(extension&&) = delete;
         extension& operator=(extension&&) = delete;
 
-        virtual void initialize(engine& app, const properties& props) = 0;
-        virtual void finalize(engine& app) = 0;
+        virtual void initialize(const properties& props) = 0;
+        virtual void finalize() = 0;
 
     protected:
         engine* _app;

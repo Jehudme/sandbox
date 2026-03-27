@@ -41,7 +41,9 @@ namespace sandbox
         _implementation->spd_logger->set_pattern("[%T] [%n] [%^%l%$] %v");
     }
 
-    logger::~logger() = default;
+    logger::~logger()
+    {
+    }
     logger::logger(logger&&) noexcept = default;
     logger& logger::operator=(logger&&) noexcept = default;
 
@@ -70,7 +72,7 @@ namespace sandbox
         return level::info;
     }
 
-    void logger::_internal_log(level log_level, std::string_view formatted_message)
+    void logger::_internal_log(level log_level, std::string_view formatted_message) const
     {
         _implementation->spd_logger->log(convert_level(log_level), formatted_message);
     }
