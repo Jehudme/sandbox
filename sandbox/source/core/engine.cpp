@@ -1,5 +1,6 @@
 #include "sandbox/core/engine.h"
 #include "sandbox/core/extension.h"
+#include "sandbox/extensions/caches.h"
 #include "sandbox/filesystem/properties.h"
 #include "sandbox/reflections/registry.h"
 #include "sandbox/reflections/registration.h"
@@ -10,6 +11,7 @@
 #include "sandbox/extensions/triggers.h"
 #include "sandbox/extensions/storage.h"
 #include "sandbox/extensions/events.h"
+#include "sandbox/extensions/caches.h"
 
 namespace sandbox
 {
@@ -31,8 +33,10 @@ namespace sandbox
         create_extension("triggers", "default_triggers_extension");
         create_extension("storage", "default_storage_extension");
         create_extension("events", "default_events_extension");
+        create_extension("caches", "default_caches_extension");
 
         initialize_extension("logger", configuration.sub_properties({"logger"}));
+        initialize_extension("caches");
         initialize_extension("scopes");
         initialize_extension("stages");
         initialize_extension("systems");
@@ -147,4 +151,5 @@ SANDBOX_REGISTRATION {
     SANDBOX_REGISTER_CLASS(sandbox::extensions::triggers, "default_triggers_extension")
     SANDBOX_REGISTER_CLASS(sandbox::extensions::storage, "default_storage_extension")
     SANDBOX_REGISTER_CLASS(sandbox::extensions::events, "default_events_extension")
+    SANDBOX_REGISTER_CLASS(sandbox::extensions::caches, "default_caches_extension")
 }
