@@ -12,6 +12,11 @@
 #include "sandbox/extensions/storage.h"
 #include "sandbox/extensions/events.h"
 #include "sandbox/extensions/caches.h"
+#include "sandbox/extensions/clock.h"
+#include "sandbox/extensions/filesystems.h"
+#include "sandbox/extensions/dependencies.h"
+#include "sandbox/extensions/serializer.h"
+#include "sandbox/extensions/diagnostics.h"
 
 namespace sandbox
 {
@@ -34,6 +39,11 @@ namespace sandbox
         create_extension("storage", "default_storage_extension");
         create_extension("events", "default_events_extension");
         create_extension("caches", "default_caches_extension");
+        create_extension("clock", "default_clock_extension");
+        create_extension("filesystem", "default_filesystem_extension");
+        create_extension("dependencies", "default_dependencies_extension");
+        create_extension("serializer", "default_serializer_extension");
+        create_extension("diagnostics", "default_diagnostics_extension");
 
         initialize_extension("logger", configuration.sub_properties({"logger"}));
         initialize_extension("scopes");
@@ -43,6 +53,11 @@ namespace sandbox
         initialize_extension("storage");
         initialize_extension("events");
         initialize_extension("caches");
+        initialize_extension("clock", configuration.sub_properties({"clock"}));
+        initialize_extension("filesystem", configuration.sub_properties({"filesystem"}));
+        initialize_extension("dependencies", configuration.sub_properties({"dependencies"}));
+        initialize_extension("serializer", configuration.sub_properties({"serializer"}));
+        initialize_extension("diagnostics", configuration.sub_properties({"diagnostics"}));
         
         get_extension<extensions::logger>("logger")->info("engine: initialized");
     }
@@ -61,6 +76,11 @@ namespace sandbox
         delete_extension("stages");
         delete_extension("scopes");
         delete_extension("caches");
+        delete_extension("diagnostics");
+        delete_extension("serializer");
+        delete_extension("dependencies");
+        delete_extension("filesystem");
+        delete_extension("clock");
         delete_extension("logger");
     }
 
@@ -93,9 +113,10 @@ namespace sandbox
             auto& extension_pointer = extension_entity.get_mut<std::unique_ptr<extension>>();
             if (extension_pointer)
             {
+                extension* raw_extension = extension_pointer.get();
                 if(get_logger()) get_logger()->debug("engine: finalizing extension category='{}'", category);
-                extension_pointer->finalize();
-                extension_pointer->_app = nullptr;
+                raw_extension->finalize();
+                raw_extension->_app = nullptr;
             }
 
             extension_entity.destruct();
@@ -138,6 +159,12 @@ namespace sandbox
     extensions::systems* engine::get_systems()      { return get_extension<extensions::systems>("systems"); }
     extensions::events* engine::get_events()        { return get_extension<extensions::events>("events"); }
     extensions::triggers* engine::get_triggers()    { return get_extension<extensions::triggers>("triggers"); }
+    extensions::caches* engine::get_caches()        { return get_extension<extensions::caches>("caches"); }
+    extensions::clock* engine::get_clock()          { return get_extension<extensions::clock>("clock"); }
+    extensions::filesystem* engine::get_filesystem(){ return get_extension<extensions::filesystem>("filesystem"); }
+    extensions::dependencies* engine::get_dependencies(){ return get_extension<extensions::dependencies>("dependencies"); }
+    extensions::serializer* engine::get_serializer(){ return get_extension<extensions::serializer>("serializer"); }
+    extensions::diagnostics* engine::get_diagnostics(){ return get_extension<extensions::diagnostics>("diagnostics"); }
 
     void engine::progress()                         { world.progress(); }
 }
@@ -153,4 +180,9 @@ SANDBOX_REGISTRATION {
     SANDBOX_REGISTER_CLASS(sandbox::extensions::storage, "default_storage_extension")
     SANDBOX_REGISTER_CLASS(sandbox::extensions::events, "default_events_extension")
     SANDBOX_REGISTER_CLASS(sandbox::extensions::caches, "default_caches_extension")
+    SANDBOX_REGISTER_CLASS(sandbox::extensions::clock, "default_clock_extension")
+    SANDBOX_REGISTER_CLASS(sandbox::extensions::filesystem, "default_filesystem_extension")
+    SANDBOX_REGISTER_CLASS(sandbox::extensions::dependencies, "default_dependencies_extension")
+    SANDBOX_REGISTER_CLASS(sandbox::extensions::serializer, "default_serializer_extension")
+    SANDBOX_REGISTER_CLASS(sandbox::extensions::diagnostics, "default_diagnostics_extension")
 }

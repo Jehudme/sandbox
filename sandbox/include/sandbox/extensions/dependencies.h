@@ -22,5 +22,6 @@ namespace sandbox::extensions
         void finalize() override;
 
         void require(std::string_view extension_name);
+        void validate();
     };
 }

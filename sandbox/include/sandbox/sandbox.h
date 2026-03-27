@@ -23,3 +23,8 @@
 #include "extensions/storage.h"
 #include "extensions/events.h"
 #include "extensions/caches.h"
+#include "extensions/clock.h"
+#include "extensions/filesystems.h"
+#include "extensions/dependencies.h"
+#include "extensions/serializer.h"
+#include "extensions/diagnostics.h"
