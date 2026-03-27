@@ -22,16 +22,25 @@ namespace sandbox::extensions
 
     void logger::enable() const
     {
-        auto entity = _app->world.entity("::extension::logger").enable();
+        flecs::entity extension_logger_entity = _app->world.lookup("::extensions::logger");
+        if (extension_logger_entity.is_valid())
+        {
+            extension_logger_entity.enable();
+        }
     }
 
     void logger::disable() const
     {
-        auto entity =_app->world.entity("::extension::logger").disable();
+        flecs::entity extension_logger_entity = _app->world.lookup("::extensions::logger");
+        if (extension_logger_entity.is_valid())
+        {
+            extension_logger_entity.disable();
+        }
     }
 
     bool logger::enabled() const
     {
-        return _app->world.lookup("::extension::logger").enabled();
+        flecs::entity extension_logger_entity = _app->world.lookup("::extensions::logger");
+        return extension_logger_entity.is_valid() && extension_logger_entity.enabled();
     }
 }

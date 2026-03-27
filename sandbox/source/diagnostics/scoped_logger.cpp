@@ -1,4 +1,4 @@
-#include "../../include/sandbox/diagnostics/scoped_logger.h"
+#include "sandbox/diagnostics/scoped_logger.h"
 
 namespace sandbox
 {

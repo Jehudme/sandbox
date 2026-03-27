@@ -17,7 +17,7 @@ namespace sandbox
 
     engine::~engine()
     {
-        get_logger()->info("engine: finalizing");
+        finalize();
     }
 
     void engine::initialize(const properties& configuration)
@@ -45,6 +45,18 @@ namespace sandbox
 
     void engine::finalize()
     {
+        if (auto* ext_logger = get_logger())
+        {
+            ext_logger->info("engine: finalizing");
+        }
+
+        delete_extension("events");
+        delete_extension("storage");
+        delete_extension("triggers");
+        delete_extension("systems");
+        delete_extension("stages");
+        delete_extension("scopes");
+        delete_extension("logger");
     }
 
     void engine::create_extension(std::string_view category, std::string_view identifier)

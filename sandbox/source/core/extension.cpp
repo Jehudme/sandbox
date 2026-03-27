@@ -1,4 +1,4 @@
-#include "../../include/sandbox/core/extension.h"
+#include "sandbox/core/extension.h"
 
 namespace sandbox
 {

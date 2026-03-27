@@ -29,6 +29,6 @@ namespace sandbox
         virtual void finalize() = 0;
 
     protected:
-        engine* _app;
+        engine* _app = nullptr;
     };
 }
