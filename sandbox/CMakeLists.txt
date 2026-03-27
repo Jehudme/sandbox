@@ -63,24 +63,31 @@ add_library(sandbox STATIC
         # ECS (Automated Flecs Wrappers)
         include/sandbox/ecs/systems_ext.h
         include/sandbox/ecs/systems_ext.inl
+        include/sandbox/ecs/systems_evt.h
         source/ecs/systems_ext.cpp
         include/sandbox/ecs/triggers_ext.h
         include/sandbox/ecs/triggers_ext.inl
+        include/sandbox/ecs/triggers_evt.h
         source/ecs/triggers_ext.cpp
         include/sandbox/ecs/events_ext.h
         include/sandbox/ecs/events_ext.inl
+        include/sandbox/ecs/events_evt.h
         source/ecs/events_ext.cpp
         include/sandbox/ecs/stages_ext.h
+        include/sandbox/ecs/stages_evt.h
         source/ecs/stages_ext.cpp
         include/sandbox/ecs/scopes_ext.h
+        include/sandbox/ecs/scopes_evt.h
         source/ecs/scopes_ext.cpp
 
         # DATA (Memory & Reflection)
         include/sandbox/data/caches_ext.h
         include/sandbox/data/caches_ext.inl
+        include/sandbox/data/caches_evt.h
         source/data/caches_ext.cpp
         include/sandbox/data/storage_ext.h
         include/sandbox/data/storage_ext.inl
+        include/sandbox/data/storage_evt.h
         source/data/storage_ext.cpp
         include/sandbox/data/registry.h
         include/sandbox/data/registry.inl
@@ -89,25 +96,32 @@ add_library(sandbox STATIC
 
         # IO (Files & Serialization)
         include/sandbox/io/filesystem_ext.h
+        include/sandbox/io/filesystem_evt.h
         source/io/filesystem_ext.cpp
         include/sandbox/io/serializer_ext.h
         include/sandbox/io/serializer_ext.inl
+        include/sandbox/io/serializer_evt.h
         source/io/serializer_ext.cpp
 
         # SYSTEM (Engine Services)
         include/sandbox/system/clock_ext.h
+        include/sandbox/system/clock_evt.h
         source/system/clock_ext.cpp
         include/sandbox/system/dependencies_ext.h
+        include/sandbox/system/dependencies_evt.h
         source/system/dependencies_ext.cpp
 
         # DIAGNOSTICS
         include/sandbox/diagnostics/logger.h
         include/sandbox/diagnostics/logger.inl
         source/diagnostics/logger.cpp
+        include/sandbox/diagnostics/logger_ext.h
+        include/sandbox/diagnostics/logger_evt.h
         include/sandbox/diagnostics/scoped_logger.h
         include/sandbox/diagnostics/scoped_logger.inl
         source/diagnostics/scoped_logger.cpp
         include/sandbox/diagnostics/diagnostics_ext.h
+        include/sandbox/diagnostics/diagnostics_evt.h
         source/diagnostics/diagnostics_ext.cpp
 )
 
