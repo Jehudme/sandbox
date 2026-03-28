@@ -8,10 +8,6 @@ namespace sandbox::extensions { class storage; }
 
 namespace sandbox::data
 {
-    /**
-     * @brief Events and Commands for the storage extension.
-     */
-
     template<typename base_type = void>
     struct create_object_evt
     {

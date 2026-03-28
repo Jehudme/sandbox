@@ -97,7 +97,7 @@ namespace sandbox
             const auto& segment = property_path[index];
             if (!current_node_ptr->is_object() || !current_node_ptr->get_object().contains(segment))
             {
-                return; // Silently return if path doesn't exist
+                return;
             }
             current_node_ptr = &current_node_ptr->get_object()[segment];
         }

@@ -26,7 +26,6 @@ namespace sandbox::extensions
             return;
         }
 
-        // Construct explicitly to support non-aggregate and non-brace-constructible types.
         object_entity.template set<base_type>(base_type(std::forward<constructor_arguments>(arguments)...));
 
         if (auto* log = _app->get_logger())
@@ -40,7 +39,6 @@ namespace sandbox::extensions
 
         const std::string absolute_path = "::objects::" + std::string(name);
 
-        // Cache-aside: check the entity cache before doing a world lookup.
         auto* cache = _app->get_extension<extensions::caches>("caches");
         if (cache)
         {
@@ -65,7 +63,6 @@ namespace sandbox::extensions
             return nullptr;
         }
 
-        // Populate the cache so subsequent lookups skip the world search.
         if (cache)
             cache->save(object_entity);
 

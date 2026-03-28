@@ -19,7 +19,6 @@ namespace sandbox::extensions
 
         if (!stage.empty())
         {
-            // starts_with requires C++20; this project targets C++23 — confirmed safe.
             const std::string stage_path = stage.starts_with("::") ? std::string(stage) : "::stages::" + std::string(stage);
             auto stage_entity = _app->world.lookup(stage_path.c_str());
 

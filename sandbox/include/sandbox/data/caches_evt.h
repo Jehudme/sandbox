@@ -6,10 +6,6 @@
 
 namespace sandbox::data
 {
-    /**
-     * @brief Events and Commands for the caches extension.
-     */
-
     struct save_cache_evt
     {
         flecs::entity entity;
@@ -42,4 +38,3 @@ namespace sandbox::data
         }
     };
 }
-

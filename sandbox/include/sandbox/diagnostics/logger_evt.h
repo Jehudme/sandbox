@@ -5,10 +5,6 @@
 
 namespace sandbox::diagnostics
 {
-    /**
-     * @brief Events and Commands for the logger extension.
-     */
-
     struct logger_trace_evt
     {
         std::string message;
@@ -69,4 +65,3 @@ namespace sandbox::diagnostics
         }
     };
 }
-

@@ -10,8 +10,6 @@ namespace sandbox
     template<typename derived_type>
     derived_type* engine::get_extension(std::string_view category)
     {
-        // Cache-aside: skip the cache when looking up the caches extension itself
-        // to prevent infinite recursion.
         if (category != "caches")
         {
             if (auto* cache = get_extension<extensions::caches>("caches"))
@@ -36,9 +34,6 @@ namespace sandbox
             const auto& extension_pointer = extension_entity.template get<std::unique_ptr<sandbox::extension>>();
             if (extension_pointer && extension_pointer->_app == this)
             {
-                // Capture the raw pointer before saving to the cache: save() calls
-                // entity.add<cache_flag>() which is a structural ECS change and can
-                // move component storage, invalidating the reference above.
                 auto* raw = static_cast<derived_type*>(extension_pointer.get());
                 if (category != "caches")
                 {

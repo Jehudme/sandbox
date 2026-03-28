@@ -2,8 +2,6 @@
 
 #include <rttr/registration>
 
-// These macros must be used *inside a single* RTTR_REGISTRATION { ... } block.
-
 #define SANDBOX_REGISTRATION \
 RTTR_REGISTRATION
 

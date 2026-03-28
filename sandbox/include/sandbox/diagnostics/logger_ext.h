@@ -1,9 +1,5 @@
 #pragma once
 
-// Private header — included only from engine.cpp and logger.cpp.
-// Defines sandbox::extensions::logger: an extension wrapper around
-// sandbox::logger that participates in the engine extension system.
-
 #include "sandbox/diagnostics/logger.h"
 #include "sandbox/diagnostics/logger_evt.h"
 #include "sandbox/ecs/events_ext.h"
@@ -32,8 +28,6 @@ namespace sandbox::extensions
                 .get<bool>({"async"})
                 .value_or(false);
 
-            // Drop any pre-existing spdlog logger registered under this name
-            // (e.g. the scoped_logger fallback) before creating the real one.
             spdlog::drop(name);
 
             _logger = std::make_unique<sandbox::logger>(

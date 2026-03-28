@@ -5,9 +5,6 @@
 
 namespace sandbox::ecs
 {
-    /**
-     * @brief Events and Commands for the scopes extension.
-     */
     struct set_scope_evt
     {
         std::vector<std::string> path;
@@ -28,4 +25,3 @@ namespace sandbox::ecs
         }
     };
 }
-

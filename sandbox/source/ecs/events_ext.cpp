@@ -9,7 +9,6 @@ namespace sandbox::extensions
 {
     void events::initialize(const sandbox::properties& properties)
     {
-        // Register the transient event tag explicitly.
         _app->world.template component<transient_event_tag>();
 
         // Create the cleanup system under a reserved internal path that does not collide
@@ -48,7 +47,6 @@ namespace sandbox::extensions
 
     void events::destroy(std::string_view name)
     {
-        // Operate only on the ::events:: namespace where observer subscriptions live.
         const std::string absolute_path = "::events::" + std::string(name);
         auto subscriber_entity = _app->world.lookup(absolute_path.c_str());
 
@@ -62,7 +60,6 @@ namespace sandbox::extensions
     {
         const std::string absolute_path = "::events::" + std::string(name);
 
-        // Cache-aside lookup
         flecs::entity subscriber_entity;
         auto* cache = _app->get_extension<extensions::caches>("caches");
         if (cache)
@@ -83,7 +80,6 @@ namespace sandbox::extensions
     {
         const std::string absolute_path = "::events::" + std::string(name);
 
-        // Cache-aside lookup
         flecs::entity subscriber_entity;
         auto* cache = _app->get_extension<extensions::caches>("caches");
         if (cache)
@@ -102,7 +98,6 @@ namespace sandbox::extensions
 
     bool events::exists(std::string_view name) const
     {
-        // Check only the ::events:: namespace for observer subscriptions.
         auto* cache = _app->get_extension<extensions::caches>("caches");
         if (cache)
         {
@@ -120,7 +115,6 @@ namespace sandbox::extensions
 
     bool events::enabled(std::string_view name) const
     {
-        // Cache-aside lookup
         flecs::entity subscriber_entity;
         auto* cache = _app->get_extension<extensions::caches>("caches");
         if (cache)

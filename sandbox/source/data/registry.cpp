@@ -14,8 +14,6 @@ namespace sandbox
             return nullptr;
         }
 
-        // FIX 1: reflection_type.create(args) treats the std::vector as the FIRST argument, causing the _Destroy template crash.
-        // We must extract the types and invoke the constructor variadically.
         std::vector<rttr::type> arg_types;
         arg_types.reserve(args.size());
         for (const auto& arg : args)
@@ -44,7 +42,6 @@ namespace sandbox
 
     rttr::variant registry::_internal_invoke(std::string_view identifier, void* instance, std::vector<rttr::argument> args)
     {
-        // FIX 2: Correct namespace for global methods is rttr::type
         rttr::method global_method = rttr::type::get_global_method(identifier.data());
 
         if (global_method.is_valid())

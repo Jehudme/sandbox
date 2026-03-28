@@ -29,7 +29,6 @@ namespace sandbox::extensions
 
         state mounts_state{};
 
-        // Load mounts from configuration: properties["mounts"][virtual_prefix] = physical_path
         for (const auto& mount_key : properties.get_keys({"mounts"}))
         {
             auto resolved_path = properties.get<std::string>({"mounts", mount_key});
@@ -40,7 +39,6 @@ namespace sandbox::extensions
             }
         }
 
-        // Provide a sensible default if none were configured
         if (mounts_state.mounts.empty())
         {
             const auto default_res_root = std::filesystem::current_path() / "res";

@@ -6,9 +6,6 @@
 
 namespace sandbox::ecs
 {
-    /**
-     * @brief Events and Commands for the stages extension.
-     */
     struct create_stage_evt
     {
         std::string name;
@@ -72,4 +69,3 @@ namespace sandbox::ecs
         }
     };
 }
-

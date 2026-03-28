@@ -5,10 +5,6 @@
 
 namespace sandbox::io
 {
-    /**
-     * @brief Events and Commands for the filesystem extension.
-     */
-
     struct resolve_path_evt
     {
         std::string path;
@@ -20,4 +16,3 @@ namespace sandbox::io
         }
     };
 }
-
