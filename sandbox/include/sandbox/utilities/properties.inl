@@ -16,9 +16,9 @@ namespace sandbox
         }
 
         target_type deserialized_value{};
-        const auto error_code = glz::read<glz::opts{}>(deserialized_value, *current_node_ptr);
+        const auto error_context = glz::read<glz::opts{}>(deserialized_value, *current_node_ptr);
 
-        if (!error_code) {
+        if (!error_context) {
             return deserialized_value;
         }
         return std::nullopt;
@@ -37,7 +37,10 @@ namespace sandbox
         }
 
         std::string serialization_buffer;
-        glz::write_json(value_to_set, serialization_buffer);
-        glz::read_json(*current_node_ptr, serialization_buffer);
+        // Capture error contexts to satisfy [[nodiscard]]
+        const auto write_error_context = glz::write_json(value_to_set, serialization_buffer);
+        if (!write_error_context) {
+            const auto read_error_context = glz::read_json(*current_node_ptr, serialization_buffer);
+        }
     }
 }

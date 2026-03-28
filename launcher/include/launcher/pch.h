@@ -12,10 +12,6 @@
 #include <memory>
 #include <filesystem>
 
-// Sandbox public umbrella header (very likely included everywhere in launcher)
-#include <sandbox/sandbox.h>
-
-// Public deps (because they’re effectively part of the launcher’s compile environment)
 #include <flecs.h>
 #include <rttr/registration>
 #include <rttr/type>
