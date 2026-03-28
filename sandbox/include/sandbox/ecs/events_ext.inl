@@ -14,25 +14,33 @@ namespace sandbox::extensions
         using bare_type = std::remove_cvref_t<event_type>;
         _app->world.template component<bare_type>();
 
-        auto event_entity = _app->world.entity();
-        event_entity.template add<transient_event_tag>();
-        event_entity.template set<bare_type>(std::forward<event_type>(event_data));
+        auto* world_ptr = _app->world.c_ptr();
+        const flecs::id_t event_id = _app->world.id<bare_type>();
+        ecs_table_t* table = ecs_table_find(world_ptr, &event_id, 1);
+
+        if (!table)
+        {
+            SANDBOX_LOG_ERROR("Events: failed to resolve table for event '{}'.", flecs::_::type_name<bare_type>());
+            return;
+        }
 
         _app->world.template event<bare_type>()
             .template id<bare_type>()
-            .entity(event_entity)
+            .table(table)
+            .ctx(std::forward<event_type>(event_data))
             .emit();
     }
 
     template<typename event_type>
     void events::subscribe(std::string_view name, auto&& callback)
     {
-        const std::string absolute_path = "::events::" + std::string(name);
+        std::string absolute_path = "::events::" + std::string(name);
         _app->world.template component<event_type>();
 
         _app->world.template observer<event_type>(absolute_path.c_str())
             .template event<event_type>()
-            .run([captured_callback = std::forward<decltype(callback)>(callback)](flecs::iter& it) {
+            .run([captured_callback = std::forward<decltype(callback)>(callback),
+                  event_name = std::move(absolute_path)](flecs::iter& it) {
                 if constexpr (std::is_empty_v<event_type>)
                 {
                     for (auto _ : it)
@@ -43,10 +51,21 @@ namespace sandbox::extensions
                 }
                 else
                 {
-                    auto events = it.template field<event_type>(0);
-                    for (auto i : it)
+                    bool missing_payload = false;
+                    while (it.next())
                     {
-                        captured_callback(events[i]);
+                        if (auto* payload = it.param<event_type>())
+                        {
+                            captured_callback(*payload);
+                        }
+                        else
+                        {
+                            missing_payload = true;
+                        }
+                    }
+                    if (missing_payload)
+                    {
+                        SANDBOX_LOG_WARN("Events: missing payload for event '{}'.", event_name);
                     }
                 }
             });
