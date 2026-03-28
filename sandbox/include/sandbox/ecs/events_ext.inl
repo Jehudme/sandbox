@@ -44,7 +44,6 @@ namespace sandbox::extensions
                 {
                     for (auto _ : it)
                     {
-                        (void)_;
                         event_type evt{};
                         captured_callback(evt);
                     }
