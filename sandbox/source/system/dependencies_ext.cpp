@@ -19,7 +19,6 @@ namespace sandbox::extensions
                 return dep_entity.get_mut<dependencies::state>();
             }
 
-            // Fallback to singleton storage on the world
             return world.get_mut<dependencies::state>();
         }
     }

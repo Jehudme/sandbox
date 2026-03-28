@@ -9,12 +9,6 @@ namespace sandbox::extensions { class systems; }
 
 namespace sandbox::ecs
 {
-    /**
-     * @brief Events and Commands for the systems extension.
-     *
-     * The action callback is already bound to the concrete component types at creation
-     * time, so the systems extension only needs to invoke it.
-     */
     template<typename... components>
     struct create_system_evt
     {

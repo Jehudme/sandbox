@@ -20,7 +20,6 @@ namespace sandbox::extensions
             float fps;
         };
 
-        // Component: Attach to a system entity to track its frame time automatically
         struct profile_tag {};
 
         void initialize(const sandbox::properties& properties) override;

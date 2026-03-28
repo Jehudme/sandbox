@@ -67,7 +67,6 @@ namespace sandbox::extensions
 
         const std::string absolute_path = "::triggers::" + std::string(name);
 
-        // Cache-aside lookup
         flecs::entity trigger_entity;
         auto* cache = _app->get_extension<extensions::caches>("caches");
         if (cache)
@@ -99,7 +98,6 @@ namespace sandbox::extensions
 
         const std::string absolute_path = "::triggers::" + std::string(name);
 
-        // Cache-aside lookup
         flecs::entity trigger_entity;
         auto* cache = _app->get_extension<extensions::caches>("caches");
         if (cache)
@@ -129,7 +127,6 @@ namespace sandbox::extensions
     {
         if (!_app) return false;
 
-        // Cache-aside lookup
         auto* cache = _app->get_extension<extensions::caches>("caches");
         if (cache)
         {
@@ -149,7 +146,6 @@ namespace sandbox::extensions
     {
         if (!_app) return false;
 
-        // Cache-aside lookup
         flecs::entity trigger_entity;
         auto* cache = _app->get_extension<extensions::caches>("caches");
         if (cache)

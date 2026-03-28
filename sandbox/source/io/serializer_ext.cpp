@@ -54,7 +54,6 @@ namespace sandbox::extensions
             if (type == rttr::type::get<std::string>() && json_value.holds<std::string>())
                 return property.set_value(target, json_value.get<std::string>());
 
-            // Fallback to string conversion when possible
             if (json_value.holds<std::string>())
             {
                 return property.set_value(target, json_value.get<std::string>());
@@ -95,7 +94,6 @@ namespace sandbox::extensions
                 if (!data_ptr || comp_size == 0)
                     return;
 
-                // Snapshot component data to avoid mutating live ECS storage while reflecting.
                 // WARNING: this generic serializer expects components to be trivially copyable; complex components
                 // should supply specialized serialization to avoid undefined behavior.
                 if (!(comp_type.is_arithmetic() || comp_type.is_enumeration()))

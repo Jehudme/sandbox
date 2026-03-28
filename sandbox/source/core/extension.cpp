@@ -4,7 +4,6 @@ namespace sandbox
 {
     void extension::initialize(const properties& extension_properties)
     {
-        // 1. Extract logger configuration from the properties tree
         const properties logger_properties = extension_properties.sub_properties({"logger"});
 
         const std::string logger_name = logger_properties

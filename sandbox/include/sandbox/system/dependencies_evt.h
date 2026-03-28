@@ -5,10 +5,6 @@
 
 namespace sandbox::system
 {
-    /**
-     * @brief Events and Commands for the dependencies extension.
-     */
-
     struct require_dependency_evt
     {
         std::string extension_name;
@@ -27,4 +23,3 @@ namespace sandbox::system
         }
     };
 }
-

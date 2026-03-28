@@ -5,12 +5,8 @@
 
 namespace sandbox
 {
-    class engine; // Forward declaration
+    class engine;
 
-    /**
-     * @brief Base class for all engine modules.
-     * Enforces a unique identity by disabling all copy and move operations.
-     */
     class extension
     {
         friend class engine;
@@ -19,7 +15,6 @@ namespace sandbox
         explicit extension() = default;
         virtual ~extension() = default;
 
-        // --- Non-Copyable & Non-Movable ---
         extension(const extension&) = delete;
         extension& operator=(const extension&) = delete;
         extension(extension&&) = delete;

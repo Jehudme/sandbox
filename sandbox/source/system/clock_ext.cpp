@@ -113,7 +113,6 @@ namespace sandbox::extensions
                         data.total_time += data.dt;
                         data.accumulator += data.dt;
 
-                        // Emit as many fixed pulses as needed to catch up
                         constexpr int kMaxPulsesPerFrame = 8;
                         int pulse_count = 0;
                         while (data.accumulator >= data.fixed_dt && pulse_count < kMaxPulsesPerFrame)
@@ -124,7 +123,6 @@ namespace sandbox::extensions
 
                         if (pulse_count >= kMaxPulsesPerFrame && data.accumulator >= data.fixed_dt)
                         {
-                            // Avoid spiral-of-death by discarding excessive backlog.
                             data.accumulator = 0.0f;
                             if (log) log->warn("extensions::clock: fixed-update pulses clamped to {} in one frame", kMaxPulsesPerFrame);
                         }

@@ -9,9 +9,6 @@ namespace sandbox::extensions { class triggers; }
 
 namespace sandbox::ecs
 {
-    /**
-     * @brief Events and Commands for the triggers extension.
-     */
     template<typename... components>
     struct create_trigger_evt
     {

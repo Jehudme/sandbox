@@ -78,7 +78,7 @@ namespace sandbox::extensions
                     auto entity = cache_it->second.entity;
                     if (entity.is_valid())
                     {
-                        entity.destruct(); // fires OnRemove<cache_flag> → free()
+                        entity.destruct();
                     }
                     else
                     {

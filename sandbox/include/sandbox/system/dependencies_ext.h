@@ -14,8 +14,6 @@ namespace sandbox::extensions
             std::vector<std::string> requirements;
         };
 
-        // Tag: Applied to the World entity when ALL dependencies are met.
-        // Harmony systems can "wait" for this tag before starting.
         struct is_ready_tag {};
 
         void initialize(const sandbox::properties& properties) override;
