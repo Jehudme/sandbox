@@ -1,4 +1,6 @@
 #include "sandbox/ecs/stages_ext.h"
+#include "sandbox/ecs/stages_evt.h"
+#include "sandbox/ecs/events_ext.h"
 #include "sandbox/diagnostics/logger.h"
 #include "sandbox/core/engine.h"
 #include "sandbox/core/properties.h"
@@ -7,6 +9,40 @@ namespace sandbox::extensions
 {
     void stages::initialize(const sandbox::properties& props)
     {
+        if (auto* ext_events = _app->get_extension<extensions::events>("events"))
+        {
+            ext_events->subscribe<sandbox::ecs::create_stage_evt>("stages_create", [this](sandbox::ecs::create_stage_evt& e) {
+                std::vector<std::string_view> deps;
+                deps.reserve(e.dependencies.size());
+                for (const auto& dep : e.dependencies)
+                {
+                    deps.push_back(dep);
+                }
+                this->create(e.name, deps);
+            });
+
+            ext_events->subscribe<sandbox::ecs::destroy_stage_evt>("stages_destroy", [this](sandbox::ecs::destroy_stage_evt& e) {
+                this->destroy(e.name);
+            });
+
+            ext_events->subscribe<sandbox::ecs::enable_stage_evt>("stages_enable", [this](sandbox::ecs::enable_stage_evt& e) {
+                this->enable(e.name);
+            });
+
+            ext_events->subscribe<sandbox::ecs::disable_stage_evt>("stages_disable", [this](sandbox::ecs::disable_stage_evt& e) {
+                this->disable(e.name);
+            });
+
+            ext_events->subscribe<sandbox::ecs::stage_exists_evt>("stages_exists", [this](sandbox::ecs::stage_exists_evt& e) {
+                if (e.out_exists)
+                    *e.out_exists = this->exists(e.name);
+            });
+
+            ext_events->subscribe<sandbox::ecs::stage_enabled_evt>("stages_enabled", [this](sandbox::ecs::stage_enabled_evt& e) {
+                if (e.out_enabled)
+                    *e.out_enabled = this->enabled(e.name);
+            });
+        }
     }
 
     void stages::finalize()

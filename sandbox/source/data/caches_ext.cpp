@@ -1,4 +1,6 @@
 #include "sandbox/data/caches_ext.h"
+#include "sandbox/data/caches_evt.h"
+#include "sandbox/ecs/events_ext.h"
 #include "sandbox/core/engine.h"
 #include "sandbox/diagnostics/logger.h"
 #include "sandbox/ecs/triggers_ext.h"
@@ -10,6 +12,22 @@ namespace sandbox::extensions
 {
     void caches::initialize(const sandbox::properties& properties)
     {
+        if (auto* ext_events = _app->get_extension<extensions::events>("events"))
+        {
+            ext_events->subscribe<sandbox::data::save_cache_evt>("caches_save", [this](sandbox::data::save_cache_evt& e) {
+                this->save(e.entity, e.lifetime);
+            });
+
+            ext_events->subscribe<sandbox::data::free_cache_evt>("caches_free", [this](sandbox::data::free_cache_evt& e) {
+                this->free(e.name);
+            });
+
+            ext_events->subscribe<sandbox::data::get_cache_evt>("caches_get", [this](sandbox::data::get_cache_evt& e) {
+                if (e.out_entity)
+                    *e.out_entity = this->get(e.name);
+            });
+        }
+
         _app->world.component<cache_flag>();
 
         // Create an OnRemove observer so that whenever cache_flag is removed from an entity

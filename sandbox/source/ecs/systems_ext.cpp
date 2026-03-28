@@ -1,4 +1,6 @@
 #include "sandbox/ecs/systems_ext.h"
+#include "sandbox/ecs/systems_evt.h"
+#include "sandbox/ecs/events_ext.h"
 #include "sandbox/data/caches_ext.h"
 #include "sandbox/core/engine.h"
 #include "sandbox/core/properties.h"
@@ -7,6 +9,32 @@ namespace sandbox::extensions
 {
     void systems::initialize(const sandbox::properties& props)
     {
+        if (auto* ext_events = _app->get_extension<extensions::events>("events"))
+        {
+            subscribe_system_events<>();
+
+            ext_events->subscribe<sandbox::ecs::destroy_system_evt>("systems_destroy", [this](sandbox::ecs::destroy_system_evt& e) {
+                this->destroy(e.name);
+            });
+
+            ext_events->subscribe<sandbox::ecs::enable_system_evt>("systems_enable", [this](sandbox::ecs::enable_system_evt& e) {
+                this->enable(e.name);
+            });
+
+            ext_events->subscribe<sandbox::ecs::disable_system_evt>("systems_disable", [this](sandbox::ecs::disable_system_evt& e) {
+                this->disable(e.name);
+            });
+
+            ext_events->subscribe<sandbox::ecs::system_exists_evt>("systems_exists", [this](sandbox::ecs::system_exists_evt& e) {
+                if (e.out_exists)
+                    *e.out_exists = this->exists(e.name);
+            });
+
+            ext_events->subscribe<sandbox::ecs::system_enabled_evt>("systems_enabled", [this](sandbox::ecs::system_enabled_evt& e) {
+                if (e.out_enabled)
+                    *e.out_enabled = this->enabled(e.name);
+            });
+        }
     }
 
     void systems::finalize()

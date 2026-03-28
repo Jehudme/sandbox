@@ -1,4 +1,6 @@
 #include "sandbox/ecs/triggers_ext.h"
+#include "sandbox/ecs/triggers_evt.h"
+#include "sandbox/ecs/events_ext.h"
 #include "sandbox/data/caches_ext.h"
 #include "sandbox/core/engine.h"
 #include "sandbox/core/properties.h"
@@ -7,6 +9,32 @@ namespace sandbox::extensions
 {
     void triggers::initialize(const sandbox::properties& props)
     {
+        subscribe_trigger_events<>();
+
+        if (auto* ext_events = _app->get_extension<extensions::events>("events"))
+        {
+            ext_events->subscribe<sandbox::ecs::destroy_trigger_evt>("triggers_destroy", [this](sandbox::ecs::destroy_trigger_evt& e) {
+                this->destroy(e.name);
+            });
+
+            ext_events->subscribe<sandbox::ecs::enable_trigger_evt>("triggers_enable", [this](sandbox::ecs::enable_trigger_evt& e) {
+                this->enable(e.name);
+            });
+
+            ext_events->subscribe<sandbox::ecs::disable_trigger_evt>("triggers_disable", [this](sandbox::ecs::disable_trigger_evt& e) {
+                this->disable(e.name);
+            });
+
+            ext_events->subscribe<sandbox::ecs::trigger_exists_evt>("triggers_exists", [this](sandbox::ecs::trigger_exists_evt& e) {
+                if (e.out_exists)
+                    *e.out_exists = this->exists(e.name);
+            });
+
+            ext_events->subscribe<sandbox::ecs::trigger_enabled_evt>("triggers_enabled", [this](sandbox::ecs::trigger_enabled_evt& e) {
+                if (e.out_enabled)
+                    *e.out_enabled = this->enabled(e.name);
+            });
+        }
     }
 
     void triggers::finalize()

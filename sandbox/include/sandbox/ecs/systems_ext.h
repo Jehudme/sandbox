@@ -1,6 +1,7 @@
 #pragma once
 
 #include "sandbox/core/extension.h"
+#include "sandbox/core/engine.h"
 #include <string_view>
 
 namespace sandbox::extensions
@@ -16,6 +17,9 @@ namespace sandbox::extensions
 
         template<typename... components>
         void create(std::string_view name, std::string_view stage, auto&& logic_lambda);
+
+        template<typename... components>
+        void subscribe_system_events();
 
         void destroy(std::string_view name);
         void enable(std::string_view name);

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "sandbox/diagnostics/logger.h"
-#include "sandbox/core/engine.h"
+#include "sandbox/ecs/triggers_evt.h"
+#include "sandbox/ecs/events_ext.h"
 
 namespace sandbox::extensions
 {
@@ -34,5 +34,18 @@ namespace sandbox::extensions
         if (auto* log = _app->get_logger())
             log->debug("extensions::triggers: created trigger '{}'", absolute_path);
     }
-}
 
+    template<typename... components>
+    void triggers::subscribe_trigger_events()
+    {
+        if (auto* ext_events = _app->template get_extension<extensions::events>("events"))
+        {
+            ext_events->template subscribe<sandbox::ecs::create_trigger_evt<components...>>("triggers_create", [this](sandbox::ecs::create_trigger_evt<components...>& e) {
+                if (e.action)
+                {
+                    e.action(*this, e.name);
+                }
+            });
+        }
+    }
+}
