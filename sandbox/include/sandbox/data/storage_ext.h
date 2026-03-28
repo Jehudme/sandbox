@@ -20,6 +20,7 @@ namespace sandbox::extensions
         base_type* get(std::string_view name);
 
         bool exists(std::string_view name) const;
+
     };
 }
 

@@ -1,4 +1,6 @@
 #include "sandbox/io/filesystem_ext.h"
+#include "sandbox/io/filesystem_evt.h"
+#include "sandbox/ecs/events_ext.h"
 #include "sandbox/diagnostics/logger.h"
 #include "sandbox/core/engine.h"
 #include "sandbox/core/properties.h"
@@ -10,6 +12,14 @@ namespace sandbox::extensions
     void filesystem::initialize(const sandbox::properties& properties)
     {
         if (!_app) return;
+
+        if (auto* ext_events = _app->get_extension<extensions::events>("events"))
+        {
+            ext_events->subscribe<sandbox::io::resolve_path_evt>("filesystem_resolve", [this](sandbox::io::resolve_path_evt& e) {
+                if (e.out_result)
+                    *e.out_result = this->resolve(e.path);
+            });
+        }
 
         auto* log = _app->get_logger();
 

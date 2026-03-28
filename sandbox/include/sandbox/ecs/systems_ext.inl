@@ -1,7 +1,7 @@
 #pragma once
 
-#include "sandbox/diagnostics/logger.h"
-#include "sandbox/core/engine.h"
+#include "sandbox/ecs/systems_evt.h"
+#include "sandbox/ecs/events_ext.h"
 
 namespace sandbox::extensions
 {
@@ -54,5 +54,18 @@ namespace sandbox::extensions
     {
         create<components...>(name, stage, [](auto&) {}, std::forward<decltype(logic_lambda)>(logic_lambda));
     }
-}
 
+    template<typename... components>
+    void systems::subscribe_system_events()
+    {
+        if (auto* ext_events = _app->template get_extension<extensions::events>("events"))
+        {
+            ext_events->template subscribe<sandbox::ecs::create_system_evt<components...>>("systems_create", [this](sandbox::ecs::create_system_evt<components...>& e) {
+                if (e.action)
+                {
+                    e.action(*this, e.name, e.stage);
+                }
+            });
+        }
+    }
+}

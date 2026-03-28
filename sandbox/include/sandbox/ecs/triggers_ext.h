@@ -14,6 +14,9 @@ namespace sandbox::extensions
         template<typename... components>
         void create(std::string_view name, auto&& configuration_lambda, auto&& logic_lambda);
 
+        template<typename... components>
+        void subscribe_trigger_events();
+
         void destroy(std::string_view name);
         void enable(std::string_view name);
         void disable(std::string_view name);

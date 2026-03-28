@@ -5,6 +5,8 @@
 // sandbox::logger that participates in the engine extension system.
 
 #include "sandbox/diagnostics/logger.h"
+#include "sandbox/diagnostics/logger_evt.h"
+#include "sandbox/ecs/events_ext.h"
 #include "sandbox/core/extension.h"
 #include <spdlog/spdlog.h>
 
@@ -38,6 +40,31 @@ namespace sandbox::extensions
                 name,
                 sandbox::logger::string_to_level(level_str),
                 async);
+
+            if (_app)
+            {
+                if (auto* ext_events = _app->get_extension<extensions::events>("events"))
+                {
+                    ext_events->subscribe<sandbox::diagnostics::logger_trace_evt>("logger_trace", [this](sandbox::diagnostics::logger_trace_evt& e) {
+                        this->trace("{}", e.message);
+                    });
+                    ext_events->subscribe<sandbox::diagnostics::logger_debug_evt>("logger_debug", [this](sandbox::diagnostics::logger_debug_evt& e) {
+                        this->debug("{}", e.message);
+                    });
+                    ext_events->subscribe<sandbox::diagnostics::logger_info_evt>("logger_info", [this](sandbox::diagnostics::logger_info_evt& e) {
+                        this->info("{}", e.message);
+                    });
+                    ext_events->subscribe<sandbox::diagnostics::logger_warn_evt>("logger_warn", [this](sandbox::diagnostics::logger_warn_evt& e) {
+                        this->warn("{}", e.message);
+                    });
+                    ext_events->subscribe<sandbox::diagnostics::logger_error_evt>("logger_error", [this](sandbox::diagnostics::logger_error_evt& e) {
+                        this->error("{}", e.message);
+                    });
+                    ext_events->subscribe<sandbox::diagnostics::logger_critical_evt>("logger_critical", [this](sandbox::diagnostics::logger_critical_evt& e) {
+                        this->critical("{}", e.message);
+                    });
+                }
+            }
         }
 
         void finalize() override

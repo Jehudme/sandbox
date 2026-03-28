@@ -3,6 +3,8 @@
 #include "sandbox/diagnostics/logger.h"
 #include "sandbox/data/caches_ext.h"
 #include "sandbox/core/engine.h"
+#include "sandbox/data/storage_evt.h"
+#include "sandbox/ecs/events_ext.h"
 
 namespace sandbox::extensions
 {
@@ -72,5 +74,5 @@ namespace sandbox::extensions
         // or across structural ECS changes (add/remove components, entity destruction).
         return &object_entity.template get_mut<base_type>();
     }
-}
 
+}

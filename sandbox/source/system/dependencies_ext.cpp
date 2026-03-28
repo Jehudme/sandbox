@@ -1,4 +1,6 @@
 #include "sandbox/system/dependencies_ext.h"
+#include "sandbox/system/dependencies_evt.h"
+#include "sandbox/ecs/events_ext.h"
 #include "sandbox/diagnostics/logger.h"
 #include "sandbox/core/engine.h"
 #include "sandbox/core/properties.h"
@@ -25,6 +27,17 @@ namespace sandbox::extensions
     void dependencies::initialize(const sandbox::properties& properties)
     {
         if (!_app) return;
+
+        if (auto* ext_events = _app->get_extension<extensions::events>("events"))
+        {
+            ext_events->subscribe<sandbox::system::require_dependency_evt>("dependencies_require", [this](sandbox::system::require_dependency_evt& e) {
+                this->require(e.extension_name);
+            });
+
+            ext_events->subscribe<sandbox::system::validate_dependencies_evt>("dependencies_validate", [this](sandbox::system::validate_dependencies_evt&) {
+                this->validate();
+            });
+        }
 
         auto* log = _app->get_logger();
         _app->world.component<state>();

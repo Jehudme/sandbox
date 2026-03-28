@@ -2,8 +2,18 @@
 #include <thread>
 #include <chrono>
 #include <filesystem>
+#include <string_view>
 
 #include "sandbox/sandbox.h"
+#include "sandbox/ecs/scopes_evt.h"
+#include "sandbox/ecs/stages_evt.h"
+#include "sandbox/ecs/systems_evt.h"
+#include "sandbox/ecs/triggers_evt.h"
+#include "sandbox/data/storage_evt.h"
+#include "sandbox/data/caches_evt.h"
+#include "sandbox/system/dependencies_evt.h"
+#include "sandbox/io/filesystem_evt.h"
+#include "sandbox/diagnostics/logger_evt.h"
 
 struct position
 {
@@ -47,82 +57,60 @@ int main()
     sandbox::engine app;
     app.initialize(config);
 
-    auto* ext_logger = app.get_logger();
-    if (ext_logger)
-    {
-        ext_logger->info("extensions::logger is working correctly");
-        ext_logger->warn("this is a warning from extensions::logger");
-        ext_logger->debug("debug message from extensions::logger");
-    }
-
-    auto* ext_scopes = app.get_scopes();
-    if (ext_scopes)
-    {
-        ext_scopes->set_scope({"game", "world"});
-        ext_scopes->push_scope({"game", "entities"});
-        ext_scopes->set_scope({"game"});
-    }
-
-    auto* ext_stages = app.get_extension<sandbox::extensions::stages>("stages");
-    if (ext_stages)
-    {
-        ext_stages->create("physics_stage");
-        ext_stages->create("render_stage", {"physics_stage"});
-        ext_stages->create("ai_stage", {"physics_stage"});
-    }
-
-    auto* ext_storage = app.get_storage();
-    auto* ext_systems = app.get_systems();
-    auto* ext_triggers = app.get_triggers();
     auto* ext_events = app.get_events();
-    auto* ext_caches = app.get_caches();
-    auto* ext_clock = app.get_clock();
-    auto* ext_filesystem = app.get_filesystem();
-    auto* ext_dependencies = app.get_dependencies();
-    auto* ext_serializer = app.get_serializer();
-    auto* ext_diagnostics = app.get_diagnostics();
-
-    if (ext_storage)
-    {
-        ext_storage->create<position>("player_1", 0.0f, 0.0f);
-        ext_storage->create<velocity>("player_1_vel", 1.0f, 0.5f);
-    }
-
-    if (ext_systems)
-    {
-        ext_systems->create<position>("movement_system", "physics_stage",
-            [](auto& builder) {
-                builder.interval(0.1f);
-            },
-            [](position& pos) {
-                pos.x += 0.1f;
-                pos.y += 0.05f;
-            }
-        );
-
-        ext_systems->create<position, velocity>("physics_system", "physics_stage",
-            [](position& pos, const velocity& vel) {
-                pos.x += vel.dx;
-                pos.y += vel.dy;
-            }
-        );
-    }
-
-    if (ext_triggers)
-    {
-        ext_triggers->create<position>("on_position_added",
-            [](auto& observer_builder) {
-                observer_builder.event(flecs::OnSet);
-            },
-            [](flecs::entity entity, position& pos) {
-                SANDBOX_LOG_INFO("trigger fired: entity='{}' position set to x={:.2f} y={:.2f}",
-                    entity.name().c_str(), pos.x, pos.y);
-            }
-        );
-    }
-
     if (ext_events)
     {
+        ext_events->publish(sandbox::diagnostics::logger_info_evt::create("extensions::logger is working correctly"));
+        ext_events->publish(sandbox::diagnostics::logger_warn_evt::create("this is a warning from extensions::logger"));
+        ext_events->publish(sandbox::diagnostics::logger_debug_evt::create("debug message from extensions::logger"));
+
+        ext_events->publish(sandbox::ecs::set_scope_evt::create({"game", "world"}));
+        ext_events->publish(sandbox::ecs::push_scope_evt::create({"game", "entities"}));
+        ext_events->publish(sandbox::ecs::set_scope_evt::create({"game"}));
+
+        ext_events->publish(sandbox::ecs::create_stage_evt::create("physics_stage"));
+        ext_events->publish(sandbox::ecs::create_stage_evt::create("render_stage", {"physics_stage"}));
+        ext_events->publish(sandbox::ecs::create_stage_evt::create("ai_stage", {"physics_stage"}));
+
+        ext_events->publish(sandbox::data::create_object_evt<>::create("player_1", [](sandbox::extensions::storage& storage_ext, std::string_view name) {
+            storage_ext.create<position>(name, 0.0f, 0.0f);
+        }));
+        ext_events->publish(sandbox::data::create_object_evt<>::create("player_1_vel", [](sandbox::extensions::storage& storage_ext, std::string_view name) {
+            storage_ext.create<velocity>(name, 1.0f, 0.5f);
+        }));
+
+        ext_events->publish(sandbox::ecs::create_system_evt<>::create("movement_system", "physics_stage",
+            [](sandbox::extensions::systems& systems_ext, std::string_view name, std::string_view stage) {
+                systems_ext.create<position>(name, stage,
+                    [](auto& builder) { builder.interval(0.1f); },
+                    [](position& pos) {
+                        pos.x += 0.1f;
+                        pos.y += 0.05f;
+                    });
+            }
+        ));
+
+        ext_events->publish(sandbox::ecs::create_system_evt<>::create("physics_system", "physics_stage",
+            [](sandbox::extensions::systems& systems_ext, std::string_view name, std::string_view stage) {
+                systems_ext.create<position, velocity>(name, stage,
+                    [](position& pos, const velocity& vel) {
+                        pos.x += vel.dx;
+                        pos.y += vel.dy;
+                    });
+            }
+        ));
+
+        ext_events->publish(sandbox::ecs::create_trigger_evt<>::create("on_position_added",
+            [](sandbox::extensions::triggers& triggers_ext, std::string_view name) {
+                triggers_ext.create<position>(name,
+                    [](auto& observer_builder) { observer_builder.event(flecs::OnSet); },
+                    [](flecs::entity entity, position& pos) {
+                        SANDBOX_LOG_INFO("trigger fired: entity='{}' position set to x={:.2f} y={:.2f}",
+                            entity.name().c_str(), pos.x, pos.y);
+                    });
+            }
+        ));
+
         ext_events->subscribe<player_spawned_event>("on_player_spawned",
             [](player_spawned_event& event_data) {
                 SANDBOX_LOG_INFO("immediate event received: player='{}' at ({:.2f}, {:.2f})",
@@ -131,31 +119,24 @@ int main()
         );
 
         ext_events->publish<player_spawned_event>({"player_3", 200.0f, 150.0f});
-    }
 
-    if (ext_caches)
-    {
         auto player_entity = app.world.lookup("::objects::player_1");
-        ext_caches->save(player_entity, 2.0f);
-        SANDBOX_LOG_INFO("cached player_1 exists: {}", ext_caches->get("player_1").is_valid());
-    }
+        ext_events->publish(sandbox::data::save_cache_evt::create(player_entity, 2.0f));
+        flecs::entity cached_entity;
+        ext_events->publish(sandbox::data::get_cache_evt::create("player_1", &cached_entity));
+        SANDBOX_LOG_INFO("cached player_1 exists: {}", cached_entity.is_valid());
 
-    if (ext_dependencies)
-    {
-        ext_dependencies->require("logger");
-        ext_dependencies->require("systems");
-        ext_dependencies->validate();
+        ext_events->publish(sandbox::system::require_dependency_evt::create("logger"));
+        ext_events->publish(sandbox::system::require_dependency_evt::create("systems"));
+        ext_events->publish(sandbox::system::validate_dependencies_evt::create());
         SANDBOX_LOG_INFO("dependencies ready tag present: {}", app.world.has<sandbox::extensions::dependencies::is_ready_tag>());
-    }
 
-    if (ext_filesystem)
-    {
-        auto resolved = ext_filesystem->resolve("res://test/path");
+        std::string resolved;
+        ext_events->publish(sandbox::io::resolve_path_evt::create("res://test/path", &resolved));
         SANDBOX_LOG_INFO("filesystem resolved res://test/path -> {}", resolved);
     }
 
     // Serializer test: save and load entity
-    if (ext_serializer)
     {
         auto entity = app.world.entity("serial_entity");
         entity.set<position>({10.0f, 20.0f});
@@ -177,26 +158,29 @@ int main()
         app.progress();
         std::this_thread::sleep_for(std::chrono::milliseconds(16));
 
-        if (ext_storage)
+        if (ext_events)
         {
-            if (auto* player_1_position = ext_storage->get<position>("player_1"))
+            position* player_1_position = nullptr;
+            ext_events->publish(sandbox::data::get_object_evt<position>::create("player_1", &player_1_position,
+                [](sandbox::extensions::storage& storage_ext, std::string_view name, position** out) {
+                    if (out)
+                        *out = storage_ext.get<position>(name);
+                }));
+
+            if (player_1_position)
             {
                 SANDBOX_LOG_DEBUG("frame {}: player_1 position x={:.2f} y={:.2f}", frame_index, player_1_position->x, player_1_position->y);
             }
         }
 
-        if (ext_clock)
+        auto clock_entity = app.world.lookup("::extensions::clock");
+        if (clock_entity.is_valid() && clock_entity.has<sandbox::extensions::clock::state>())
         {
-            auto clock_entity = app.world.lookup("::extensions::clock");
-            if (clock_entity.is_valid() && clock_entity.has<sandbox::extensions::clock::state>())
-            {
-                auto& state = clock_entity.get_mut<sandbox::extensions::clock::state>();
-                SANDBOX_LOG_DEBUG("frame {}: clock dt={} total={}", frame_index, state.dt, state.total_time);
-            }
+            auto& state = clock_entity.get_mut<sandbox::extensions::clock::state>();
+            SANDBOX_LOG_DEBUG("frame {}: clock dt={} total={}", frame_index, state.dt, state.total_time);
         }
     }
 
-    if (ext_serializer)
     {
         // Load into a new entity to verify
         auto loaded = app.world.entity("loaded_entity");
@@ -209,7 +193,6 @@ int main()
         }
     }
 
-    if (ext_diagnostics)
     {
         auto diag_entity = app.world.lookup("::extensions::diagnostics");
         if (diag_entity.is_valid() && diag_entity.has<sandbox::extensions::diagnostics::state>())

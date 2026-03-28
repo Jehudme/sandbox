@@ -39,8 +39,23 @@ namespace sandbox::extensions
 
         _app->world.template observer<event_type>(absolute_path.c_str())
             .template event<event_type>()
-            .each([captured_callback = std::forward<decltype(callback)>(callback)](flecs::iter& it, size_t index, event_type& data) {
-                captured_callback(data);
+            .run([captured_callback = std::forward<decltype(callback)>(callback)](flecs::iter& it) {
+                if constexpr (std::is_empty_v<event_type>)
+                {
+                    for (auto _ : it)
+                    {
+                        event_type evt{};
+                        captured_callback(evt);
+                    }
+                }
+                else
+                {
+                    auto events = it.template field<event_type>(0);
+                    for (auto i : it)
+                    {
+                        captured_callback(events[i]);
+                    }
+                }
             });
     }
 }

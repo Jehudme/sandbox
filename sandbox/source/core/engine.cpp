@@ -31,12 +31,12 @@ namespace sandbox
         world = flecs::world();
 
         create_extension("logger", "default_logger_extension");
+        create_extension("events", "default_events_extension");
         create_extension("scopes", "default_scopes_extension");
         create_extension("stages", "default_stages_extension");
         create_extension("systems", "default_systems_extension");
         create_extension("triggers", "default_triggers_extension");
         create_extension("storage", "default_storage_extension");
-        create_extension("events", "default_events_extension");
         create_extension("caches", "default_caches_extension");
         create_extension("clock", "default_clock_extension");
         create_extension("filesystem", "default_filesystem_extension");
@@ -45,12 +45,12 @@ namespace sandbox
         create_extension("diagnostics", "default_diagnostics_extension");
 
         initialize_extension("logger", configuration.sub_properties({"logger"}));
+        initialize_extension("events");
         initialize_extension("scopes");
         initialize_extension("stages");
         initialize_extension("systems");
         initialize_extension("triggers");
         initialize_extension("storage");
-        initialize_extension("events");
         initialize_extension("caches");
         initialize_extension("clock", configuration.sub_properties({"clock"}));
         initialize_extension("filesystem", configuration.sub_properties({"filesystem"}));
