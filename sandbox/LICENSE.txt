@@ -1,1 +1,0 @@
-Placeholder license file for sandbox build packaging.

@@ -9,7 +9,6 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
-
 #include <exception>
 #include <functional>
 #include <initializer_list>
@@ -26,19 +25,10 @@
 #include <utility>
 #include <variant>
 #include <vector>
-
 #include <filesystem>
 #include <system_error>
-
-#if defined(__linux__)
-  #include <unistd.h>
-#endif
-
 #include <spdlog/spdlog.h>
-
 #include <rttr/registration>
 #include <rttr/type>
-
 #include <flecs.h>
-
 #include <glaze/glaze.hpp>
