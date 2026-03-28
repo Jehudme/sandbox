@@ -14,13 +14,9 @@ namespace sandbox::extensions
         using bare_type = std::remove_cvref_t<event_type>;
         _app->world.template component<bare_type>();
 
-        auto event_entity = _app->world.entity();
-        event_entity.template add<transient_event_tag>();
-        event_entity.template set<bare_type>(std::forward<event_type>(event_data));
-
         _app->world.template event<bare_type>()
             .template id<bare_type>()
-            .entity(event_entity)
+            .ctx(std::forward<event_type>(event_data))
             .emit();
     }
 
@@ -35,7 +31,7 @@ namespace sandbox::extensions
             .run([captured_callback = std::forward<decltype(callback)>(callback)](flecs::iter& it) {
                 if constexpr (std::is_empty_v<event_type>)
                 {
-                    for (auto _ : it)
+                    while (it.next())
                     {
                         event_type evt{};
                         captured_callback(evt);
@@ -43,10 +39,12 @@ namespace sandbox::extensions
                 }
                 else
                 {
-                    auto events = it.template field<event_type>(0);
-                    for (auto i : it)
+                    while (it.next())
                     {
-                        captured_callback(events[i]);
+                        if (auto* payload = it.param<event_type>())
+                        {
+                            captured_callback(*payload);
+                        }
                     }
                 }
             });

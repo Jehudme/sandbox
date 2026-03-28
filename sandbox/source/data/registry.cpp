@@ -1,12 +1,14 @@
 #include "sandbox/data/registry.h"
 #include "sandbox/diagnostics/scoped_logger.h"
+#include <rttr/string_view.h>
 #include <rttr/type.h>
 
 namespace sandbox
 {
     void* registry::_internal_create_instance(std::string_view type_identifier, std::vector<rttr::argument> args)
     {
-        rttr::type reflection_type = rttr::type::get_by_name(type_identifier.data());
+        rttr::string_view type_view{ type_identifier.data(), type_identifier.size() };
+        rttr::type reflection_type = rttr::type::get_by_name(type_view);
 
         if (!reflection_type.is_valid())
         {
@@ -42,7 +44,8 @@ namespace sandbox
 
     rttr::variant registry::_internal_invoke(std::string_view identifier, void* instance, std::vector<rttr::argument> args)
     {
-        rttr::method global_method = rttr::type::get_global_method(identifier.data());
+        rttr::string_view identifier_view{ identifier.data(), identifier.size() };
+        rttr::method global_method = rttr::type::get_global_method(identifier_view);
 
         if (global_method.is_valid())
         {
@@ -56,7 +59,7 @@ namespace sandbox
 
             if (t.is_valid())
             {
-                rttr::method member_method = t.get_method(identifier.data());
+                rttr::method member_method = t.get_method(identifier_view);
                 if (member_method.is_valid())
                 {
                     return member_method.invoke_variadic(instance_var, args);
@@ -70,7 +73,8 @@ namespace sandbox
 
     rttr::variant registry::_internal_invoke_static(std::string_view class_identifier, std::string_view function_identifier, std::vector<rttr::argument> args)
     {
-        rttr::type type = rttr::type::get_by_name(class_identifier.data());
+        rttr::string_view class_view{ class_identifier.data(), class_identifier.size() };
+        rttr::type type = rttr::type::get_by_name(class_view);
 
         if (!type.is_valid())
         {
@@ -78,7 +82,8 @@ namespace sandbox
             return rttr::variant();
         }
 
-        rttr::method method = type.get_method(function_identifier.data());
+        rttr::string_view function_view{ function_identifier.data(), function_identifier.size() };
+        rttr::method method = type.get_method(function_view);
 
         if (method.is_valid())
         {
@@ -91,12 +96,14 @@ namespace sandbox
 
     bool registry::is_type_registered(std::string_view type_identifier)
     {
-        return rttr::type::get_by_name(type_identifier.data()).is_valid();
+        rttr::string_view type_view{ type_identifier.data(), type_identifier.size() };
+        return rttr::type::get_by_name(type_view).is_valid();
     }
 
     std::string registry::get_registered_name(std::string_view type_identifier)
     {
-        rttr::type reflection_type = rttr::type::get_by_name(type_identifier.data());
+        rttr::string_view type_view{ type_identifier.data(), type_identifier.size() };
+        rttr::type reflection_type = rttr::type::get_by_name(type_view);
 
         if (reflection_type.is_valid())
         {
