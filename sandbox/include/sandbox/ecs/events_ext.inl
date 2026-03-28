@@ -14,8 +14,19 @@ namespace sandbox::extensions
         using bare_type = std::remove_cvref_t<event_type>;
         _app->world.template component<bare_type>();
 
+        auto* world_ptr = _app->world.c_ptr();
+        const flecs::id_t event_id = _app->world.id<bare_type>();
+        ecs_table_t* table = ecs_table_find(world_ptr, &event_id, 1);
+
+        if (!table)
+        {
+            SANDBOX_LOG_ERROR("Events: failed to resolve table for event '{}'.", flecs::_::type_name<bare_type>());
+            return;
+        }
+
         _app->world.template event<bare_type>()
             .template id<bare_type>()
+            .table(table)
             .ctx(std::forward<event_type>(event_data))
             .emit();
     }
