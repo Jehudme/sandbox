@@ -49,18 +49,13 @@ add_library(sandbox STATIC
         source/utilities/properties.cpp
         include/sandbox/utilities/properties.h
         include/sandbox/utilities/properties.inl
-        source/core/extension.cpp
-        include/sandbox/core/extension.h
+        source/core/plugins.cpp
+        include/sandbox/core/plugins.h
         source/core/type_registry.cpp
         include/sandbox/core/type_registry.h
         include/sandbox/core/type_registry.inl
         include/sandbox/core/type_registration.h
-        source/utilities/logger.cpp
-        include/sandbox/extensions/logger.h
-        include/sandbox/extensions/events.h
-        source/extensions/logger.cpp
-        include/sandbox/extensions/events.inl
-        include/sandbox/extensions/logger.inl
+        include/sandbox/core/plugins.h
 )
 
 target_compile_features(sandbox PUBLIC cxx_std_23)

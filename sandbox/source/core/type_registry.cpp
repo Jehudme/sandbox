@@ -1,9 +1,9 @@
-#include "../../include/sandbox/core/TypeRegistry.h"
+#include "sandbox/core/type_registry.h"
 #include <rttr/type>
 
 namespace sandbox
 {
-    void* TypeRegistry::internal_instantiate_pointer(std::string_view type_name, std::vector<rttr::argument> arguments)
+    void* type_registry::internal_instantiate_pointer(std::string_view type_name, std::vector<rttr::argument> arguments)
     {
         const rttr::type target_type = rttr::type::get_by_name(std::string(type_name));
         if (!target_type.is_valid()) return nullptr;
@@ -16,7 +16,7 @@ namespace sandbox
         return nullptr;
     }
 
-    rttr::variant TypeRegistry::internal_call_method(std::string_view method_name, void* instance_pointer, std::vector<rttr::argument> arguments)
+    rttr::variant type_registry::internal_call_method(std::string_view method_name, void* instance_pointer, std::vector<rttr::argument> arguments)
     {
         if (!instance_pointer) return {};
 
@@ -32,7 +32,7 @@ namespace sandbox
         return {};
     }
 
-    rttr::variant TypeRegistry::internal_call_static_method(std::string_view class_name, std::string_view method_name, std::vector<rttr::argument> arguments)
+    rttr::variant type_registry::internal_call_static_method(std::string_view class_name, std::string_view method_name, std::vector<rttr::argument> arguments)
     {
         const rttr::type target_type = rttr::type::get_by_name(std::string(class_name));
         if (!target_type.is_valid()) return {};
@@ -43,12 +43,12 @@ namespace sandbox
         return {};
     }
 
-    bool TypeRegistry::has_type(std::string_view type_name)
+    bool type_registry::has_type(std::string_view type_name)
     {
         return rttr::type::get_by_name(std::string(type_name)).is_valid();
     }
 
-    std::string TypeRegistry::get_type_metadata_name(std::string_view type_name)
+    std::string type_registry::get_type_metadata_name(std::string_view type_name)
     {
         const rttr::type target_type = rttr::type::get_by_name(std::string(type_name));
         return target_type.is_valid() ? target_type.get_name().to_string() : std::string();

@@ -8,11 +8,11 @@
 
 namespace sandbox
 {
-    class TypeRegistry
+    class type_registry
     {
     public:
-        TypeRegistry() = delete;
-        ~TypeRegistry() = delete;
+        type_registry() = delete;
+        ~type_registry() = delete;
 
         template<typename base_t, typename... arguments_t>
         static std::unique_ptr<base_t> instantiate(std::string_view type_name, arguments_t&&... constructor_arguments);
@@ -33,4 +33,4 @@ namespace sandbox
     };
 }
 
-#include "TypeRegistry.inl"
+#include "type_registry.inl"
