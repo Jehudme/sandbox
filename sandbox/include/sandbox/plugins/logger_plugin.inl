@@ -4,8 +4,7 @@ namespace sandbox::plugins
 {
     template<typename... argument_types>
     inline void logger_plugin::log(log_level lvl, std::string_view format_string, argument_types&&... arguments) const {
-        const std::string formatted_message = std::format(format_string, std::forward<argument_types>(arguments)...);
-        _internal_log(lvl, formatted_message);
+        _internal_log(lvl, std::vformat(format_string, std::forward<argument_types>(arguments)...));
     }
 
     template<typename... argument_types>
