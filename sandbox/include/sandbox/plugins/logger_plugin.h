@@ -41,15 +41,15 @@ namespace sandbox::plugins
         template<typename... argument_types>
         inline void critical(std::string_view format_string, argument_types&&... arguments) const;
 
-        static std::string level_to_string(log_level log_level);
-        static log_level string_to_level(std::string_view log_level_string);
-
     private:
         void _internal_log(log_level log_level, std::string_view formatted_message) const;
 
         struct implementation;
         std::unique_ptr<implementation> _implementation;
     };
+
+    static std::string level_to_string(logger_plugin::log_level log_level);
+    static logger_plugin::log_level string_to_level(std::string_view log_level_string);
 }
 
 #include "logger_plugin.inl"

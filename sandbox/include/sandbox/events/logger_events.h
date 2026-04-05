@@ -11,7 +11,7 @@ namespace sandbox::events {
     };
 
     template<typename... argument_types>
-static inline log_event create_log_event(plugins::logger_plugin::log_level level, std::string_view format_string, auto&&... arguments);
+    static inline log_event create_log_event(plugins::logger_plugin::log_level level, std::string_view format_string, auto&&... arguments);
 
     template<typename... argument_types>
     static inline log_event create_log_trace_event(std::string_view format_string, argument_types&&... arguments);
