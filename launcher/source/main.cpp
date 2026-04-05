@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "../../sandbox/include/sandbox/utilities/properties.h"
+#include "../../sandbox/include/sandbox/utils/properties.h"
 
 
 int main()

@@ -1,5 +1,5 @@
 #pragma once
-#include "sandbox//utilities/properties.h"
+#include "sandbox//utils/properties.h"
 
 namespace sandbox
 {

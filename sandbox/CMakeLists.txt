@@ -46,9 +46,9 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(rttr spdlog glaze flecs)
 
 add_library(sandbox STATIC
-        source/utilities/properties.cpp
-        include/sandbox/utilities/properties.h
-        include/sandbox/utilities/properties.inl
+        source/utils/properties.cpp
+        include/sandbox/utils/properties.h
+        include/sandbox/utils/properties.inl
         source/core/plugins.cpp
         include/sandbox/core/plugins.h
         source/core/type_registry.cpp
