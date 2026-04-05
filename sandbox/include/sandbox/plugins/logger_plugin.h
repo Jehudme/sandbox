@@ -9,37 +9,37 @@
 
 namespace sandbox::plugins
 {
-    class logger : public plugin
+    class logger_plugin : public plugin
     {
     public:
         enum class log_level { trace, debug, info, warn, error, critical };
 
-        logger() = default;
-        ~logger() override = default;
+        logger_plugin() = default;
+        ~logger_plugin() override = default;
 
         void initialize(const properties& properties) override;
         void finalize() override;
 
         template<typename... argument_types>
-        void log(log_level lvl, std::string_view format_string, argument_types&&... arguments) const;
+        inline void log(log_level lvl, std::string_view format_string, argument_types&&... arguments) const;
 
         template<typename... argument_types>
-        void trace(std::string_view format_string, argument_types&&... arguments) const;
+        inline void trace(std::string_view format_string, argument_types&&... arguments) const;
 
         template<typename... argument_types>
-        void debug(std::string_view format_string, argument_types&&... arguments) const;
+        inline void debug(std::string_view format_string, argument_types&&... arguments) const;
 
         template<typename... argument_types>
-        void info(std::string_view format_string, argument_types&&... arguments) const;
+        inline void info(std::string_view format_string, argument_types&&... arguments) const;
 
         template<typename... argument_types>
-        void warn(std::string_view format_string, argument_types&&... arguments) const;
+        inline void warn(std::string_view format_string, argument_types&&... arguments) const;
 
         template<typename... argument_types>
-        void error(std::string_view format_string, argument_types&&... arguments) const;
+        inline void error(std::string_view format_string, argument_types&&... arguments) const;
 
         template<typename... argument_types>
-        void critical(std::string_view format_string, argument_types&&... arguments) const;
+        inline void critical(std::string_view format_string, argument_types&&... arguments) const;
 
         static std::string level_to_string(log_level log_level);
         static log_level string_to_level(std::string_view log_level_string);
@@ -52,4 +52,4 @@ namespace sandbox::plugins
     };
 }
 
-#include "logger.inl"
+#include "logger_plugin.inl"

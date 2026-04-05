@@ -2,7 +2,7 @@
 // Created by jehud on 2026-04-04.
 //
 
-#include "logger.h"
+#include "../../include/sandbox/plugins/logger_plugin.h"
 
 namespace sandbox
 {
