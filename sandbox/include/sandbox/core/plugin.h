@@ -5,12 +5,12 @@ namespace sandbox
 {
     class engine;
 
-    class plugins
+    class plugin
     {
         friend class engine;
     public:
-        plugins() = default;
-        virtual ~plugins() = default;
+        plugin() = default;
+        virtual ~plugin() = default;
 
         virtual void initialize(const properties& properties) = 0;
         virtual void finalize() = 0;
