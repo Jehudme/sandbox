@@ -14,8 +14,8 @@ namespace sandbox::plugins
     public:
         enum class log_level { trace, debug, info, warn, error, critical };
 
-        logger();
-        ~logger();
+        logger() = default;
+        ~logger() override = default;
 
         void initialize(const properties& properties) override;
         void finalize() override;

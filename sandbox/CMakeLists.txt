@@ -58,6 +58,7 @@ add_library(sandbox STATIC
         include/sandbox/core/plugin.h
         include/sandbox/plugins/logger.cpp
         include/sandbox/plugins/logger.h
+        include/sandbox/plugins/logger.inl
 )
 
 target_compile_features(sandbox PUBLIC cxx_std_23)
