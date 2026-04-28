@@ -56,12 +56,6 @@ add_library(sandbox STATIC
         include/sandbox/core/type_registry.inl
         include/sandbox/core/type_registration.h
         include/sandbox/core/plugin.h
-        source/plugins/logger_plugin.cpp
-        include/sandbox/plugins/logger_plugin.h
-        include/sandbox/plugins/logger_plugin.inl
-        source/events/logger_events.cpp
-        include/sandbox/events/logger_events.h
-        include/sandbox/events/logger_events.inl
         source/core/engine.cpp
         include/sandbox/core/engine.h
         include/sandbox/core/ecs.h

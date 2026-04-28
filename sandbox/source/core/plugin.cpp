@@ -2,8 +2,9 @@
 
 namespace sandbox
 {
-    engine& plugin::get_engine() const
+
+    plugin::plugin(engine& context) :
+        context(context)
     {
-        return m_engine;
     }
 }
