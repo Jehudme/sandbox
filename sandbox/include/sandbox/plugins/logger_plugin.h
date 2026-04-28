@@ -17,7 +17,7 @@ namespace sandbox::plugins
         logger_plugin() = default;
         ~logger_plugin() override = default;
 
-        void initialize(const properties& properties) override;
+        void initialize() override;
         void finalize() override;
 
         template<typename... argument_types>

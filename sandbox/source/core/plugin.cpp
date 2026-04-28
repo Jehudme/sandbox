@@ -4,6 +4,6 @@ namespace sandbox
 {
     engine& plugin::get_engine() const
     {
-        return *m_engine;
+        return m_engine;
     }
 }

@@ -62,6 +62,9 @@ add_library(sandbox STATIC
         source/events/logger_events.cpp
         include/sandbox/events/logger_events.h
         include/sandbox/events/logger_events.inl
+        source/core/engine.cpp
+        include/sandbox/core/engine.h
+        include/sandbox/core/ecs.h
 )
 
 target_compile_features(sandbox PUBLIC cxx_std_23)

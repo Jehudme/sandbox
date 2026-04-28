@@ -9,16 +9,17 @@ namespace sandbox
     {
         friend class engine;
     public:
-        plugin() = default;
-        virtual ~plugin() = default;
-
-        virtual void initialize(const properties& properties) = 0;
-        virtual void finalize() = 0;
+        plugin(engine& engine_instance);
+        virtual ~plugin();
 
         engine& get_engine() const;
 
     protected:
-        engine* m_engine = nullptr;
+        engine& m_engine;
+
+    private:
+        virtual void initialize() = 0;
+        virtual void finalize() = 0;
 
     };
 }

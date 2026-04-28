@@ -17,6 +17,7 @@ namespace sandbox
         using visitor_callback = std::function<void(const key_path& path, const std::string& json_value)>;
 
         properties() = default;
+        properties(const properties&) = default;
 
         void load_from_file(const std::filesystem::path& file_path);
         void save_to_file(const std::filesystem::path& file_path) const;
