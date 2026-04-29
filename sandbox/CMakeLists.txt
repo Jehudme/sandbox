@@ -59,6 +59,8 @@ add_library(sandbox STATIC
         source/core/engine.cpp
         include/sandbox/core/engine.h
         include/sandbox/core/ecs.h
+        source/core/scope_guard.cpp
+        include/sandbox/core/scope_guard.h
 )
 
 target_compile_features(sandbox PUBLIC cxx_std_23)
