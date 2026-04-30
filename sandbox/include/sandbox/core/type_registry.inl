@@ -15,10 +15,10 @@ namespace sandbox
     }
 
     template<typename... argument_types>
-    rttr::variant type_registry::call_method(std::string_view method_name, void* instance_pointer, argument_types&&... method_arguments)
+    rttr::variant type_registry::call_method(std::string_view method_name, rttr::instance instance, argument_types&&... method_arguments)
     {
         std::vector<rttr::argument> argument_list({ std::forward<argument_types>(method_arguments)... });
-        return internal_call_method(method_name, instance_pointer, std::move(argument_list));
+        return internal_call_method(method_name, instance, std::move(argument_list));
     }
 
     template<typename... argument_types>

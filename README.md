@@ -41,10 +41,11 @@ Sandbox is organized into layered subsystem categories:
 
 Subsystem behavior is extension-centric and event-driven, enabling composition without tight compile-time coupling between services.
 
-## Extension Documentation
+## Documentation
 
-Extension-specific wiki pages live in [`docs/`](./docs):
+Developer guides live in [`docs/`](./docs):
 
+- [`docs/core_architecture.md`](./docs/core_architecture.md) — plugin model, type registration, manifest format, and dependency resolution
 - [`docs/ecs_extensions.md`](./docs/ecs_extensions.md)
 - [`docs/data_extensions.md`](./docs/data_extensions.md)
 - [`docs/io_extensions.md`](./docs/io_extensions.md)
