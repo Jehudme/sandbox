@@ -8,6 +8,8 @@ namespace sandbox
     class dispatcher : public plugin
     {
     public:
+        dispatcher(engine& context);
+        ~dispatcher();
 
         void initialize() override;
         void finalize() override;

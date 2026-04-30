@@ -61,7 +61,7 @@ add_library(sandbox STATIC
         include/sandbox/core/ecs.h
         source/core/scope_guard.cpp
         include/sandbox/core/scope_guard.h
-        include/sandbox/plugins/dispatcher.cpp
+        source/plugins/dispatcher.cpp
         include/sandbox/plugins/dispatcher.h
 )
 
