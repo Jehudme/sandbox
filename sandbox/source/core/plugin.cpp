@@ -2,9 +2,10 @@
 
 namespace sandbox
 {
-
     plugin::plugin(engine& context) :
         context(context)
     {
     }
+
+    plugin::~plugin() = default;
 }
