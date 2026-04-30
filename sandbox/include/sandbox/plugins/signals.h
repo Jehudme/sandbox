@@ -33,9 +33,9 @@ namespace sandbox
     template<typename event_type>
     void signals::publish(const event_type& event)
     {
-        // 1. Pass the native reference using the typed .ctx() overload
+        // Tell Flecs: Emit this event specifically targeting the 'global_event_bus' tag!
         context.ecs.event<event_type>()
-             .template id<event_type>()
+             .template id<global_event_bus>() // <-- The missing link!
              .entity(m_bus_entity)
              .ctx(event)
              .emit();
@@ -44,11 +44,13 @@ namespace sandbox
     template<typename event_type>
     entity signals::subscribe(std::function<void(const event_type&)> callback)
     {
-        return context.ecs.observer<event_type>()
+        return context.ecs.observer()
             .template event<event_type>()
-            .template with<global_event_bus>() // 2. Add the 'template' disambiguator here
-            .each([callback](const event_type& event_data) {
-                callback(event_data);
+            .template with<global_event_bus>()
+            .each([callback](flecs::iter& it, size_t /* index */) {
+                if (it.param()) {
+                    callback(*static_cast<const event_type*>(it.param()));
+                }
             });
     }
 }

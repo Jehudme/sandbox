@@ -26,25 +26,16 @@ namespace sandbox
 
     void engine::initialize(const properties& manifest)
     {
-        // 1. Define defaults
         auto target_manifest = sandbox::properties::parse(R"(
-    {
-        "plugins": {
-            "signals": { "type": "default::signals" }
+        {
+            "plugins": {
+                "signals": { "type": "default::signals" }
+            }
         }
-    }
-    )");
-
-        // 2. Merge user manifest (user settings override defaults)
-        std::cout << manifest.save_to_string() << std::endl;
-        std::cout << target_manifest.save_to_string() << std::endl;
+        )");
 
         target_manifest.merge(manifest);
 
-        std::cout << manifest.save_to_string() << std::endl;
-        std::cout << target_manifest.save_to_string() << std::endl;
-
-        // 3. Initialize everything found in the final merged manifest
         std::vector<std::string> aliases = target_manifest.list_keys({"plugins"});
 
         for (const std::string& alias : aliases) {

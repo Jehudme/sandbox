@@ -3,7 +3,7 @@
 
 SANDBOX_REFLECTION
 {
-    SANDBOX_REGISTER_PLUGIN(sandbox::signals)
+    SANDBOX_REGISTER_PLUGIN_NAMED(sandbox::signals, "default::signals")
 }
 
 namespace sandbox
