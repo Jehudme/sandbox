@@ -26,10 +26,8 @@ namespace sandbox
     {
         SANDBOX_SCOPE_GUARD(ecs.entity("::plugins"));
 
-        if (auto new_plugin = type_registry::instantiate<plugin>(type_name, this))
-        {
-            ecs.entity(alias.data())
-                 .emplace<std::unique_ptr<plugin>>(std::move(new_plugin));
+        if (auto new_plugin = type_registry::instantiate<plugin>(type_name, this)) {
+            ecs.entity(alias.data()).emplace<std::unique_ptr<plugin>>(std::move(new_plugin));
         }
     }
 
@@ -37,8 +35,7 @@ namespace sandbox
     {
         SANDBOX_SCOPE_GUARD(ecs.entity("::plugins"));
 
-        if (auto plugin_entity = ecs.lookup(alias.data()))
-        {
+        if (auto plugin_entity = ecs.lookup(alias.data())){
             plugin_entity.destruct();
         }
     }
@@ -47,10 +44,8 @@ namespace sandbox
     {
         SANDBOX_SCOPE_GUARD(ecs.entity("::plugins"));
 
-        if (auto entt = ecs.lookup(alias.data()))
-        {
-            if (auto& plugin_ptr = entt.get<std::unique_ptr<plugin>>())
-            {
+        if (auto entt = ecs.lookup(alias.data())) {
+            if (auto& plugin_ptr = entt.get<std::unique_ptr<plugin>>()) {
                 return plugin_ptr.get();
             }
         }

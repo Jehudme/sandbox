@@ -25,8 +25,7 @@ namespace sandbox {
     };
 
     template <typename plugin_type>
-    plugin_type* engine::find_plugin(std::string_view alias)
-    {
+    plugin_type* engine::find_plugin(std::string_view alias) {
         return dynamic_cast<plugin_type*>(get_plugin(alias));
     }
 
