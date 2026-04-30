@@ -63,6 +63,8 @@ add_library(sandbox STATIC
         include/sandbox/core/scope_guard.h
         source/plugins/signals.cpp
         include/sandbox/plugins/signals.h
+        include/sandbox/plugins/logger.cpp
+        include/sandbox/plugins/logger.h
 )
 
 target_compile_features(sandbox PUBLIC cxx_std_23)

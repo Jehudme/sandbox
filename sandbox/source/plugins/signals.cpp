@@ -3,16 +3,16 @@
 
 SANDBOX_REFLECTION
 {
-    SANDBOX_REGISTER_PLUGIN_NAMED(sandbox::signals, "default::signals")
+    SANDBOX_REGISTER_PLUGIN(sandbox::signals)
 }
 
 namespace sandbox
 {
     signals::signals(engine& context) : plugin(context)
     {
-        // 5. Create the dedicated router entity and attach the tag
-        m_bus_entity = context.ecs.entity("::internal::global_event_bus");
-        m_bus_entity.add<global_event_bus>();
+        // Initialize the default fallback bus when the plugin is created
+        m_default_bus = context.ecs.entity("::internal::default_event_bus");
+        m_default_bus.add<signal_channel>();
     }
 
     signals::~signals()
@@ -25,5 +25,11 @@ namespace sandbox
 
     void signals::finalize()
     {
+    }
+
+    flecs::entity signals::create_channel(std::string_view name)
+    {
+        // Creates a custom isolated bus entity and flags it as a valid channel
+        return context.ecs.entity(name.data()).add<signal_channel>();
     }
 }

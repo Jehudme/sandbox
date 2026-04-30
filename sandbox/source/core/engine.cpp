@@ -29,7 +29,7 @@ namespace sandbox
         auto target_manifest = sandbox::properties::parse(R"(
         {
             "plugins": {
-                "signals": { "type": "default::signals" }
+                "signals": { "type": "sandbox::signals" }
             }
         }
         )");
