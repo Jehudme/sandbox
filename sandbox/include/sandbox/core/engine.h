@@ -10,7 +10,7 @@ namespace sandbox {
     class engine {
     public:
         engine() = default;
-        ~engine() = default;
+        ~engine();
 
         void initialize(const properties& manifest);
 
@@ -22,6 +22,10 @@ namespace sandbox {
         plugin_type* find_plugin(std::string_view alias);
 
         world ecs;
+
+    private:
+        void call_plugin_initialize(plugin* p);
+        void call_plugin_finalize(plugin* p);
     };
 
     template <typename plugin_type>
