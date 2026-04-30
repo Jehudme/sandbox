@@ -9,7 +9,8 @@ namespace sandbox
     {
         friend class engine;
     public:
-        plugin(engine& context);
+        explicit plugin(engine& context);
+        explicit plugin(engine* context);
         virtual ~plugin();
 
         engine& context;

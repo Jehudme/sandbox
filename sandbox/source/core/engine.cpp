@@ -8,6 +8,21 @@
 
 namespace sandbox
 {
+    engine::~engine()
+    {
+        auto plugins_scope = ecs.lookup("::plugins");
+        if (!plugins_scope.is_valid()) return;
+
+        plugins_scope.children([this](flecs::entity child) {
+            if (const auto& ptr = child.get<std::unique_ptr<plugin>>()) {
+                call_plugin_finalize(ptr.get());
+            }
+        });
+    }
+
+    void engine::call_plugin_initialize(plugin* p) { p->initialize(); }
+    void engine::call_plugin_finalize(plugin* p)   { p->finalize();   }
+
     void engine::initialize(const properties& manifest)
     {
         SANDBOX_SCOPE_GUARD(ecs.entity("::plugins"));
@@ -27,6 +42,7 @@ namespace sandbox
         SANDBOX_SCOPE_GUARD(ecs.entity("::plugins"));
 
         if (auto new_plugin = type_registry::instantiate<plugin>(type_name, this)) {
+            call_plugin_initialize(new_plugin.get());
             ecs.entity(alias.data()).emplace<std::unique_ptr<plugin>>(std::move(new_plugin));
         }
     }
@@ -35,7 +51,10 @@ namespace sandbox
     {
         SANDBOX_SCOPE_GUARD(ecs.entity("::plugins"));
 
-        if (auto plugin_entity = ecs.lookup(alias.data())){
+        if (auto plugin_entity = ecs.lookup(alias.data())) {
+            if (const auto& ptr = plugin_entity.get<std::unique_ptr<plugin>>()) {
+                call_plugin_finalize(ptr.get());
+            }
             plugin_entity.destruct();
         }
     }
@@ -45,7 +64,7 @@ namespace sandbox
         SANDBOX_SCOPE_GUARD(ecs.entity("::plugins"));
 
         if (auto entt = ecs.lookup(alias.data())) {
-            if (auto& plugin_ptr = entt.get<std::unique_ptr<plugin>>()) {
+            if (const auto& plugin_ptr = entt.get<std::unique_ptr<plugin>>()) {
                 return plugin_ptr.get();
             }
         }

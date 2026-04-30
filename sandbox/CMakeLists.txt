@@ -61,6 +61,9 @@ add_library(sandbox STATIC
         include/sandbox/core/ecs.h
         source/core/scope_guard.cpp
         include/sandbox/core/scope_guard.h
+        source/core/dispatcher.cpp
+        include/sandbox/core/dispatcher.h
+        include/sandbox/core/dispatcher.inl
 )
 
 target_compile_features(sandbox PUBLIC cxx_std_23)

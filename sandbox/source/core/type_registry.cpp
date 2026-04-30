@@ -16,17 +16,16 @@ namespace sandbox
         return nullptr;
     }
 
-    rttr::variant type_registry::internal_call_method(std::string_view method_name, void* instance_pointer, std::vector<rttr::argument> arguments)
+    rttr::variant type_registry::internal_call_method(std::string_view method_name, rttr::instance instance, std::vector<rttr::argument> arguments)
     {
-        if (!instance_pointer) return {};
+        if (!instance.is_valid()) return {};
 
-        rttr::instance object_instance(instance_pointer);
-        const rttr::type instance_type = object_instance.get_derived_type();
+        const rttr::type instance_type = instance.get_derived_type();
 
         const rttr::method target_method = instance_type.get_method(std::string(method_name));
         if (target_method.is_valid())
         {
-            return target_method.invoke(object_instance, arguments);
+            return target_method.invoke_variadic(instance, arguments);
         }
 
         return {};
@@ -38,7 +37,7 @@ namespace sandbox
         if (!target_type.is_valid()) return {};
 
         const rttr::method target_method = target_type.get_method(std::string(method_name));
-        if (target_method.is_valid()) return target_method.invoke({}, arguments);
+        if (target_method.is_valid()) return target_method.invoke_variadic({}, arguments);
 
         return {};
     }
