@@ -5,14 +5,11 @@
 
 namespace sandbox
 {
-    class dispatcher : public plugin
+    class signals : public plugin
     {
     public:
-        dispatcher(engine& context);
-        ~dispatcher();
-
-        void initialize() override;
-        void finalize() override;
+        signals(engine& context);
+        ~signals();
 
         /**
          * @brief Publishes a global event to the ECS world.
@@ -26,12 +23,16 @@ namespace sandbox
          */
         template<typename event_type>
         entity subscribe(std::function<void(const event_type&)> callback);
+
+    private:
+        void initialize() override;
+        void finalize() override;
     };
 
     // --- Template Implementations (Outside declaration) ---
 
     template<typename event_type>
-    void dispatcher::publish(const event_type& event)
+    void signals::publish(const event_type& event)
     {
         // Emit the event via the Flecs world
         context.ecs.event<event_type>()
@@ -40,7 +41,7 @@ namespace sandbox
     }
 
     template<typename event_type>
-    entity dispatcher::subscribe(std::function<void(const event_type&)> callback)
+    entity signals::subscribe(std::function<void(const event_type&)> callback)
     {
         return context.ecs.observer<event_type>()
             .template event<event_type>()

@@ -9,5 +9,5 @@ int main()
     props.set({"database", "host"}, "localhost");
     props.set({"database", "port"}, 5432);
 
-    std::cout << props.to_json_string() << std::endl;
+    std::cout << props.save_to_string() << std::endl;
 }

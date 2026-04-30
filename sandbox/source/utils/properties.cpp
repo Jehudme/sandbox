@@ -5,6 +5,16 @@
 
 namespace sandbox
 {
+    properties::properties(const std::string& json_string)
+    {
+        load_from_string(json_string);
+    }
+
+    properties::properties(const std::filesystem::path& file_path)
+    {
+        load_from_file(file_path);
+    }
+
     void properties::load_from_file(const std::filesystem::path& file_path)
     {
         std::ifstream file_stream(file_path);
@@ -15,6 +25,16 @@ namespace sandbox
 
         // Capture and ignore or handle the error context
         const auto error_context = glz::read_json(m_root_node, string_buffer.str());
+        if (error_context) {
+            // Optional: Handle load error (e.g., reset the tree)
+            m_root_node = glz::json_t::object_t{};
+        }
+    }
+
+    void properties::load_from_string(const std::string& json_string)
+    {
+        m_root_node = glz::json_t::object_t{}; // Reset the tree before loading new data
+        const auto error_context = glz::read_json(m_root_node, json_string);
         if (error_context) {
             // Optional: Handle load error (e.g., reset the tree)
             m_root_node = glz::json_t::object_t{};
@@ -151,7 +171,7 @@ namespace sandbox
         return key_list_result;
     }
 
-    std::string properties::to_json_string(const key_path& path) const
+    std::string properties::save_to_string(const key_path& path) const
     {
         const glz::json_t* current_node_ptr = &m_root_node;
         for (const std::string& key : path) {
@@ -160,6 +180,14 @@ namespace sandbox
             } else return {};
         }
         return current_node_ptr->dump().value();
+    }
+
+    properties properties::parse(const std::string& json_string)
+    {
+        properties props = properties();
+        props.load_from_string(json_string);
+
+        return props;
     }
 
 
