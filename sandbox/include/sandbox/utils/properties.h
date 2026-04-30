@@ -16,14 +16,22 @@ namespace sandbox
         using key_list = std::vector<std::string>;
         using visitor_callback = std::function<void(const key_path& path, const std::string& json_value)>;
 
+        properties(const std::string& json_string);
+        properties(const std::filesystem::path& file_path);
+
         properties() = default;
+        ~properties() = default;
+
+        properties& operator=(const properties&) = default;
         properties(const properties&) = default;
 
         void load_from_file(const std::filesystem::path& file_path);
+        void load_from_string(const std::string& json_string);
         void save_to_file(const std::filesystem::path& file_path) const;
-        std::string to_json_string(const key_path& path = {}) const;
+        std::string save_to_string(const key_path& path = {}) const;
 
 
+        static properties parse(const std::string& json_string);
         void merge(const properties& other_properties);
         void move(const key_path& source_path, const key_path& destination_path);
         void rename(const key_path& path, const std::string& new_name);

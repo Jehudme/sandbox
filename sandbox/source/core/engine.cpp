@@ -27,6 +27,19 @@ namespace sandbox
     {
         SANDBOX_SCOPE_GUARD(ecs.entity("::plugins"));
 
+        auto target_manifest = sandbox::properties::parse(R"(
+        {
+            "plugins": {
+                "signals": {
+                    "type": "sandbox::signals",
+                    "enabled": true
+                }
+            }
+        }
+        )");
+
+        target_manifest.merge(manifest);
+
         std::vector<std::string> aliases = manifest.list_keys({"plugins"});
 
         for (std::string alias : aliases) {
