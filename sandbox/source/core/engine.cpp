@@ -1,5 +1,6 @@
 #include "sandbox/core/engine.h"
 
+#include <iostream>
 #include <stack>
 
 #include "sandbox/core/plugin.h"
@@ -25,28 +26,34 @@ namespace sandbox
 
     void engine::initialize(const properties& manifest)
     {
-        SANDBOX_SCOPE_GUARD(ecs.entity("::plugins"));
-
+        // 1. Define defaults
         auto target_manifest = sandbox::properties::parse(R"(
-        {
-            "plugins": {
-                "signals": {
-                    "type": "sandbox::signals",
-                    "enabled": true
-                }
-            }
+    {
+        "plugins": {
+            "signals": { "type": "default::signals" }
         }
-        )");
+    }
+    )");
+
+        // 2. Merge user manifest (user settings override defaults)
+        std::cout << manifest.save_to_string() << std::endl;
+        std::cout << target_manifest.save_to_string() << std::endl;
 
         target_manifest.merge(manifest);
 
-        std::vector<std::string> aliases = manifest.list_keys({"plugins"});
+        std::cout << manifest.save_to_string() << std::endl;
+        std::cout << target_manifest.save_to_string() << std::endl;
 
-        for (std::string alias : aliases) {
-            std::optional<std::string> type_name = manifest.get<std::string>({"plugins", alias, "type"});
+        // 3. Initialize everything found in the final merged manifest
+        std::vector<std::string> aliases = target_manifest.list_keys({"plugins"});
 
-            if (type_name.has_value()) create_plugin(alias, *type_name);
-            else throw std::runtime_error(std::format("Plugin {} has no type specified", alias));
+        for (const std::string& alias : aliases) {
+            auto type_name = target_manifest.get<std::string>({"plugins", alias, "type"});
+            if (type_name) {
+                create_plugin(alias, *type_name);
+            } else {
+                throw std::runtime_error(std::format("Plugin {} has no type", alias));
+            }
         }
     }
 
@@ -54,17 +61,18 @@ namespace sandbox
     {
         SANDBOX_SCOPE_GUARD(ecs.entity("::plugins"));
 
-        if (auto new_plugin = type_registry::instantiate<plugin>(type_name, this)) {
+        // Pass the engine as a strict reference wrapper
+        if (auto new_plugin = type_registry::instantiate<plugin, engine&>(type_name, *this)) {
             call_plugin_initialize(new_plugin.get());
-            ecs.entity(alias.data()).emplace<std::unique_ptr<plugin>>(std::move(new_plugin));
+
+            ecs.entity(std::string(alias).c_str())
+               .emplace<std::unique_ptr<plugin>>(std::move(new_plugin));
         }
     }
 
     void engine::delete_plugin(std::string_view alias)
     {
-        SANDBOX_SCOPE_GUARD(ecs.entity("::plugins"));
-
-        if (auto plugin_entity = ecs.lookup(alias.data())) {
+        if (auto plugin_entity = ecs.entity("::plugins").lookup(std::string(alias).c_str())) {
             if (const auto& ptr = plugin_entity.get<std::unique_ptr<plugin>>()) {
                 call_plugin_finalize(ptr.get());
             }
@@ -74,9 +82,7 @@ namespace sandbox
 
     plugin* engine::get_plugin(std::string_view alias)
     {
-        SANDBOX_SCOPE_GUARD(ecs.entity("::plugins"));
-
-        if (auto entt = ecs.lookup(alias.data())) {
+        if (auto entt = ecs.entity("::plugins").lookup(std::string(alias).c_str())) {
             if (const auto& plugin_ptr = entt.get<std::unique_ptr<plugin>>()) {
                 return plugin_ptr.get();
             }

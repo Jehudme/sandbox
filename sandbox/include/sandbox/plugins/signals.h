@@ -5,38 +5,39 @@
 
 namespace sandbox
 {
+    // 1. Define an empty struct to act as our ECS term/filter
+    struct global_event_bus {};
+
     class signals : public plugin
     {
     public:
         signals(engine& context);
         ~signals();
 
-        /**
-         * @brief Publishes a global event to the ECS world.
-         */
         template<typename event_type>
         void publish(const event_type& event);
 
-        /**
-         * @brief Subscribes to an event and returns the Observer entity.
-         * @return flecs::entity The entity representing this subscription.
-         */
         template<typename event_type>
         entity subscribe(std::function<void(const event_type&)> callback);
 
     private:
         void initialize() override;
         void finalize() override;
+
+        // 2. A dedicated internal entity to act as our event router
+        flecs::entity m_bus_entity;
     };
 
-    // --- Template Implementations (Outside declaration) ---
+    // --- Template Implementations ---
 
     template<typename event_type>
     void signals::publish(const event_type& event)
     {
-        // Emit the event via the Flecs world
+        // 1. Pass the native reference using the typed .ctx() overload
         context.ecs.event<event_type>()
-             .set(event)
+             .template id<event_type>()
+             .entity(m_bus_entity)
+             .ctx(event)
              .emit();
     }
 
@@ -45,9 +46,9 @@ namespace sandbox
     {
         return context.ecs.observer<event_type>()
             .template event<event_type>()
-            .yield_existing(true)
-            .each([callback](const event_type& data) {
-                callback(data);
+            .template with<global_event_bus>() // 2. Add the 'template' disambiguator here
+            .each([callback](const event_type& event_data) {
+                callback(event_data);
             });
     }
 }

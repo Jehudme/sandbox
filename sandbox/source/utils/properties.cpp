@@ -61,14 +61,27 @@ namespace sandbox
 
     void properties::deep_merge(glz::json_t& destination, const glz::json_t& source)
     {
+        // 1. If the incoming source is completely empty (null), do nothing.
+        // This prevents an empty user manifest from wiping out the defaults.
+        if (source.is_null()) {
+            return;
+        }
+
         if (source.is_object() && destination.is_object()) {
             auto& destination_map = destination.get_object();
             const auto& source_map = source.get_object();
 
             for (const auto& [key, value] : source_map) {
-                deep_merge(destination_map[key], value);
+                // 2. Optional but recommended: Standard JSON merge patch behavior.
+                // If the user explicitly sets a value to null, erase the key.
+                if (value.is_null()) {
+                    destination_map.erase(key);
+                } else {
+                    deep_merge(destination_map[key], value);
+                }
             }
         } else {
+            // 3. Primitive values overwrite as normal
             destination = source;
         }
     }
