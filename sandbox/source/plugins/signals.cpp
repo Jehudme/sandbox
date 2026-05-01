@@ -1,3 +1,5 @@
+
+/***
 #include "sandbox/plugins/signals.h"
 #include "sandbox/core/type_registration.h"
 
@@ -33,3 +35,4 @@ namespace sandbox
         return context.ecs.entity(name.data()).add<signal_channel>();
     }
 }
+***/

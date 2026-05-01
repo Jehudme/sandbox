@@ -1,23 +1,20 @@
 #pragma once
-#include "sandbox//utils/properties.h"
+#include "ecs.h"
 
-namespace sandbox
-{
-    class engine;
 
-    class plugin
-    {
+namespace sandbox{
+
+    class plugin {
         friend class engine;
+
     public:
-        explicit plugin(engine& context);
-        explicit plugin(engine* context);
-        virtual ~plugin();
+        plugin(world ecs);
+        ~plugin();
 
-        engine& context;
-
-    private:
         virtual void initialize() = 0;
         virtual void finalize() = 0;
 
+    protected:
+        world ecs;
     };
 }
