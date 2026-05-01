@@ -1,6 +1,7 @@
 #pragma once
 
 #include <rttr/registration>
+#include "ecs.h"
 
 #define SANDBOX_REFLECTION \
 RTTR_REGISTRATION
@@ -19,7 +20,7 @@ SANDBOX_REGISTER_TYPE_NAMED(type_t, #type_t)
  */
 #define SANDBOX_REGISTER_PLUGIN_NAMED(type_t, metadata_name) \
 rttr::registration::class_<type_t>(metadata_name) \
-.constructor<sandbox::engine&>()(rttr::policy::ctor::as_raw_ptr);
+.constructor<sandbox::world>()(rttr::policy::ctor::as_raw_ptr);
 
 #define SANDBOX_REGISTER_PLUGIN(type_t) \
 SANDBOX_REGISTER_PLUGIN_NAMED(type_t, #type_t)
