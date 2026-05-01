@@ -7,7 +7,7 @@ namespace sandbox {
 
     class engine {
     public:
-        engine();
+        engine(const properties& manifest);
         ~engine();
 
         engine(const engine&) = delete;
@@ -21,7 +21,6 @@ namespace sandbox {
 
     private:
         void load_plugin(std::string_view type_name);
-        void unload_plugin(std::string_view type_name);
 
     public:
         world ecs;
