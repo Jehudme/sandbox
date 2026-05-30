@@ -1,4 +1,4 @@
-#include "../../include/sandbox/core/properties.h"
+#include "../../include/sandbox/utilities/properties.h"
 #include <glaze/glaze.hpp>
 #include <fstream>
 #include <sstream>

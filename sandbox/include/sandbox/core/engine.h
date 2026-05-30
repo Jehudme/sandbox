@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ecs.h"
-#include "properties.h"
+#include "../utilities/properties.h"
 #include <filesystem>
 #include <string>
 

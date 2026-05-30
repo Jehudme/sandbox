@@ -1,5 +1,5 @@
 #include "sandbox/core/engine.h"
-#include "sandbox/core/properties.h"
+#include "../../sandbox/include/sandbox/utilities/properties.h"
 #include "sandbox/core/exports.h" // Includes your new setup function
 #include <iostream>
 
