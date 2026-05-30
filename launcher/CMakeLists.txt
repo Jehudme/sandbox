@@ -19,6 +19,7 @@ target_precompile_headers(launcher
 )
 
 set_target_properties(launcher PROPERTIES
+        OUTPUT_NAME "sandbox_engine"
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
         ENABLE_EXPORTS TRUE
 )
