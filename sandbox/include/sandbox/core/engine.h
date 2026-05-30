@@ -1,13 +1,15 @@
 #pragma once
+
 #include "ecs.h"
 #include "properties.h"
-
+#include <filesystem>
+#include <string>
 
 namespace sandbox {
 
     class engine {
     public:
-        engine(const properties& manifest);
+        engine();
         ~engine();
 
         engine(const engine&) = delete;
@@ -18,6 +20,10 @@ namespace sandbox {
 
         void initialize(const properties& manifest);
         void finalize();
+
+        void load_libraries_from_directory(const std::filesystem::path& directory_path);
+        void load_library(const std::filesystem::path& library_path);
+        void load_module_from_library(const std::filesystem::path& library_path, const std::string& module_name);
 
     public:
         world ecs;

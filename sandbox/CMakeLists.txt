@@ -39,8 +39,10 @@ add_library(sandbox STATIC
         include/sandbox/core/properties.h
         include/sandbox/core/engine.h
         include/sandbox/core/ecs.h
-        include/sandbox/core/plugin.h
+        include/sandbox/core/exports.h
         include/sandbox/core/properties.inl
+        include/sandbox/utilities/filesystem.h
+        source/utilities/filesystem.cpp
 )
 
 add_library(sandbox::library ALIAS sandbox)
