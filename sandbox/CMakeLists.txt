@@ -3,26 +3,9 @@ project(sandbox LANGUAGES CXX)
 
 include(FetchContent)
 
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
-set(BUILD_EXAMPLES      OFF CACHE BOOL "" FORCE)
-set(BUILD_UNIT_TESTS    OFF CACHE BOOL "" FORCE)
-set(BUILD_DOCUMENTATION OFF CACHE BOOL "" FORCE)
-set(BUILD_INSTALLER     OFF CACHE BOOL "" FORCE)
-
-# Prefer static RTTR
-set(RTTR_BUILD_STATIC ON  CACHE BOOL "" FORCE)
-set(RTTR_BUILD_SHARED OFF CACHE BOOL "" FORCE)
-
-# Avoid install/packaging when embedded
-set(RTTR_ENABLE_INSTALL OFF CACHE BOOL "" FORCE)
-
-FetchContent_Declare(
-        rttr
-        GIT_REPOSITORY https://github.com/rttrorg/rttr.git
-        GIT_TAG        v0.9.6
-)
+# -----------------------------------------------------------------------------
+# Third-Party Dependencies
+# -----------------------------------------------------------------------------
 
 FetchContent_Declare(
         spdlog
@@ -43,43 +26,44 @@ FetchContent_Declare(
         GIT_TAG        v4.1.4
 )
 
-FetchContent_MakeAvailable(rttr spdlog glaze flecs)
+FetchContent_MakeAvailable(spdlog glaze flecs)
+
+# -----------------------------------------------------------------------------
+# Sandbox Library Target
+# -----------------------------------------------------------------------------
 
 add_library(sandbox STATIC
-        source/utils/properties.cpp
-        include/sandbox/utils/properties.h
-        include/sandbox/utils/properties.inl
-        source/core/type_registry.cpp
-        include/sandbox/core/type_registry.h
-        include/sandbox/core/type_registry.inl
-        include/sandbox/core/type_registration.h
+        source/core/properties.cpp
+        source/core/engine.cpp
+
+        include/sandbox/core/properties.h
         include/sandbox/core/engine.h
         include/sandbox/core/ecs.h
-        source/core/scope_guard.cpp
-        include/sandbox/core/scope_guard.h
         include/sandbox/core/plugin.h
-        include/sandbox/core/engine.cpp
-        include/sandbox/core/engine.h
+        include/sandbox/core/properties.inl
 )
 
+add_library(sandbox::library ALIAS sandbox)
+
+# Compile Features & Standards
 target_compile_features(sandbox PUBLIC cxx_std_23)
 
+# Include Directories
 target_include_directories(sandbox
         PUBLIC  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/source
 )
 
+# Target Linkage
 target_link_libraries(sandbox
         PUBLIC
-        flecs_static
+        flecs
         spdlog::spdlog
         glaze::glaze
-        RTTR::Core
 )
 
+# Precompiled Headers Configuration
 target_precompile_headers(sandbox
         PRIVATE
-        "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/pch.h>"
+        include/sandbox/pch.h
 )
-
-add_library(sandbox::library ALIAS sandbox)

@@ -1,6 +1,6 @@
 #pragma once
 #include "ecs.h"
-#include "sandbox/utils/properties.h"
+#include "properties.h"
 
 
 namespace sandbox {
@@ -18,9 +18,6 @@ namespace sandbox {
 
         void initialize(const properties& manifest);
         void finalize();
-
-    private:
-        void load_plugin(std::string_view type_name);
 
     public:
         world ecs;
