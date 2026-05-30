@@ -1,6 +1,6 @@
 #include "sandbox/core/engine.h"
-#include "../../sandbox/include/sandbox/utilities/properties.h"
-#include "sandbox/core/exports.h" // Includes your new setup function
+#include "sandbox/utilities/properties.h"
+#include "sandbox/core/plugin.h"
 #include <iostream>
 
 int main(int argc, char** argv) {

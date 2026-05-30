@@ -2,7 +2,7 @@
 #include <flecs.h>
 
 // Include your engine's export macros
-#include "sandbox/core/exports.h"
+#include "sandbox/core/plugin.h"
 
 // ============================================================================
 // 1. Fake Components
