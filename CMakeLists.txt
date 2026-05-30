@@ -6,4 +6,5 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_subdirectory(sandbox)
-add_subdirectory(launcher)
+add_subdirectory(test/launcher)
+add_subdirectory(test/application)

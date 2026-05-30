@@ -45,8 +45,7 @@ namespace sandbox {
     }
 
     void engine::load_library(const std::filesystem::path& library_path) {
-        std::string inferred_module_name = library_path.stem().string();
-        load_module_from_library(library_path, inferred_module_name);
+        load_module_from_library(library_path, "SandboxLibraryMain");
     }
 
     void engine::load_module_from_library(const std::filesystem::path& library_path, const std::string& module_name) {
