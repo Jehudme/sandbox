@@ -3,6 +3,7 @@
 
 #include "sandbox/core/engine.h"
 #include "sandbox/core/plugin.h"
+#include "sandbox/macros/runner.h"
 
 int main() {
     sandbox::configure_plugin_os_api();
@@ -11,4 +12,7 @@ int main() {
     sandbox::properties manifest;
 
     engine.initialize(manifest);
+
+    SANDBOX_ENGINE_RUN(engine.ecs);
+
 }

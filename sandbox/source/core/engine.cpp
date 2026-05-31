@@ -5,6 +5,7 @@
 #include <stdexcept>
 
 #include "modules/logger.h"
+#include "modules/runner.h"
 #include "sandbox/core/plugin.h"
 
 namespace sandbox {
@@ -21,7 +22,7 @@ namespace sandbox {
         ecs.entity("::manifest").set<properties>(manifest);
 
         ecs.import<modules::logger>();
-        ecs.progress(0);
+        ecs.import<modules::runner>();
 
         SANDBOX_INFO(ecs, "[Engine] Initializing...");
 
