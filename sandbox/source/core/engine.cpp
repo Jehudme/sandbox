@@ -3,7 +3,11 @@
 #include "sandbox/utilities/filesystem.h"
 #include <stdexcept>
 
+#include "modules/logger.h"
+#include "sandbox/core/plugin.h"
+
 namespace sandbox {
+    engine::engine() = default;
 
     engine::~engine() {
         finalize();
@@ -11,6 +15,10 @@ namespace sandbox {
 
     void engine::initialize(const properties& manifest) {
         ecs.reset();
+
+        ecs.entity("::manifest").set<properties>(manifest);
+        ecs.import<modules::logger>();
+
         load_libraries_from_directory(manifest.get<std::string>({"path", "libraries"}).value_or("libraries"));
     }
 

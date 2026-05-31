@@ -7,11 +7,7 @@ add_executable(launcher
 
 add_executable(sandbox::launcher ALIAS launcher)
 
-# REMOVED mock_test_plugin FROM HERE:
 target_link_libraries(launcher PRIVATE sandbox::library)
-
-# ADDED THIS: Tell CMake to compile the plugin before the launcher runs, but don't link them!
-add_dependencies(launcher mock_test_plugin)
 
 target_precompile_headers(launcher
         PRIVATE

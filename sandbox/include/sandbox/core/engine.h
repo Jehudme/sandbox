@@ -9,7 +9,7 @@ namespace sandbox {
 
     class engine {
     public:
-        engine() = default;
+        engine();
         ~engine();
 
         engine(const engine&) = delete;
