@@ -5,23 +5,15 @@
 
 namespace sandbox::events {
 
-    struct GlobalBusTag {};
-
-    // Returns a stable entity used as the "channel"
-    inline flecs::entity bus(flecs::world ecs);
-
-    // Synchronous publish: safe to pass stack payload
     template <typename EventType>
-    void publish(flecs::world ecs, const EventType& payload);
+    void publish(flecs::world world, const EventType& payload, flecs::entity channel = flecs::entity());
 
-    // Asynchronous publish: payload must outlive delivery, so we heap-own it
     template <typename EventType>
-    void publish_async(flecs::world ecs, EventType payload);
+    void publish_async(flecs::world world, EventType payload, flecs::entity channel = flecs::entity());
 
-    // Subscribe to EventType on the global bus
     template <typename EventType, typename Func>
-    flecs::entity subscribe(flecs::world ecs, Func&& callback);
+    flecs::entity subscribe(flecs::world world, Func&& callback, flecs::entity channel = flecs::entity());
 
-} // namespace sandbox::events
+}
 
 #include "events.inl"
