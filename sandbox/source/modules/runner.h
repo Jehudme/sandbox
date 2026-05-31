@@ -14,14 +14,12 @@ namespace sandbox::modules {
         ~runner();
 
     private:
-        // Core execution handlers
         void run_sync(world& ecs);
         void start_async(world& ecs);
         void quit();
         void pause();
         void resume();
 
-        // The actual loop logic that ticks Flecs
         void internal_tick_loop(world& ecs);
 
         enum class execution_state {
@@ -33,7 +31,6 @@ namespace sandbox::modules {
 
         execution_state m_state{execution_state::Idle};
 
-        // Threading synchronization primitives
         std::mutex m_state_mutex;
         std::condition_variable m_state_cv;
         std::thread m_worker_thread;

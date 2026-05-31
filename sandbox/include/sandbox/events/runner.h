@@ -1,17 +1,24 @@
 #pragma once
 
+#include <functional>
+
 namespace sandbox::events::runner {
 
+    // 1. The Runtime Interrupts
     struct state_change {
         enum class action {
-            Start, // Spawns an async background thread
-            Run,   // Blocks the calling thread (Synchronous)
-            Quit,  // Terminates the loop gracefully
-            Pause, // Suspends ECS progression (Puts thread to sleep)
-            Resume // Wakes the thread and resumes progression
+            Quit,
+            Pause,
+            Resume
         };
 
         action state_request;
+    };
+
+    // 2. The Execution Handshake
+    struct execution_handshake {
+        bool is_async = false;
+        mutable std::function<void()> callback;
     };
 
 } // namespace sandbox::events::runner

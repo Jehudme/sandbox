@@ -13,6 +13,6 @@ int main() {
 
     engine.initialize(manifest);
 
-    SANDBOX_ENGINE_RUN(engine.ecs);
+    SANDBOX_RUNNER_RUN(engine.ecs);
 
 }
