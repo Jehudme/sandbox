@@ -1,30 +1,30 @@
-#include "logger.h"
+#include "modules/logger.h"
 
+#include "sandbox/macros/logger.h" // Required to use SANDBOX_INFO
 #include "sandbox/utilities/properties.h"
 #include "sandbox/utilities/events.h"
 
 #include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/async.h>
 #include <vector>
-
-#include "spdlog/sinks/basic_file_sink.h"
+#include <stdexcept>
 
 namespace sandbox::modules {
 
     logger::logger(world& ecs) {
-        // 1. Register this class structure as an official Flecs module context name scope
         ecs.module<logger>("::Modules::Logger");
 
-        // 2. Extract properties configuration component from the global manifest entity
         properties manifest = ecs.lookup("::manifest").get<properties>();
 
-        // 3. Retrieve spdlog construction parameters with safe fallback defaults
-        bool is_asynchronous       = manifest.get<bool>({"logger" , "async"})               .value_or(false);
-        std::string output_file    = manifest.get<std::string>({"logger" , "output_file"})  .value_or("log/sandbox.log");
-        std::string log_pattern    = manifest.get<std::string>({"logger" , "pattern"})      .value_or("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
-        std::string level          = manifest.get<std::string>({"logger" , "level"})        .value_or("info");
+        bool is_asynchronous    = manifest.get<bool>({"logger" , "async"})               .value_or(false);
+        std::string output_file = manifest.get<std::string>({"logger" , "output_file"})  .value_or("log/sandbox.log");
+        std::string log_pattern = manifest.get<std::string>({"logger" , "pattern"})      .value_or("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
+        std::string level       = manifest.get<std::string>({"logger" , "level"})        .value_or("info");
 
-        // 4. Set up individual sinks (Console color-coded terminal output + Persistent disk file)
+        // Ensure the exception override parameter is loaded from the configuration
+        m_throw_on_error        = manifest.get<bool>({"logger" , "throw_on_error"})      .value_or(false);
+
         std::vector<spdlog::sink_ptr> logging_sinks;
 
         auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
@@ -35,11 +35,8 @@ namespace sandbox::modules {
             logging_sinks.push_back(file_sink);
         }
 
-        // 5. Build either an Async thread-pool variant or a direct Sync logging implementation
         if (is_asynchronous) {
-            // Allocate backing thread ring-buffer worker context cleanly if not already initialized
             spdlog::init_thread_pool(8192, 1);
-
             m_logger = std::make_shared<spdlog::async_logger>(
                 "sandbox_core",
                 logging_sinks.begin(),
@@ -55,29 +52,27 @@ namespace sandbox::modules {
             );
         }
 
-        // 6. Apply pattern layouts and severity filtering levels to our spdlog controller
         m_logger->set_pattern(log_pattern);
         m_logger->set_level(spdlog::level::from_str(level));
 
-        // Register with global spdlog registry handle so macros can find it if needed
         spdlog::register_logger(m_logger);
 
-        // 7. Subscribe to the custom type-safe event channel we designed earlier
-        flecs::entity subscriber_observer = sandbox::events::subscribe<events::log>(
+        sandbox::events::subscribe<events::log>(
             ecs,
             [this](const events::log& log_event) {
                 this->log(log_event);
             }
         );
 
-        subscriber_observer.child_of<logger>();
-
-        m_logger->info("[LoggerModule] Service fully mounted and intercepting global channel telemetry.");
+        // We use the macro to announce the logger is ready!
+        // Because we removed child_of<logger>(), the observer will catch this perfectly.
+        SANDBOX_INFO(ecs, "[Logger] Mounted.");
     }
 
     logger::~logger() {
         if (m_logger) {
-            m_logger->info("[LoggerModule] Flushing stream buffers and shutting down cleanly.");
+            // Direct native call is required here, as the ECS world may be in the middle of teardown/reset
+            m_logger->info("[Logger] Shutting down.");
             m_logger->flush();
         }
         spdlog::drop("sandbox_core");
