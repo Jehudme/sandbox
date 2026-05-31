@@ -1,64 +1,67 @@
 #include <iostream>
 #include <flecs.h>
 
-// Include your engine's export macros
 #include "sandbox/core/plugin.h"
+#include "sandbox/utilities/events.h"
 
-// ============================================================================
-// 1. Fake Components
-// ============================================================================
 struct MockPosition { float x, y; };
 struct MockVelocity { float x, y; };
 struct MockAudioSource { float volume; };
 
-// ============================================================================
-// 2. Fake Sub-Modules
-// ============================================================================
-
-// Module A: Physics
-struct MockPhysicsModule {
-    MockPhysicsModule(flecs::world& world) {
-        // Register the module with Flecs
-        world.module<MockPhysicsModule>();
-
-        // Register components
-        world.component<MockPosition>();
-        world.component<MockVelocity>();
-
-        // Create a dummy system to prove execution works
-
-        std::cout << "  -> [Mock] Physics Module loaded!\n";
-    }
+struct MockCollisionEvent {
+    float impact_force;
 };
-SANDBOX_DEFINE_MODULE(MockPhysicsModule, MockPhysics)
 
-// Module B: Audio
 struct MockAudioModule {
-    MockAudioModule(flecs::world& world) {
+    explicit MockAudioModule(flecs::world& world) {
         world.module<MockAudioModule>();
         world.component<MockAudioSource>();
-        std::cout << "  -> [Mock] Audio Module loaded!\n";
+
+        flecs::entity obs = sandbox::events::subscribe<MockCollisionEvent>(
+            world,
+            [](const MockCollisionEvent& e) {
+                std::cout
+                    << "    [Audio Module] Heard a collision! Playing crunch sound at volume "
+                    << e.impact_force << "!\n";
+            }
+        );
+
+        obs.child_of<MockAudioModule>();
+
+        std::cout << "  -> [Mock] Audio Module loaded (Listening for collisions)...\n";
     }
 };
 SANDBOX_DEFINE_MODULE(MockAudioModule, MockAudio)
 
-// ============================================================================
-// 3. The Master Entry Point
-// ============================================================================
+struct MockPhysicsModule {
+    explicit MockPhysicsModule(flecs::world& world) {
+        world.module<MockPhysicsModule>();
+        world.component<MockPosition>();
+        world.component<MockVelocity>();
+
+        world.system<MockPosition>("SimulatePhysics")
+            .each([](flecs::iter& it, size_t /*i*/, MockPosition& /*p*/) {
+                std::cout << "    [Physics Module] System running. Simulating collision...\n";
+                sandbox::events::publish(it.world(), MockCollisionEvent{85.5f});
+            });
+
+        std::cout << "  -> [Mock] Physics Module loaded (Publisher)...\n";
+    }
+};
+SANDBOX_DEFINE_MODULE(MockPhysicsModule, MockPhysics)
 
 struct MockMasterLibrary {
-    MockMasterLibrary(flecs::world& world) {
+    explicit MockMasterLibrary(flecs::world& world) {
         world.module<MockMasterLibrary>();
 
         std::cout << "[Mock Library] Mounting Master Entry Point...\n";
 
-        // Statically import the sub-modules into this master block
-        world.import<MockPhysicsModule>();
         world.import<MockAudioModule>();
+        world.import<MockPhysicsModule>();
+
+        world.entity("DummyCollider").set<MockPosition>({10.0f, 20.0f});
 
         std::cout << "[Mock Library] Fully Loaded!\n";
     }
 };
-
-// Expose the master entry point using the exact anchor your engine looks for
 SANDBOX_DEFINE_LIBRARY(MockMasterLibrary)

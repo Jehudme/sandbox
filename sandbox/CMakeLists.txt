@@ -45,6 +45,8 @@ add_library(sandbox STATIC
         source/utilities/filesystem.cpp
         include/sandbox/core/platform.h
         source/core/plugin.cpp
+        include/sandbox/utilities/events.h
+        include/sandbox/utilities/events.inl
 )
 
 add_library(sandbox::library ALIAS sandbox)
