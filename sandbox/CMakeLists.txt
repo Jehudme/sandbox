@@ -51,6 +51,7 @@ add_library(sandbox STATIC
         source/modules/logger.cpp
         include/sandbox/events/logger.h
         include/sandbox/events/logger.inl
+        include/sandbox/macros/logger.h
 )
 
 add_library(sandbox::library ALIAS sandbox)

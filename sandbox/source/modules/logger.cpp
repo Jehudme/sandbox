@@ -73,7 +73,6 @@ namespace sandbox::modules {
         subscriber_observer.child_of<logger>();
 
         m_logger->info("[LoggerModule] Service fully mounted and intercepting global channel telemetry.");
-        sandbox::events::publish(ecs, events::log("Sandbox Engine initialized successfully.", events::log::level::Info));
     }
 
     logger::~logger() {
@@ -87,20 +86,39 @@ namespace sandbox::modules {
     void logger::log(const events::log& log_event) {
         if (!m_logger) return;
 
-        // Map your engine's custom event enum layer cleanly into native spdlog severity levels
         spdlog::level::level_enum native_spdlog_level = spdlog::level::info;
+        bool should_trigger_exception = false;
 
         switch (log_event.log_level) {
             case events::log::level::Trace: native_spdlog_level = spdlog::level::trace; break;
             case events::log::level::Debug: native_spdlog_level = spdlog::level::debug; break;
             case events::log::level::Info:  native_spdlog_level = spdlog::level::info;  break;
             case events::log::level::Warn:  native_spdlog_level = spdlog::level::warn;  break;
-            case events::log::level::Error: native_spdlog_level = spdlog::level::err;   break;
-            case events::log::level::Fatal: native_spdlog_level = spdlog::level::critical; break;
+
+            case events::log::level::Error:
+                native_spdlog_level = spdlog::level::err;
+                should_trigger_exception = true;
+                break;
+            case events::log::level::Fatal:
+                native_spdlog_level = spdlog::level::critical;
+                should_trigger_exception = true;
+                break;
         }
 
-        // Output raw pre-formatted string data straight into the configured sinks
         m_logger->log(native_spdlog_level, log_event.message);
+
+        bool final_throw_decision = false;
+
+        if (log_event.throw_on_error_override.has_value()) {
+            final_throw_decision = log_event.throw_on_error_override.value();
+        } else {
+            final_throw_decision = m_throw_on_error && should_trigger_exception;
+        }
+
+        if (final_throw_decision) {
+            m_logger->flush();
+            throw std::runtime_error(log_event.message);
+        }
     }
 
 } // namespace sandbox::modules

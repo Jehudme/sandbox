@@ -7,7 +7,7 @@ namespace sandbox::events {
     struct ChannelTag {};
 
     inline flecs::entity default_channel(flecs::world world) {
-        flecs::entity default_channel_entity = world.entity("sandbox::DefaultEventChannel");
+        flecs::entity default_channel_entity = world.entity("::sandbox::DefaultEventChannel");
         if (!default_channel_entity.has<ChannelTag>()) {
             default_channel_entity.add<ChannelTag>();
         }
