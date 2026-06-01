@@ -116,7 +116,6 @@ namespace sandbox {
     }
 
     void engine::initialize(const sandbox::engine_arguments& arguments) {
-        sandbox::configure_plugin_os_api();
         ecs.entity("arguments").set<sandbox::engine_arguments>(arguments);
 
         import_core_infrastructure(ecs);
