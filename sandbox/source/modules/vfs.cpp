@@ -1,8 +1,9 @@
 #include "modules/vfs.h"
-
+#include "sandbox/exceptions/vfs_exceptions.h"
 #include "sandbox/utilities/events.h"
 #include "sandbox/macros/logger.h"
 #include <physfs.h>
+#include <fstream>
 
 namespace sandbox::modules {
 
@@ -23,6 +24,8 @@ namespace sandbox::modules {
         sandbox::events::subscribe<events::vfs::delete_request>(ecs, [this, &ecs](const auto& e) { on_delete(ecs, e); });
         sandbox::events::subscribe<events::vfs::mkdir_request>(ecs, [this, &ecs](const auto& e) { on_mkdir(ecs, e); });
         sandbox::events::subscribe<events::vfs::rename_request>(ecs, [this, &ecs](const auto& e) { on_rename(ecs, e); });
+        sandbox::events::subscribe<events::vfs::copy_request>(ecs, [this, &ecs](const auto& e) { on_copy(ecs, e); });
+        sandbox::events::subscribe<events::vfs::move_request>(ecs, [this, &ecs](const auto& e) { on_move(ecs, e); });
         sandbox::events::subscribe<events::vfs::state_request>(ecs, [this, &ecs](const auto& e) { on_state(ecs, e); });
         sandbox::events::subscribe<events::vfs::absolute_request>(ecs, [this, &ecs](const auto& e) { on_absolute(ecs, e); });
 
@@ -34,76 +37,103 @@ namespace sandbox::modules {
     }
 
     void filesystem::on_mount(world& ecs, const events::vfs::mount_path& e) {
-        std::string phys = e.physical_path.string();
-        std::string virt = clean_path(e.virtual_prefix);
-        const char* mount_target = virt.empty() ? nullptr : virt.c_str();
+        std::string v_str = e.virtual_prefix.generic_string();
 
-        if (!PHYSFS_mount(phys.c_str(), mount_target, e.read_only ? 1 : 0)) {
-            log_physfs_error(ecs, "Mount operation", phys);
+        if (v_str.find(":/") == std::string::npos) {
+            throw events::vfs::vfs_mount_error("Format Validation", e.virtual_prefix, "Missing protocol separator (e.g., 'mount://').");
+        }
+
+        std::string prefix = get_mount_prefix(v_str);
+        if (prefix.empty()) {
+            throw events::vfs::vfs_mount_error("Format Validation", e.virtual_prefix, "Mount name cannot be empty.");
+        }
+
+        if (!get_sub_path(v_str).empty()) {
+            throw events::vfs::vfs_mount_error("Format Validation", e.virtual_prefix, "Mount target cannot contain sub-directories.");
+        }
+
+        std::error_code ec;
+        std::filesystem::create_directories(e.physical_path, ec);
+
+        std::string phys = e.physical_path.string();
+
+        // ISOLATED TREE FIX: We mount it explicitly to its own prefix folder in PhysFS
+        if (!PHYSFS_mount(phys.c_str(), prefix.c_str(), e.read_only ? 1 : 0)) {
+            throw_physfs_error("Mount Operation", e.physical_path);
+        }
+
+        if (!e.read_only) {
+            m_writable_mounts[prefix] = e.physical_path;
         }
     }
 
     void filesystem::on_unmount(world& ecs, const events::vfs::unmount_path& e) {
-        std::string virt = clean_path(e.virtual_prefix);
-        if (!PHYSFS_unmount(virt.c_str())) {
-            log_physfs_error(ecs, "Unmount operation", virt);
+        std::string v_str = e.virtual_prefix.generic_string();
+        std::string prefix = get_mount_prefix(v_str);
+
+        // In modern PhysFS, unmount expects the physical path
+        auto it = m_writable_mounts.find(prefix);
+        if (it != m_writable_mounts.end()) {
+            PHYSFS_unmount(it->second.string().c_str());
+            m_writable_mounts.erase(it);
         }
     }
 
     void filesystem::on_read(world& ecs, const events::vfs::read_request& e) {
-        std::string path = clean_path(e.virtual_path);
+        std::string path = get_physfs_path(e.virtual_path.generic_string());
 
-        e.result_command = [this, &ecs, path]() -> std::vector<std::byte> {
-            std::vector<std::byte> buffer;
+        e.result_command = [this, path, virt_path = e.virtual_path]() -> std::vector<std::byte> {
             PHYSFS_file* file = PHYSFS_openRead(path.c_str());
-            if (!file) {
-                log_physfs_error(ecs, "Open for Read", path);
-                return buffer;
-            }
+            if (!file) throw_physfs_error("Open for Read", virt_path);
 
             PHYSFS_sint64 len = PHYSFS_fileLength(file);
-            buffer.resize(static_cast<size_t>(len));
+            std::vector<std::byte> buffer(static_cast<size_t>(len));
+
             if (PHYSFS_readBytes(file, buffer.data(), len) < 0) {
-                log_physfs_error(ecs, "Read Bytes", path);
-                buffer.clear();
+                PHYSFS_close(file);
+                throw_physfs_error("Read Bytes", virt_path);
             }
+
             PHYSFS_close(file);
             return buffer;
         };
     }
 
     void filesystem::on_write(world& ecs, const events::vfs::write_request& e) {
-        std::string path = clean_path(e.virtual_path);
         bool append = e.append_mode;
 
-        e.result_command = [this, &ecs, path, append, data = std::move(e.data)]() -> bool {
-            PHYSFS_file* file = append ? PHYSFS_openAppend(path.c_str()) : PHYSFS_openWrite(path.c_str());
-            if (!file) {
-                log_physfs_error(ecs, "Open for Write/Append", path);
-                return false;
+        e.result_command = [this, virt_path = e.virtual_path, append, data = std::move(e.data)]() -> void {
+            std::filesystem::path physical_target = resolve_physical_write_path(virt_path);
+
+            std::error_code ec;
+            std::filesystem::create_directories(physical_target.parent_path(), ec);
+
+            std::ios_base::openmode mode = std::ios::binary | std::ios::out;
+            if (append) mode |= std::ios::app;
+
+            std::ofstream file(physical_target, mode);
+            if (!file.is_open()) {
+                throw events::vfs::vfs_write_error("Open for Write", virt_path, "Native file stream failed to open.");
             }
 
-            PHYSFS_sint64 written = PHYSFS_writeBytes(file, data.data(), data.size());
-            bool success = (written == static_cast<PHYSFS_sint64>(data.size()));
-            if (!success) {
-                log_physfs_error(ecs, "Write Bytes", path);
+            file.write(reinterpret_cast<const char*>(data.data()), data.size());
+            if (!file.good()) {
+                throw events::vfs::vfs_write_error("Write Bytes", virt_path, "Native stream failed to write all bytes.");
             }
-            PHYSFS_close(file);
-            return success;
         };
     }
 
     void filesystem::on_list(world& ecs, const events::vfs::list_request& e) {
-        std::string base_phys_path = clean_path(e.virtual_path);
+        std::string base_phys_path = get_physfs_path(e.virtual_path.generic_string());
         std::filesystem::path base_virt_path = e.virtual_path;
         bool recursive = e.recursive;
 
-        e.result_command = [this, &ecs, base_phys_path, base_virt_path, recursive]() -> std::vector<std::filesystem::path> {
+        e.result_command = [this, base_phys_path, base_virt_path, recursive]() -> std::vector<std::filesystem::path> {
             std::vector<std::filesystem::path> total_paths;
 
             auto walk_directory = [&](auto& self, const std::string& current_phys, const std::filesystem::path& current_virt) -> void {
                 char** files = PHYSFS_enumerateFiles(current_phys.c_str());
-                if (!files) return;
+                if (!files) throw_physfs_error("Directory Enumeration", current_virt);
 
                 for (char** i = files; *i != nullptr; i++) {
                     std::string item_name = *i;
@@ -128,55 +158,102 @@ namespace sandbox::modules {
     }
 
     void filesystem::on_delete(world& ecs, const events::vfs::delete_request& e) {
-        std::string path = clean_path(e.virtual_path);
-        e.result_command = [this, &ecs, path]() -> bool {
-            bool success = (PHYSFS_delete(path.c_str()) != 0);
-            if (!success) log_physfs_error(ecs, "Delete File/Folder", path);
-            return success;
+        e.result_command = [this, virt_path = e.virtual_path]() -> void {
+            std::filesystem::path physical_target = resolve_physical_write_path(virt_path);
+            std::error_code ec;
+            if (!std::filesystem::remove_all(physical_target, ec) && ec) {
+                throw events::vfs::vfs_system_error("Delete File/Folder", virt_path, ec.message());
+            }
         };
     }
 
     void filesystem::on_mkdir(world& ecs, const events::vfs::mkdir_request& e) {
-        std::string path = clean_path(e.virtual_path);
-        e.result_command = [this, &ecs, path]() -> bool {
-            bool success = (PHYSFS_mkdir(path.c_str()) != 0);
-            if (!success) log_physfs_error(ecs, "Create Directory", path);
-            return success;
+        e.result_command = [this, virt_path = e.virtual_path]() -> void {
+            std::filesystem::path physical_target = resolve_physical_write_path(virt_path);
+            std::error_code ec;
+            if (!std::filesystem::create_directories(physical_target, ec) && ec) {
+                throw events::vfs::vfs_system_error("Create Directory", virt_path, ec.message());
+            }
         };
     }
 
     void filesystem::on_rename(world& ecs, const events::vfs::rename_request& e) {
-        std::string old_p = clean_path(e.old_virtual_path);
-        std::string new_p = clean_path(e.new_virtual_path);
+        e.result_command = [this, virt_old = e.old_virtual_path, virt_new = e.new_virtual_path]() -> void {
+            std::filesystem::path physical_old = resolve_physical_write_path(virt_old);
+            std::filesystem::path physical_new = resolve_physical_write_path(virt_new);
 
-        e.result_command = [&ecs, old_p, new_p]() -> bool {
-            if (const char* real_dir = PHYSFS_getRealDir(old_p.c_str())) {
-                std::filesystem::path physical_old = std::filesystem::path(real_dir) / old_p;
-                std::filesystem::path physical_new = std::filesystem::path(real_dir) / new_p;
-                std::error_code ec;
-                std::filesystem::rename(physical_old, physical_new, ec);
-                if (!ec) return true;
-                SANDBOX_ERROR(ecs, "[Filesystem] OS Rename failed from '{}' to '{}' | Error: {}", old_p, new_p, ec.message());
-            } else {
-                SANDBOX_ERROR(ecs, "[Filesystem] Rename targeted a missing resource: '{}'", old_p);
-            }
-            return false;
+            std::error_code ec;
+            std::filesystem::rename(physical_old, physical_new, ec);
+            if (ec) throw events::vfs::vfs_system_error("OS Rename", physical_old, ec.message());
         };
     }
 
-    void filesystem::on_state(world& ecs, const events::vfs::state_request& e) {
-        std::string path = clean_path(e.virtual_path);
-        std::filesystem::path original_virt = e.virtual_path;
+    void filesystem::on_copy(world& ecs, const events::vfs::copy_request& e) {
+        e.result_command = [this, virt_src = e.source_virtual_path, virt_dest = e.destination_virtual_path]() -> void {
+            std::string physfs_src = get_physfs_path(virt_src.generic_string());
+            std::filesystem::path physical_new = resolve_physical_write_path(virt_dest);
 
-        e.result_command = [this, &ecs, path, original_virt]() -> events::vfs::file_metadata {
+            // ANTI 0-BYTE OVERWRITE GUARD: Prevents copying a file over itself!
+            const char* real_dir = PHYSFS_getRealDir(physfs_src.c_str());
+            if (real_dir) {
+                std::filesystem::path actual_src = std::filesystem::path(real_dir) / get_sub_path(virt_src.generic_string());
+                std::error_code ec;
+                if (std::filesystem::exists(actual_src, ec) && std::filesystem::exists(physical_new, ec)) {
+                    if (std::filesystem::equivalent(actual_src, physical_new, ec)) return; // Silent success
+                }
+            }
+
+            PHYSFS_file* src_file = PHYSFS_openRead(physfs_src.c_str());
+            if (!src_file) throw events::vfs::vfs_not_found_error("Copy Source Lookup", virt_src);
+
+            std::error_code ec;
+            std::filesystem::create_directories(physical_new.parent_path(), ec);
+
+            std::ofstream dest_file(physical_new, std::ios::binary | std::ios::out);
+            if (!dest_file.is_open()) {
+                PHYSFS_close(src_file);
+                throw events::vfs::vfs_write_error("Copy Destination Open", virt_dest, "Failed to open native write stream.");
+            }
+
+            constexpr size_t buffer_size = 4096;
+            std::vector<char> buffer(buffer_size);
+            PHYSFS_sint64 bytes_read = 0;
+
+            while ((bytes_read = PHYSFS_readBytes(src_file, buffer.data(), buffer_size)) > 0) {
+                dest_file.write(buffer.data(), bytes_read);
+                if (!dest_file.good()) {
+                    PHYSFS_close(src_file);
+                    dest_file.close();
+                    throw events::vfs::vfs_write_error("Copy Stream Write", virt_dest, "Disk write failure during streaming.");
+                }
+            }
+
+            PHYSFS_close(src_file);
+            dest_file.close();
+
+            if (bytes_read < 0) {
+                throw events::vfs::vfs_read_error("Copy Stream Read", virt_src, "Failed reading source archive bytes.");
+            }
+        };
+    }
+
+    void filesystem::on_move(world& ecs, const events::vfs::move_request& e) {
+        // Move is architecturally identical to Rename since we only allow moving writable files natively
+        events::vfs::rename_request rename_req{e.source_virtual_path, e.destination_virtual_path};
+        on_rename(ecs, rename_req);
+        e.result_command = std::move(rename_req.result_command);
+    }
+
+    void filesystem::on_state(world& ecs, const events::vfs::state_request& e) {
+        std::string path = get_physfs_path(e.virtual_path.generic_string());
+
+        e.result_command = [this, path, virt_path = e.virtual_path]() -> events::vfs::file_metadata {
             events::vfs::file_metadata metadata{};
-            metadata.virtual_path = original_virt;
+            metadata.virtual_path = virt_path;
 
             PHYSFS_Stat stat;
-            // FIXED: == 0 means PhysFS failed to read
             if (PHYSFS_stat(path.c_str(), &stat) == 0) {
-                log_physfs_error(ecs, "Query Stat Details", path);
-                return metadata;
+                throw_physfs_error("State Query", virt_path);
             }
 
             metadata.size = stat.filesize;
@@ -196,49 +273,98 @@ namespace sandbox::modules {
         };
     }
 
-    // NEW HANDLER: Instantly translates a Virtual Path to an Absolute OS Path
     void filesystem::on_absolute(world& ecs, const events::vfs::absolute_request& e) {
-        std::string path = clean_path(e.virtual_path);
+        std::string physfs_path = get_physfs_path(e.virtual_path.generic_string());
 
-        e.result_command = [&ecs, path]() -> std::filesystem::path {
-            if (const char* real_dir = PHYSFS_getRealDir(path.c_str())) {
-                return std::filesystem::path(real_dir) / path;
-            }
-            return {}; // Returns an empty path if it doesn't physically exist
+        e.result_command = [this, physfs_path, virt_path = e.virtual_path]() -> std::filesystem::path {
+            const char* real_dir = PHYSFS_getRealDir(physfs_path.c_str());
+            if (!real_dir) throw events::vfs::vfs_not_found_error("Absolute Resolution", virt_path);
+
+            return std::filesystem::path(real_dir) / get_sub_path(virt_path.generic_string());
         };
     }
 
-    // MASSIVELY SIMPLIFIED STRING STRIPPER (No messy loops)
-    std::string filesystem::clean_path(const std::filesystem::path& path) const {
-        std::string p = path.generic_string();
+    std::filesystem::path filesystem::resolve_physical_write_path(const std::filesystem::path& virtual_path) const {
+        std::string v_str = virtual_path.generic_string();
+        std::string prefix = get_mount_prefix(v_str);
 
-        size_t colon = p.find(':');
-        if (colon != std::string::npos) {
-            // Find the first character of the mount name (skipping ://)
-            size_t mount_start = p.find_first_not_of('/', colon + 1);
-            if (mount_start != std::string::npos) {
-                // Find the slash immediately after the mount name
-                size_t path_start = p.find('/', mount_start);
-                if (path_start != std::string::npos) {
-                    // Find the start of the actual relative subpath
-                    size_t real_start = p.find_first_not_of('/', path_start);
-                    if (real_start != std::string::npos) {
-                        p = p.substr(real_start);
-                    } else p = "";
-                } else p = "";
-            } else p = "";
+        auto it = m_writable_mounts.find(prefix);
+        if (it == m_writable_mounts.end()) {
+            throw events::vfs::vfs_write_error("Write Security", virtual_path, "No writable mount mapped to this path.");
         }
 
-        // Strip trailing slashes
-        while (!p.empty() && p.back() == '/') p.pop_back();
+        std::filesystem::path root_physical = it->second;
+        std::string sub_path = get_sub_path(v_str);
 
-        return p;
+        std::filesystem::path raw_target = root_physical / sub_path;
+
+        std::filesystem::path jailed_target = raw_target.lexically_normal();
+        std::filesystem::path jailed_root = root_physical.lexically_normal();
+
+        auto root_str = jailed_root.string();
+        auto target_str = jailed_target.string();
+
+        if (target_str.find(root_str) != 0) {
+            throw events::vfs::vfs_system_error(
+                "Security Violation",
+                virtual_path,
+                "Path traversal attack detected! Attempted to break out of VFS sandbox."
+            );
+        }
+
+        return jailed_target;
     }
 
-    void filesystem::log_physfs_error(world& ecs, const std::string& context, const std::string& path) const {
+    std::string filesystem::get_mount_prefix(std::string_view v_path) const {
+        size_t colon = v_path.find(':');
+        if (colon == std::string_view::npos) return "";
+
+        size_t start = v_path.find_first_not_of('/', colon + 1);
+        if (start == std::string_view::npos) return "";
+
+        size_t end = v_path.find('/', start);
+        return (end == std::string_view::npos) ? std::string(v_path.substr(start))
+                                               : std::string(v_path.substr(start, end - start));
+    }
+
+    std::string filesystem::get_sub_path(std::string_view v_path) const {
+        size_t colon = v_path.find(':');
+        if (colon == std::string_view::npos) return "";
+
+        size_t start = v_path.find_first_not_of('/', colon + 1);
+        if (start == std::string_view::npos) return "";
+
+        size_t next_slash = v_path.find('/', start);
+        if (next_slash == std::string_view::npos) return "";
+
+        size_t sub_path_start = v_path.find_first_not_of('/', next_slash);
+        if (sub_path_start == std::string_view::npos) return "";
+
+        std::string_view p = v_path.substr(sub_path_start);
+        while (!p.empty() && p.back() == '/') p.remove_suffix(1);
+        return std::string(p);
+    }
+
+    std::string filesystem::get_physfs_path(std::string_view v_path) const {
+        std::string prefix = get_mount_prefix(v_path);
+        if (prefix.empty()) return "";
+        std::string sub = get_sub_path(v_path);
+        return sub.empty() ? prefix : prefix + "/" + sub;
+    }
+
+    void filesystem::throw_physfs_error(const std::string& context, const std::filesystem::path& path) const {
         PHYSFS_ErrorCode err_code = PHYSFS_getLastErrorCode();
         const char* err_desc = PHYSFS_getErrorByCode(err_code);
-        SANDBOX_ERROR(ecs, "[Filesystem] {} failed for '{}' | Error: {}", context, path, err_desc);
+
+        switch(err_code) {
+            case PHYSFS_ERR_NOT_FOUND:
+                throw events::vfs::vfs_not_found_error(context, path);
+            case PHYSFS_ERR_OUT_OF_MEMORY:
+            case PHYSFS_ERR_NO_SPACE:
+                throw events::vfs::vfs_write_error(context, path, err_desc);
+            default:
+                throw events::vfs::vfs_system_error(context, path, err_desc);
+        }
     }
 
 } // namespace sandbox::modules

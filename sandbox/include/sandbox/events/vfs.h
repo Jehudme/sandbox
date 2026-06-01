@@ -7,10 +7,6 @@
 
 namespace sandbox::events::vfs {
 
-    // ============================================================================
-    // File Status & Metadata Types
-    // ============================================================================
-
     enum class file_type {
         regular,
         directory,
@@ -20,10 +16,10 @@ namespace sandbox::events::vfs {
 
     struct file_metadata {
         std::filesystem::path virtual_path;
-        int64_t size{0};                  // File size in bytes (0 for directories)
-        int64_t creation_time{-1};        // Seconds since epoch (-1 if unsupported/unknown)
-        int64_t modification_time{-1};    // Seconds since epoch (-1 if unsupported/unknown)
-        int64_t access_time{-1};          // Seconds since epoch (-1 if unsupported/unknown)
+        int64_t size{0};
+        int64_t creation_time{-1};
+        int64_t modification_time{-1};
+        int64_t access_time{-1};
         file_type type{file_type::unknown};
         bool read_only{false};
     };
@@ -35,9 +31,9 @@ namespace sandbox::events::vfs {
 
     struct write_request {
         std::filesystem::path virtual_path;
-        mutable std::vector<std::byte> data; // mutable allows moving data directly into the closure
+        mutable std::vector<std::byte> data;
         bool append_mode{false};
-        mutable std::function<bool()> result_command;
+        mutable std::function<void()> result_command;
     };
 
     struct list_request {
@@ -56,21 +52,32 @@ namespace sandbox::events::vfs {
         mutable std::function<std::filesystem::path()> result_command;
     };
 
-
     struct delete_request {
         std::filesystem::path virtual_path;
-        mutable std::function<bool()> result_command;
+        mutable std::function<void()> result_command;
     };
 
     struct mkdir_request {
         std::filesystem::path virtual_path;
-        mutable std::function<bool()> result_command;
+        mutable std::function<void()> result_command;
     };
 
     struct rename_request {
         std::filesystem::path old_virtual_path;
         std::filesystem::path new_virtual_path;
-        mutable std::function<bool()> result_command;
+        mutable std::function<void()> result_command;
+    };
+
+    struct copy_request {
+        std::filesystem::path source_virtual_path;
+        std::filesystem::path destination_virtual_path;
+        mutable std::function<void()> result_command;
+    };
+
+    struct move_request {
+        std::filesystem::path source_virtual_path;
+        std::filesystem::path destination_virtual_path;
+        mutable std::function<void()> result_command;
     };
 
     struct mount_path {
@@ -83,4 +90,4 @@ namespace sandbox::events::vfs {
         std::filesystem::path virtual_prefix;
     };
 
-} // namespace sandbox::events::vfs
+}

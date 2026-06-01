@@ -13,138 +13,141 @@
 #include "sandbox/core/plugin.h"
 
 namespace sandbox {
+
+    // ============================================================================
+    // 1. Anonymous Helper Functions
+    // ============================================================================
+    namespace {
+
+        void import_core_infrastructure(flecs::world& ecs) {
+            ecs.import<modules::filesystem>();
+            ecs.import<modules::logger>();
+            ecs.import<modules::runner>();
+        }
+
+        void register_virtual_mounts(flecs::world& ecs, const std::filesystem::path& application_path) {
+            std::filesystem::path executable_path = filesystem::current_path();
+            std::filesystem::path user_path = filesystem::get_user_data_directory();
+
+            SANDBOX_VFS_MOUNT(ecs, user_path, "mount://user", false);
+            SANDBOX_VFS_MOUNT(ecs, executable_path, "mount://executable", true);
+            SANDBOX_VFS_MOUNT(ecs, application_path, "mount://application", true);
+        }
+
+        void build_local_modules_cache(flecs::world& ecs) {
+            std::vector<filesystem::path> discoverable_paths = {};
+
+            // Safeguard path lists to prevent crashing if module paths are absent
+            try {
+                auto app_mods = SANDBOX_VFS_EXEC_LIST(ecs, "mount://application/modules", false);
+                discoverable_paths.insert(discoverable_paths.end(), app_mods.begin(), app_mods.end());
+            } catch (...) {}
+
+            try {
+                auto exe_mods = SANDBOX_VFS_EXEC_LIST(ecs, "mount://executable/modules", false);
+                discoverable_paths.insert(discoverable_paths.end(), exe_mods.begin(), exe_mods.end());
+            } catch (...) {}
+
+            if (discoverable_paths.empty()) return;
+            SANDBOX_VFS_EXEC_MKDIR(ecs, "mount://user/modules");
+
+            for (const auto& path : discoverable_paths) {
+                if (path.extension() == SANDBOX_COMPATIBLE_MODULE_EXTENSION) {
+                    std::filesystem::path target_destination = std::filesystem::path("mount://user/modules") / path.filename();
+                    SANDBOX_VFS_EXEC_COPY(ecs, path, target_destination);
+                }
+            }
+        }
+
+        void parse_and_register_manifest(flecs::world& ecs) {
+            std::vector<std::byte> data = SANDBOX_VFS_EXEC_READ(ecs, "mount://application/manifest.json");
+
+            if (data.empty()) {
+                SANDBOX_WARN(ecs, "[Engine] manifest.json was empty or could not be loaded.");
+                return;
+            }
+
+            std::string json_string(reinterpret_cast<const char*>(data.data()), data.size());
+            ecs.entity("::Manifest").set<properties>(properties(json_string));
+        }
+
+        void load_manifest_requested_plugins(engine* engine_instance) {
+            auto manifest_entity = engine_instance->ecs.entity("::Manifest");
+            if (!manifest_entity.has<properties>()) return;
+
+            const properties& manifest = manifest_entity.get<properties>();
+            std::filesystem::path local_cache_root = "mount://user/modules";
+
+            auto modules_list = manifest.get<std::vector<std::string>>({"modules"}).value_or(std::vector<std::string>{});
+
+            for (const auto& module_name : modules_list) {
+                std::filesystem::path module_virtual_path = local_cache_root / module_name;
+
+                // Automatically append compatible extension (.so/.dll) if omitted by modder
+                if (!module_virtual_path.has_extension()) {
+                    module_virtual_path.replace_extension(SANDBOX_COMPATIBLE_MODULE_EXTENSION);
+                }
+
+                try {
+                    engine_instance->load_library(module_virtual_path);
+                } catch (const std::exception& error) {
+                    SANDBOX_ERROR(engine_instance->ecs, "[Engine] Failed to link manifest module '{}': {}", module_name, error.what());
+                }
+            }
+        }
+
+    } // namespace
+
+
+
+    // ============================================================================
+    // 2. Class Implementation
+    // ============================================================================
+
     engine::engine() = default;
 
     engine::~engine() {
         finalize();
     }
 
-    // ============================================================================
-    // Core Lifecycle
-    // ============================================================================
-
-    void engine::initialize(const std::filesystem::path& root_mount_path) {
+    void engine::initialize(const std::filesystem::path& application_path) {
         sandbox::configure_plugin_os_api();
 
+        import_core_infrastructure(ecs);
 
-        import_core_modules();
+        register_virtual_mounts(ecs, application_path);
+        build_local_modules_cache(ecs);
 
-        // 1. Get the absolute paths for both execution roots
-        std::filesystem::path launcher_physical_path = std::filesystem::current_path();
-        std::filesystem::path core_physical_path = std::filesystem::absolute(root_mount_path);
-
-        SANDBOX_INFO(ecs, "[Engine] Mounting launcher base layout from: '{}'", launcher_physical_path.string());
-        SANDBOX_INFO(ecs, "[Engine] Mounting application core layout from: '{}'", core_physical_path.string());
-
-        // 2. Mount both layout paths securely
-        SANDBOX_VFS_MOUNT(ecs, launcher_physical_path, "mount://launcher", true);
-        SANDBOX_VFS_MOUNT(ecs, core_physical_path, "mount://core", true);
-
-        // 3. Instantly execute the synchronous read
-        //std::vector<std::byte> manifest_data = SANDBOX_VFS_EXEC_READ(ecs, "mount://core/manifest.json");
-
-        process_manifest_payload(std::move(std::vector<std::byte>()));
-
-        load_libraries_from_directory("mount://launcher/libraries");
+        parse_and_register_manifest(ecs);
+        load_manifest_requested_plugins(this);
     }
 
     void engine::finalize() {
         ecs.reset();
     }
 
-    // ============================================================================
-    // Initialization Helpers
-    // ============================================================================
+    void engine::load_library(const std::filesystem::path& virtual_path) {
+        std::filesystem::path physical_path = SANDBOX_VFS_EXEC_ABSOLUTE(ecs, virtual_path);
 
-    void engine::import_core_modules() {
-        ecs.import<modules::logger>();
-        ecs.import<modules::runner>();
-        ecs.import<modules::filesystem>();
-    }
-
-    void engine::process_manifest_payload(std::vector<std::byte>&& data) {
-        //if (data.empty()) {
-        //    SANDBOX_FATAL(ecs, "[Engine] Failed to read manifest.json from mounted core package.");
-        //    SANDBOX_RUNNER_QUIT(ecs);
-        //    return;
-        //}
-
-        // 1. Instantly parse the raw byte payload
-        properties manifest(data);
-
-        // 2. Inject configuration into ECS
-        ecs.entity("::manifest").set<properties>(manifest);
-        SANDBOX_INFO(ecs, "[Engine] Manifest successfully parsed and registered.");
-
-        // 3. Fall back gracefully to a virtual layout directory path if omitted from properties
-        std::string libraries_directory = manifest.get<std::string>({"path", "libraries"}).value_or("mount://core/libraries");
-        SANDBOX_DEBUG(ecs, "[Engine] Scanning virtual plugin directory: '{}'", libraries_directory);
-
-        try {
-            // 4. Safely execute routing scans sequentially with absolute path verification
-            load_libraries_from_directory(libraries_directory);
-            SANDBOX_INFO(ecs, "[Engine] Initialization sequence complete.");
-        } catch (const std::exception& error) {
-            SANDBOX_FATAL(ecs, "[Engine] Initialization failed during plugin loading: {}", error.what());
-            SANDBOX_RUNNER_QUIT(ecs);
-        }
-    }
-
-    // ============================================================================
-    // Plugin Loading Subsystem (VFS Routed)
-    // ============================================================================
-
-    void engine::load_libraries_from_directory(const std::filesystem::path& virtual_directory_path) {
-        uint32_t loaded_plugins_counter = 0;
-
-        // 1. Fetch a flat vector of complete virtual paths recursively
-        std::vector<std::filesystem::path> absolute_virtual_paths = SANDBOX_VFS_EXEC_LIST(ecs, virtual_directory_path, true);
-
-        for (const auto& path : absolute_virtual_paths) {
-            auto meta = SANDBOX_VFS_EXEC_STATE(ecs, path);
-
-            if (meta.type != events::vfs::file_type::regular && meta.type != events::vfs::file_type::symlink) continue;
-            if (path.extension() != SANDBOX_COMPATIBLE_MODULE_EXTENSION) continue;
-
-            try {
-                SANDBOX_TRACE(ecs, "[Engine] VFS routed physical module: '{}'", path.filename().string());
-                load_library(SANDBOX_VFS_EXEC_ABSOLUTE(ecs, path));
-                loaded_plugins_counter++;
-            } catch (const std::exception& error) {
-                SANDBOX_ERROR(ecs, "[Engine] Failed to load '{}': {}", path.filename().string(), error.what());
-            }
+        if (physical_path.empty()) {
+            SANDBOX_ERROR_THROW(ecs, "Unresolved virtual file system path: {}", virtual_path.string());
         }
 
-        SANDBOX_INFO(ecs, "[Engine] Loaded {} plugins successfully through recursive VFS mapping.", loaded_plugins_counter);
-    }
-
-    void engine::load_library(const std::filesystem::path& library_path) {
-        // Force the entry point name into a static string with an infinite lifetime
         static const std::string entry_point = "SandboxLibraryMain";
-        load_module_from_library(library_path, entry_point.c_str());
+        load_module_from_library(physical_path, entry_point.c_str());
     }
 
-    void engine::load_module_from_library(const std::filesystem::path& physical_library_path, const char* module_name) {
-        if (!std::filesystem::is_regular_file(physical_library_path)) {
-            SANDBOX_ERROR_THROW(ecs, "Invalid physical plugin file: {}", physical_library_path.string());
-        }
-
-        // Keep the clean filename alive as a local variable during this scope
+    void engine::load_module_from_library(const std::filesystem::path& physical_library_path, std::string_view module_name) {
         std::string clean_filename = filesystem::strip_extension(physical_library_path).string();
+        SANDBOX_DEBUG(ecs, "[Engine] Linking: {}::{}", physical_library_path.filename().string(), module_name);
 
-        SANDBOX_DEBUG(ecs, "[Engine] Linking physical symbol '{}::{}'", physical_library_path.filename().string(), module_name);
-
-        // Hand the physical disk path and the permanently alive string securely to Flecs
-        auto library = ecs_import_from_library(
-            ecs.c_ptr(),
-            clean_filename.c_str(),
-            module_name
-        );
+        auto library = ecs_import_from_library(ecs.c_ptr(), clean_filename.c_str(), module_name.data());
 
         if (library) {
-            SANDBOX_INFO(ecs, "[Engine] Mounted '{}' successfully.", physical_library_path.filename().string());
+            SANDBOX_INFO(ecs, "[Engine] Mounted: {}", physical_library_path.filename().string());
         } else {
-            SANDBOX_ERROR(ecs, "[Engine] Failed to mount '{}'.", physical_library_path.filename().string());
+            SANDBOX_ERROR(ecs, "[Engine] Mount failed: {}", physical_library_path.filename().string());
         }
     }
+
 } // namespace sandbox

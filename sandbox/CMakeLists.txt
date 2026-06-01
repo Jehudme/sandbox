@@ -72,6 +72,8 @@ add_library(sandbox STATIC
         source/modules/vfs.cpp
         source/modules/vfs.h
         include/sandbox/macros/vfs.h
+        include/sandbox/exceptions/vfs_exceptions.h
+        source/exceptions/vfs_exceptions.cpp
 )
 
 add_library(sandbox::library ALIAS sandbox)

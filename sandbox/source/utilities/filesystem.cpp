@@ -1,4 +1,5 @@
 #include "sandbox/utilities/filesystem.h"
+#include "sandbox/core/platform.h"
 
 namespace sandbox::filesystem
 {
@@ -51,5 +52,65 @@ namespace sandbox::filesystem
             }
         }
         return directories;
+    }
+
+    std::filesystem::path get_user_data_directory() {
+        #if defined(SANDBOX_WINDOWS_PLATFORM)
+            const char* appdata = std::getenv("APPDATA");
+            if (!appdata) {
+                throw std::runtime_error("[Filesystem] %APPDATA% environment variable is missing on Windows.");
+            }
+            return std::filesystem::path(appdata) / "Sandbox";
+
+        #elif defined(SANDBOX_LINUX_PLATFORM)
+            const char* xdg_data = std::getenv("XDG_DATA_HOME");
+            if (xdg_data && *xdg_data != '\0') {
+                return std::filesystem::path(xdg_data) / "sandbox";
+            }
+
+            const char* home = std::getenv("HOME");
+            if (!home) {
+                throw std::runtime_error("[Filesystem] $HOME environment variable is missing on Linux.");
+            }
+            return std::filesystem::path(home) / ".local" / "share" / "sandbox";
+
+        #elif defined(SANDBOX_APPLE_PLATFORM)
+            const char* home = std::getenv("HOME");
+            if (!home) {
+                throw std::runtime_error("[Filesystem] $HOME environment variable is missing on macOS.");
+            }
+            return std::filesystem::path(home) / "Library" / "Application Support" / "Sandbox";
+
+        #endif
+    }
+
+    std::filesystem::path get_user_cache_directory() {
+        #if defined(SANDBOX_WINDOWS_PLATFORM)
+            const char* localappdata = std::getenv("LOCALAPPDATA");
+            if (!localappdata) {
+                throw std::runtime_error("[Filesystem] %LOCALAPPDATA% environment variable is missing on Windows.");
+            }
+            return std::filesystem::path(localappdata) / "Sandbox" / "Cache";
+
+        #elif defined(SANDBOX_LINUX_PLATFORM)
+            const char* xdg_cache = std::getenv("XDG_CACHE_HOME");
+            if (xdg_cache && *xdg_cache != '\0') {
+                return std::filesystem::path(xdg_cache) / "sandbox";
+            }
+
+            const char* home = std::getenv("HOME");
+            if (!home) {
+                throw std::runtime_error("[Filesystem] $HOME environment variable is missing on Linux.");
+            }
+            return std::filesystem::path(home) / ".cache" / "sandbox";
+
+        #elif defined(SANDBOX_APPLE_PLATFORM)
+            const char* home = std::getenv("HOME");
+            if (!home) {
+                throw std::runtime_error("[Filesystem] $HOME environment variable is missing on macOS.");
+            }
+            return std::filesystem::path(home) / "Library" / "Caches" / "Sandbox";
+
+        #endif
     }
 }

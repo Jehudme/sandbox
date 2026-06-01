@@ -25,23 +25,11 @@ namespace sandbox {
         void initialize(const std::filesystem::path& root_mount_path);
         void finalize();
 
-        // Expects a Virtual File System path (e.g., "mount://core/plugins")
-        void load_libraries_from_directory(const std::filesystem::path& virtual_directory_path);
-
-        // Expects a true OS physical path resolved by the VFS scanner
-        void load_library(const std::filesystem::path& physical_library_path);
-        void load_module_from_library(const std::filesystem::path& physical_library_path, const char* module_name);
-
-    private:
-        // Helper routines to flatten the initialization pipeline
-        void import_core_modules();
-        void process_manifest_payload(std::vector<std::byte>&& data);
-
-        // Recursive VFS directory scanner for OS-level plugin resolution
-        void scan_vfs_for_plugins(const std::filesystem::path& virtual_path, uint32_t& loaded_count);
+        void load_library(const std::filesystem::path& virtual_library_path);
+        void load_module_from_library(const std::filesystem::path& physical_library_path, std::string_view module_name);
 
     public:
         flecs::world ecs;
     };
 
-} // namespace sandbox
+}

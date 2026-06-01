@@ -1,5 +1,6 @@
 #pragma once
 
+#include "sandbox/utilities/filesystem.h"
 #include "sandbox/core/ecs.h"
 #include "sandbox/events/vfs.h"
 #include "sandbox/utilities/events.h"
@@ -16,7 +17,7 @@ namespace sandbox::vfs_controls {
         return std::move(ev.result_command);
     }
 
-    inline std::function<bool()> write(flecs::world ecs, const std::filesystem::path& path, std::vector<std::byte>&& data, bool append = false) {
+    inline std::function<void()> write(flecs::world ecs, const std::filesystem::path& path, std::vector<std::byte>&& data, bool append = false) {
         events::vfs::write_request ev{ path, std::move(data), append };
         sandbox::events::publish(ecs, ev);
         return std::move(ev.result_command);
@@ -28,20 +29,32 @@ namespace sandbox::vfs_controls {
         return std::move(ev.result_command);
     }
 
-    inline std::function<bool()> remove(flecs::world ecs, const std::filesystem::path& path) {
+    inline std::function<void()> remove(flecs::world ecs, const std::filesystem::path& path) {
         events::vfs::delete_request ev{ path };
         sandbox::events::publish(ecs, ev);
         return std::move(ev.result_command);
     }
 
-    inline std::function<bool()> mkdir(flecs::world ecs, const std::filesystem::path& path) {
+    inline std::function<void()> mkdir(flecs::world ecs, const std::filesystem::path& path) {
         events::vfs::mkdir_request ev{ path };
         sandbox::events::publish(ecs, ev);
         return std::move(ev.result_command);
     }
 
-    inline std::function<bool()> rename(flecs::world ecs, const std::filesystem::path& old_p, const std::filesystem::path& new_p) {
+    inline std::function<void()> rename(flecs::world ecs, const std::filesystem::path& old_p, const std::filesystem::path& new_p) {
         events::vfs::rename_request ev{ old_p, new_p };
+        sandbox::events::publish(ecs, ev);
+        return std::move(ev.result_command);
+    }
+
+    inline std::function<void()> copy(flecs::world ecs, const std::filesystem::path& src, const std::filesystem::path& dest) {
+        events::vfs::copy_request ev{ src, dest };
+        sandbox::events::publish(ecs, ev);
+        return std::move(ev.result_command);
+    }
+
+    inline std::function<void()> move(flecs::world ecs, const std::filesystem::path& src, const std::filesystem::path& dest) {
+        events::vfs::move_request ev{ src, dest };
         sandbox::events::publish(ecs, ev);
         return std::move(ev.result_command);
     }
@@ -90,6 +103,12 @@ namespace sandbox::vfs_controls {
 #define SANDBOX_VFS_FETCH_RENAME(world, old_path, new_path) \
     sandbox::vfs_controls::rename(world, old_path, new_path)
 
+#define SANDBOX_VFS_FETCH_COPY(world, src, dest) \
+    sandbox::vfs_controls::copy(world, src, dest)
+
+#define SANDBOX_VFS_FETCH_MOVE(world, src, dest) \
+    sandbox::vfs_controls::move(world, src, dest)
+
 #define SANDBOX_VFS_FETCH_STATE(world, path) \
     sandbox::vfs_controls::state(world, path)
 
@@ -117,6 +136,12 @@ namespace sandbox::vfs_controls {
 
 #define SANDBOX_VFS_EXEC_RENAME(world, old_path, new_path) \
     sandbox::vfs_controls::rename(world, old_path, new_path)()
+
+#define SANDBOX_VFS_EXEC_COPY(world, src, dest) \
+    sandbox::vfs_controls::copy(world, src, dest)()
+
+#define SANDBOX_VFS_EXEC_MOVE(world, src, dest) \
+    sandbox::vfs_controls::move(world, src, dest)()
 
 #define SANDBOX_VFS_EXEC_STATE(world, path) \
     sandbox::vfs_controls::state(world, path)()

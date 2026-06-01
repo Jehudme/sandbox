@@ -17,7 +17,7 @@ int main() {
         // 3. Mount the physical data folder to "mount://core"
         // Note: For this to work, you must have a folder named "core_data"
         // next to your executable containing your "manifest.json".
-        app.initialize("core_data");
+        app.initialize("/home/jehud/app.zip");
 
         // 4. Start the synchronous blocking game loop on the main thread
         SANDBOX_RUNNER_RUN(app.ecs);
