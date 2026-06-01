@@ -4,6 +4,7 @@
     #include <dlfcn.h>
     #include <cstring>
     #include <cstdint>
+    #include <iostream> // For printing the raw kernel error
 #endif
 
 namespace sandbox {
@@ -21,8 +22,18 @@ namespace sandbox {
             return result;
         };
 
+        // ====================================================================
+        // CRITICAL UPDATE: Unmasking the Linux Linker!
+        // Switched to RTLD_LAZY and added direct dlerror() printing.
+        // ====================================================================
         os_api.dlopen_ = [](const char* lib) -> uintptr_t {
-            return reinterpret_cast<uintptr_t>(dlopen(lib, RTLD_NOW | RTLD_GLOBAL));
+            void* handle = dlopen(lib, RTLD_LAZY | RTLD_GLOBAL);
+            if (!handle) {
+                const char* err = dlerror();
+                std::cerr << "\n[OS Linker] FATAL REJECTION: dlopen failed for '" << lib << "'\n"
+                          << "[OS Linker] EXACT REASON: " << (err ? err : "Unknown") << "\n\n";
+            }
+            return reinterpret_cast<uintptr_t>(handle);
         };
 
         os_api.dlproc_ = [](uintptr_t lib, const char* proc) -> void(*)() {

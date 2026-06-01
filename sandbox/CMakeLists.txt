@@ -5,6 +5,8 @@ project(sandbox LANGUAGES CXX)
 # in third-party libraries like PhysFS by setting a safety minimum policy layer.
 set(CMAKE_POLICY_VERSION_MINIMUM "3.5")
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 include(FetchContent)
 
 # -----------------------------------------------------------------------------

@@ -24,7 +24,9 @@ namespace sandbox {
     // ============================================================================
 
     void engine::initialize(const std::filesystem::path& root_mount_path) {
-        ecs.reset();
+        sandbox::configure_plugin_os_api();
+
+
         import_core_modules();
 
         // 1. Get the absolute paths for both execution roots

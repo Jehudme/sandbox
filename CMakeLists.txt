@@ -7,3 +7,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_subdirectory(sandbox)
 add_subdirectory(launcher)
+
+add_subdirectory(test)
+add_dependencies(launcher test_lib)

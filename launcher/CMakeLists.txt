@@ -3,6 +3,7 @@ project(launcher LANGUAGES CXX)
 
 add_executable(launcher
         source/main.cpp
+        ../test/library.cpp
 )
 
 add_executable(sandbox::launcher ALIAS launcher)
