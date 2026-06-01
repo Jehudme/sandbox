@@ -11,6 +11,7 @@ target_link_libraries(test_lib PRIVATE sandbox::library)
 # so your executable's VFS initialization sequence can find it instantly.
 set_target_properties(test_lib PROPERTIES
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/modules
+        BUILD_RPATH "\$ORIGIN/.."
         BUILD_WITH_INSTALL_RPATH TRUE
         INSTALL_RPATH "\$ORIGIN/.."
 )
