@@ -1,5 +1,5 @@
 #pragma once
-#include "flecs/addons/cpp/flecs.hpp"
+#include <flecs.h>
 
 namespace sandbox {
     using entity = flecs::entity;

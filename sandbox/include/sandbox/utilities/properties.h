@@ -1,10 +1,11 @@
 #pragma once
 
-#include <filesystem>
 #include <functional>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
+#include <cstddef> // Required for std::byte
 #include <glaze/json/json_t.hpp>
 
 namespace sandbox
@@ -16,8 +17,8 @@ namespace sandbox
         using key_list = std::vector<std::string>;
         using visitor_callback = std::function<void(const key_path& path, const std::string& json_value)>;
 
-        properties(const std::string& json_string);
-        properties(const std::filesystem::path& file_path);
+        properties(std::string_view json_string);
+        properties(const std::vector<std::byte>& byte_data);
 
         properties() = default;
         ~properties() = default;
@@ -25,13 +26,13 @@ namespace sandbox
         properties& operator=(const properties&) = default;
         properties(const properties&) = default;
 
-        void load_from_file(const std::filesystem::path& file_path);
-        void load_from_string(const std::string& json_string);
-        void save_to_file(const std::filesystem::path& file_path) const;
+        void load_from_string(std::string_view json_string);
+        void load_from_bytes(const std::vector<std::byte>& byte_data);
         std::string save_to_string(const key_path& path = {}) const;
 
+        static properties parse(std::string_view json_string);
+        static properties parse(const std::vector<std::byte>& byte_data);
 
-        static properties parse(const std::string& json_string);
         void merge(const properties& other_properties);
         void move(const key_path& source_path, const key_path& destination_path);
         void rename(const key_path& path, const std::string& new_name);

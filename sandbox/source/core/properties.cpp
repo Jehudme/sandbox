@@ -1,58 +1,63 @@
-#include "../../include/sandbox/utils/properties.h"
+#include "sandbox/utilities/properties.h"
 #include <glaze/glaze.hpp>
-#include <fstream>
-#include <sstream>
 
 namespace sandbox
 {
-    properties::properties(const std::string& json_string)
+    properties::properties(std::string_view json_string)
     {
         load_from_string(json_string);
     }
 
-    properties::properties(const std::filesystem::path& file_path)
+    properties::properties(const std::vector<std::byte>& byte_data)
     {
-        load_from_file(file_path);
+        load_from_bytes(byte_data);
     }
 
-    void properties::load_from_file(const std::filesystem::path& file_path)
+    void properties::load_from_bytes(const std::vector<std::byte>& byte_data)
     {
-        std::ifstream file_stream(file_path);
-        if (!file_stream.is_open()) return;
-
-        std::stringstream string_buffer;
-        string_buffer << file_stream.rdbuf();
-
-        // Capture and ignore or handle the error context
-        const auto error_context = glz::read_json(m_root_node, string_buffer.str());
-        if (error_context) {
-            // Optional: Handle load error (e.g., reset the tree)
+        if (byte_data.empty()) {
             m_root_node = glz::json_t::object_t{};
+            return;
         }
+
+        // Cast the raw byte buffer into a string_view for instant parsing without copies
+        std::string_view json_view(reinterpret_cast<const char*>(byte_data.data()), byte_data.size());
+        load_from_string(json_view);
     }
 
-    void properties::load_from_string(const std::string& json_string)
+    void properties::load_from_string(std::string_view json_string)
     {
-        m_root_node = glz::json_t::object_t{}; // Reset the tree before loading new data
+        m_root_node = glz::json_t::object_t{}; // Reset the tree
         const auto error_context = glz::read_json(m_root_node, json_string);
         if (error_context) {
-            // Optional: Handle load error (e.g., reset the tree)
             m_root_node = glz::json_t::object_t{};
         }
     }
 
-    void properties::save_to_file(const std::filesystem::path& file_path) const
+    properties properties::parse(std::string_view json_string)
     {
-        std::ofstream file_stream(file_path);
-        if (!file_stream.is_open()) return;
-
-        std::string json_output_buffer;
-        const auto error_context = glz::write_json(m_root_node, json_output_buffer);
-
-        if (!error_context) {
-            file_stream << json_output_buffer;
-        }
+        return properties(json_string);
     }
+
+    properties properties::parse(const std::vector<std::byte>& byte_data)
+    {
+        return properties(byte_data);
+    }
+
+    std::string properties::save_to_string(const key_path& path) const
+    {
+        const glz::json_t* current_node_ptr = &m_root_node;
+        for (const std::string& key : path) {
+            if (current_node_ptr->is_object() && current_node_ptr->get_object().contains(key)) {
+                current_node_ptr = &current_node_ptr->get_object().at(key);
+            } else return {};
+        }
+        return current_node_ptr->dump().value();
+    }
+
+    // ========================================================================
+    // Data Manipulation & Traversal (Identical to previous implementation)
+    // ========================================================================
 
     void properties::merge(const properties& other_properties)
     {
@@ -61,19 +66,11 @@ namespace sandbox
 
     void properties::deep_merge(glz::json_t& destination, const glz::json_t& source)
     {
-        // 1. If the incoming source is completely empty (null), do nothing.
-        // This prevents an empty user manifest from wiping out the defaults.
-        if (source.is_null()) {
-            return;
-        }
+        if (source.is_null()) return;
 
         if (source.is_object() && destination.is_object()) {
             auto& destination_map = destination.get_object();
-            const auto& source_map = source.get_object();
-
-            for (const auto& [key, value] : source_map) {
-                // 2. Optional but recommended: Standard JSON merge patch behavior.
-                // If the user explicitly sets a value to null, erase the key.
+            for (const auto& [key, value] : source.get_object()) {
                 if (value.is_null()) {
                     destination_map.erase(key);
                 } else {
@@ -81,7 +78,6 @@ namespace sandbox
                 }
             }
         } else {
-            // 3. Primitive values overwrite as normal
             destination = source;
         }
     }
@@ -98,7 +94,6 @@ namespace sandbox
 
         auto& source_object_map = source_parent_node_ptr->get_object();
         auto source_iterator = source_object_map.find(source_path.back());
-
         if (source_iterator == source_object_map.end()) return;
 
         glz::json_t extracted_json_node = std::move(source_iterator->second);
@@ -175,34 +170,13 @@ namespace sandbox
         }
 
         if (current_node_ptr->is_object()) {
-            const auto& object_map = current_node_ptr->get_object();
-            key_list_result.reserve(object_map.size());
-            for (const auto& [key, value] : object_map) {
+            key_list_result.reserve(current_node_ptr->get_object().size());
+            for (const auto& [key, value] : current_node_ptr->get_object()) {
                 key_list_result.push_back(key);
             }
         }
         return key_list_result;
     }
-
-    std::string properties::save_to_string(const key_path& path) const
-    {
-        const glz::json_t* current_node_ptr = &m_root_node;
-        for (const std::string& key : path) {
-            if (current_node_ptr->is_object() && current_node_ptr->get_object().contains(key)) {
-                current_node_ptr = &current_node_ptr->get_object().at(key);
-            } else return {};
-        }
-        return current_node_ptr->dump().value();
-    }
-
-    properties properties::parse(const std::string& json_string)
-    {
-        properties props = properties();
-        props.load_from_string(json_string);
-
-        return props;
-    }
-
 
     void properties::traverse(const visitor_callback& callback) const
     {
@@ -210,14 +184,10 @@ namespace sandbox
         walk(m_root_node, active_traversal_path, callback);
     }
 
-    void properties::walk(const glz::json_t& current_node,
-                          key_path& current_path,
-                          const visitor_callback& callback) const
+    void properties::walk(const glz::json_t& current_node, key_path& current_path, const visitor_callback& callback) const
     {
         std::string serialized_json_value;
-        const auto error_context = glz::write_json(current_node, serialized_json_value);
-
-        if (!error_context) {
+        if (!glz::write_json(current_node, serialized_json_value)) {
             callback(current_path, serialized_json_value);
         }
 
@@ -229,4 +199,5 @@ namespace sandbox
             }
         }
     }
-}
+
+} // namespace sandbox

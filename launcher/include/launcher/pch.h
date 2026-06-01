@@ -13,8 +13,6 @@
 #include <filesystem>
 
 #include <flecs.h>
-#include <rttr/registration>
-#include <rttr/type>
 
 #include <spdlog/spdlog.h>
 #include <glaze/glaze.hpp>

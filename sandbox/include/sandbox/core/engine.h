@@ -1,13 +1,19 @@
 #pragma once
-#include "ecs.h"
-#include "sandbox/utils/properties.h"
 
+#include <filesystem>
+#include <string>
+#include <vector>
+#include <cstddef>
+#include <cstdint>
+
+#include "sandbox/core/ecs.h"
+#include "sandbox/utilities/properties.h"
 
 namespace sandbox {
 
     class engine {
     public:
-        engine(const properties& manifest);
+        engine();
         ~engine();
 
         engine(const engine&) = delete;
@@ -16,14 +22,14 @@ namespace sandbox {
         engine(engine&&) noexcept = default;
         engine& operator=(engine&&) noexcept = default;
 
-        void initialize(const properties& manifest);
+        void initialize(const std::filesystem::path& root_mount_path);
         void finalize();
 
-    private:
-        void load_plugin(std::string_view type_name);
+        void load_library(const std::filesystem::path& virtual_library_path);
+        void load_module_from_library(const std::filesystem::path& physical_library_path, std::string_view module_name);
 
     public:
-        world ecs;
+        flecs::world ecs;
     };
 
 }

@@ -28,7 +28,5 @@
 #include <filesystem>
 #include <system_error>
 #include <spdlog/spdlog.h>
-#include <rttr/registration>
-#include <rttr/type>
 #include <flecs.h>
 #include <glaze/glaze.hpp>
