@@ -26,23 +26,28 @@ namespace sandbox::modules {
         std::filesystem::path physical_path = SANDBOX_VFS_EXEC_ABSOLUTE(ecs, e.virtual_path);
 
         if (physical_path.empty()) {
-            throw events::plugins::plugin_load_error("VFS Resolution", e.virtual_path, "Could not locate target for OS linking.");
+            SANDBOX_ERROR(ecs, "[Plugins] VFS Resolution failed: {}", e.virtual_path.string());
+            return; // CRITICAL FIX: Do not throw inside an observer!
         }
 
-        // 2. Prepare the clean filename (stripping extensions like .so / .dll)
-        std::string clean_filename = filesystem::strip_extension(physical_path).string();
+        // ====================================================================
+        // CRITICAL FIX: Do NOT strip the extension!
+        // We pass the exact physical path so dlopen gets the true filename.
+        // ====================================================================
+        std::string exact_path = physical_path.string();
 
         SANDBOX_DEBUG(ecs, "[Plugins] Linking: {}::{}", physical_path.filename().string(), e.entry_point);
 
         // 3. Delegate to the OS dynamic linker via Flecs API
-        auto library = ecs_import_from_library(ecs.c_ptr(), clean_filename.c_str(), e.entry_point.c_str());
+        auto library = ecs_import_from_library(ecs.c_ptr(), exact_path.c_str(), e.entry_point.c_str());
 
         // 4. Validate success
         if (library) {
             SANDBOX_INFO(ecs, "[Plugins] Mounted: {}", physical_path.filename().string());
         } else {
             SANDBOX_ERROR(ecs, "[Plugins] Mount failed: {}", physical_path.filename().string());
-            throw events::plugins::plugin_load_error("OS Linker", e.virtual_path, "dlopen/LoadLibrary failed to load the shared object.");
+            // CRITICAL FIX: Do not throw! Just log the error and return safely.
+            return;
         }
     }
 

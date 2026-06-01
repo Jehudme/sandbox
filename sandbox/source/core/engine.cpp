@@ -12,6 +12,7 @@
 #include "modules/plugins.h"
 #include "modules/runner.h"
 #include "modules/vfs.h"
+#include "sandbox/core/arguments.h"
 #include "sandbox/core/plugin.h"
 #include "sandbox/macros/plugins.h"
 
@@ -114,12 +115,13 @@ namespace sandbox {
         finalize();
     }
 
-    void engine::initialize(const std::filesystem::path& application_path) {
+    void engine::initialize(const sandbox::engine_arguments& arguments) {
         sandbox::configure_plugin_os_api();
+        ecs.entity("arguments").set<sandbox::engine_arguments>(arguments);
 
         import_core_infrastructure(ecs);
 
-        register_virtual_mounts(ecs, application_path);
+        register_virtual_mounts(ecs, arguments.mounts);
         build_local_modules_cache(ecs);
 
         parse_and_register_manifest(ecs);

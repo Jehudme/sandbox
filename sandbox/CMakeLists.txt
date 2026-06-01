@@ -28,6 +28,7 @@ add_library(sandbox SHARED
         source/modules/vfs.cpp
         source/exceptions/vfs_exceptions.cpp
         source/modules/plugins.cpp
+        include/sandbox/core/arguments.h
 )
 add_library(sandbox::library ALIAS sandbox)
 

@@ -1,30 +1,43 @@
 #include <iostream>
 #include <filesystem>
 #include <exception>
+#include <string>
 
+#include <CLI/CLI.hpp>
 #include "sandbox/core/engine.h"
 #include "sandbox/core/plugin.h"
 #include "sandbox/macros/runner.h"
 
-int main() {
-    // 1. Configure OS-specific dynamic linking API
-    sandbox::configure_plugin_os_api();
+int main(int argc, char* argv[]) {
+    CLI::App app{"Sandbox Meta-Engine Runtime Launcher"};
+    sandbox::engine_arguments config;
 
-    // 2. Instantiate the engine core
-    sandbox::engine app;
+    // 1. Core Boot Routing
+    app.add_option("--mount,-m", config.mounts, "Mount paths (e.g., --mount application=test-app.zip)")
+       ->required()
+       ->check(CLI::ExistingFile);
+
+    app.add_flag("--dev,-d", config.developer_mode, "Enable developer mode layers");
+
+    // 2. The Dynamic Module Payload
+    // This allows users to pass infinite custom arguments without modifying the launcher!
+    // Example: -p Renderer=Vulkan -p Physics.TickRate=120
+    app.add_option("--prop,-p", config.module_args, "Custom module properties (Key=Value)");
+
+    // 3. Execution Handoff
+    CLI11_PARSE(app, argc, argv);
+
+    sandbox::configure_plugin_os_api();
+    sandbox::engine engine_instance;
 
     try {
-        // 3. Mount the physical data folder to "mount://core"
-        // Note: For this to work, you must have a folder named "core_data"
-        // next to your executable containing your "manifest.json".
-        app.initialize("/home/jehud/app.zip");
+        std::cout << "[Launcher] Booting engine core...\n";
+        engine_instance.initialize(config);
 
-        // 4. Start the synchronous blocking game loop on the main thread
-        SANDBOX_RUNNER_RUN(app.ecs);
+        SANDBOX_RUNNER_RUN(engine_instance.ecs);
 
-    } catch (const std::exception& e) {
-        // Catch any fatal initialization errors (like a missing manifest file)
-        std::cerr << "[Fatal Error in Main]: " << e.what() << '\n';
+    } catch (const std::exception& fatal_error) {
+        std::cerr << "\n[Fatal Core Crash Caught]: " << fatal_error.what() << '\n';
         return -1;
     }
 

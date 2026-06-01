@@ -5,6 +5,8 @@
 #include <vector>
 #include <cstddef>
 #include <cstdint>
+
+#include "arguments.h"
 #include "platform.h"
 
 #include "sandbox/core/ecs.h"
@@ -23,11 +25,8 @@ namespace sandbox {
         engine(engine&&) noexcept = default;
         engine& operator=(engine&&) noexcept = default;
 
-        void initialize(const std::filesystem::path& application_path);
+        void initialize(const engine_arguments &arguments);
         void finalize();
-
-        void load_library(const std::filesystem::path& virtual_library_path);
-        void load_module_from_library(const std::filesystem::path& physical_library_path, std::string_view module_name);
 
     public:
         flecs::world ecs;
