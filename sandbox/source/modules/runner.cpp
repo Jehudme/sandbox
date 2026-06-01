@@ -41,8 +41,6 @@ namespace sandbox::modules {
                 }
             }
         );
-
-        SANDBOX_INFO(ecs, "[Runner] Execution backend initialized.");
     }
 
     runner::~runner() {
@@ -98,9 +96,7 @@ namespace sandbox::modules {
     }
 
     void runner::internal_tick_loop(world& ecs) {
-        properties manifest = ecs.lookup("::manifest").get<properties>();
-        float target_fps = manifest.get<float>({"engine", "target_fps"}).value_or(60.0f);
-        ecs.set_target_fps(target_fps);
+        ecs.set_target_fps(60);
 
         while (true) {
             {

@@ -1,7 +1,6 @@
 #include "modules/logger.h"
 
-#include "sandbox/macros/logger.h" // Required to use SANDBOX_INFO
-#include "sandbox/utilities/properties.h"
+#include "sandbox/macros/logger.h"
 #include "sandbox/utilities/events.h"
 
 #include <spdlog/sinks/stdout_color_sinks.h>
@@ -15,26 +14,67 @@ namespace sandbox::modules {
     logger::logger(world& ecs) {
         ecs.module<logger>("::Modules::Logger");
 
-        properties manifest = ecs.lookup("::manifest").get<properties>();
+        // 1. Setup a safe, synchronous "Boot Logger" to capture early startup events
+        auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+        m_logger = std::make_shared<spdlog::logger>("sandbox_core", console_sink);
+        m_logger->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
+        m_logger->set_level(spdlog::level::trace); // Capture everything during early boot
 
+        spdlog::register_logger(m_logger);
+
+        // 2. Subscribe to the global logging event bus
+        sandbox::events::subscribe<events::log>(
+            ecs,
+            [this](const events::log& log_event) {
+                this->log(log_event);
+            }
+        );
+
+        // 3. Register an ECS Observer to watch the Manifest entity
+        // When the engine finishes reading the VFS and attaches the 'properties' component, this fires automatically!
+        flecs::entity manifest_entity = ecs.entity("::manifest");
+
+        ecs.observer<properties>()
+           .event(flecs::OnSet)
+           .each([this, manifest_entity](flecs::iter& it, size_t index, properties& props) {
+               // Only reconfigure if the entity receiving the properties is our global manifest
+               if (it.entity(index) == manifest_entity) {
+                   this->reconfigure(props);
+               }
+           });
+
+        SANDBOX_INFO(ecs, "[Logger] Boot logger mounted. Awaiting manifest...");
+    }
+
+    logger::~logger() {
+        if (m_logger) {
+            m_logger->info("[Logger] Shutting down.");
+            m_logger->flush();
+        }
+        spdlog::drop("sandbox_core");
+    }
+
+    void logger::reconfigure(const properties& manifest) {
+        // 1. Extract settings
         bool is_asynchronous    = manifest.get<bool>({"logger" , "async"})               .value_or(false);
         std::string output_file = manifest.get<std::string>({"logger" , "output_file"})  .value_or("log/sandbox.log");
         std::string log_pattern = manifest.get<std::string>({"logger" , "pattern"})      .value_or("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
         std::string level       = manifest.get<std::string>({"logger" , "level"})        .value_or("info");
 
-        // Ensure the exception override parameter is loaded from the configuration
         m_throw_on_error        = manifest.get<bool>({"logger" , "throw_on_error"})      .value_or(false);
 
-        std::vector<spdlog::sink_ptr> logging_sinks;
+        // 2. Tear down the old boot logger safely
+        spdlog::drop("sandbox_core");
 
-        auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-        logging_sinks.push_back(console_sink);
+        // 3. Build the new sinks
+        std::vector<spdlog::sink_ptr> logging_sinks;
+        logging_sinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
 
         if (!output_file.empty()) {
-            auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(output_file, true);
-            logging_sinks.push_back(file_sink);
+            logging_sinks.push_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>(output_file, true));
         }
 
+        // 4. Construct the configured target logger
         if (is_asynchronous) {
             spdlog::init_thread_pool(8192, 1);
             m_logger = std::make_shared<spdlog::async_logger>(
@@ -57,25 +97,7 @@ namespace sandbox::modules {
 
         spdlog::register_logger(m_logger);
 
-        sandbox::events::subscribe<events::log>(
-            ecs,
-            [this](const events::log& log_event) {
-                this->log(log_event);
-            }
-        );
-
-        // We use the macro to announce the logger is ready!
-        // Because we removed child_of<logger>(), the observer will catch this perfectly.
-        SANDBOX_INFO(ecs, "[Logger] Mounted.");
-    }
-
-    logger::~logger() {
-        if (m_logger) {
-            // Direct native call is required here, as the ECS world may be in the middle of teardown/reset
-            m_logger->info("[Logger] Shutting down.");
-            m_logger->flush();
-        }
-        spdlog::drop("sandbox_core");
+        m_logger->info("[Logger] Reconfigured successfully from VFS manifest payload.");
     }
 
     void logger::log(const events::log& log_event) {

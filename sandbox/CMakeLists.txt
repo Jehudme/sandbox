@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.20)
 project(sandbox LANGUAGES CXX)
 
+# FIX: Forces modern CMake to bypass the archaic 2.8 compatibility block
+# in third-party libraries like PhysFS by setting a safety minimum policy layer.
+set(CMAKE_POLICY_VERSION_MINIMUM "3.5")
+
 include(FetchContent)
 
 # -----------------------------------------------------------------------------
@@ -26,7 +30,14 @@ FetchContent_Declare(
         GIT_TAG        v4.1.4
 )
 
-FetchContent_MakeAvailable(spdlog glaze flecs)
+FetchContent_Declare(
+        physfs
+        GIT_REPOSITORY https://github.com/icculus/physfs.git
+        GIT_TAG        release-3.2.0
+        GIT_SHALLOW    TRUE
+)
+
+FetchContent_MakeAvailable(spdlog glaze flecs physfs)
 
 # -----------------------------------------------------------------------------
 # Sandbox Library Target
@@ -55,6 +66,10 @@ add_library(sandbox STATIC
         source/modules/runner.cpp
         source/modules/runner.h
         include/sandbox/macros/runner.h
+        include/sandbox/events/vfs.h
+        source/modules/vfs.cpp
+        source/modules/vfs.h
+        include/sandbox/macros/vfs.h
 )
 
 add_library(sandbox::library ALIAS sandbox)
@@ -71,9 +86,10 @@ target_include_directories(sandbox
 # Target Linkage
 target_link_libraries(sandbox
         PUBLIC
-        flecs
+        flecs_static
         spdlog::spdlog
         glaze::glaze
+        physfs-static
 )
 
 # Precompiled Headers Configuration
