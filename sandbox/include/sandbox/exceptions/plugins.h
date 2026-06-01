@@ -3,10 +3,11 @@
 #include <stdexcept>
 #include <string>
 #include <filesystem>
+#include "sandbox/core/platform.h"
 
 namespace sandbox::events::plugins {
 
-    class plugin_error : public std::runtime_error {
+    class SANDBOX_API plugin_error : public std::runtime_error {
     public:
         plugin_error(const std::string& context, const std::filesystem::path& path, const std::string& details)
             : std::runtime_error(format_message(context, path, details)) {}

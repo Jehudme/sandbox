@@ -7,10 +7,11 @@
 #include <vector>
 #include <cstddef> // Required for std::byte
 #include <glaze/json/json_t.hpp>
+#include "sandbox/core/platform.h"
 
 namespace sandbox
 {
-    class properties
+    class SANDBOX_API properties
     {
     public:
         using key_path = std::vector<std::string>;

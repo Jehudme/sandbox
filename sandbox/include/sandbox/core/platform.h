@@ -23,14 +23,24 @@
 // ============================================================================
 
 #if defined(SANDBOX_WINDOWS_PLATFORM)
+    // Used by Engine Classes (Exports when building the engine, Imports when consumed by launcher/plugins)
+    #if defined(SANDBOX_BUILD_SHARED)
+        #define SANDBOX_API __declspec(dllexport)
+    #else
+        #define SANDBOX_API __declspec(dllimport)
+    #endif
+
+    // Used exclusively by Plugins to expose their C-linkage entry points
     #define SANDBOX_EXPORT __declspec(dllexport)
     #define SANDBOX_COMPATIBLE_MODULE_EXTENSION ".dll"
 
 #elif defined(SANDBOX_APPLE_PLATFORM)
+    #define SANDBOX_API __attribute__((visibility("default")))
     #define SANDBOX_EXPORT __attribute__((visibility("default")))
     #define SANDBOX_COMPATIBLE_MODULE_EXTENSION ".dylib"
 
 #elif defined(SANDBOX_LINUX_PLATFORM)
+    #define SANDBOX_API __attribute__((visibility("default")))
     #define SANDBOX_EXPORT __attribute__((visibility("default")))
     #define SANDBOX_COMPATIBLE_MODULE_EXTENSION ".so"
 

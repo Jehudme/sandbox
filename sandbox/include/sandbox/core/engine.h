@@ -5,13 +5,14 @@
 #include <vector>
 #include <cstddef>
 #include <cstdint>
+#include "platform.h"
 
 #include "sandbox/core/ecs.h"
 #include "sandbox/utilities/properties.h"
 
 namespace sandbox {
 
-    class engine {
+    class SANDBOX_API engine {
     public:
         engine();
         ~engine();
