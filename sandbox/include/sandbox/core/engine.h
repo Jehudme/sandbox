@@ -22,7 +22,7 @@ namespace sandbox {
         engine(engine&&) noexcept = default;
         engine& operator=(engine&&) noexcept = default;
 
-        void initialize(const std::filesystem::path& root_mount_path);
+        void initialize(const std::filesystem::path& application_path);
         void finalize();
 
         void load_library(const std::filesystem::path& virtual_library_path);

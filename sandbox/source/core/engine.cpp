@@ -4,13 +4,16 @@
 #include "sandbox/macros/logger.h"
 #include "sandbox/macros/runner.h"
 #include "sandbox/macros/vfs.h"
+#include "sandbox/utilities/events.h"
 #include <stdexcept>
 
 #include "physfs.h"
 #include "modules/logger.h"
+#include "modules/plugins.h"
 #include "modules/runner.h"
 #include "modules/vfs.h"
 #include "sandbox/core/plugin.h"
+#include "sandbox/macros/plugins.h"
 
 namespace sandbox {
 
@@ -20,6 +23,7 @@ namespace sandbox {
     namespace {
 
         void import_core_infrastructure(flecs::world& ecs) {
+            ecs.import<modules::plugins>();
             ecs.import<modules::filesystem>();
             ecs.import<modules::logger>();
             ecs.import<modules::runner>();
@@ -89,7 +93,7 @@ namespace sandbox {
                 }
 
                 try {
-                    engine_instance->load_library(module_virtual_path);
+                    SANDBOX_PLUGIN_LOAD(engine_instance->ecs, module_virtual_path);
                 } catch (const std::exception& error) {
                     SANDBOX_ERROR(engine_instance->ecs, "[Engine] Failed to link manifest module '{}': {}", module_name, error.what());
                 }
@@ -124,30 +128,6 @@ namespace sandbox {
 
     void engine::finalize() {
         ecs.reset();
-    }
-
-    void engine::load_library(const std::filesystem::path& virtual_path) {
-        std::filesystem::path physical_path = SANDBOX_VFS_EXEC_ABSOLUTE(ecs, virtual_path);
-
-        if (physical_path.empty()) {
-            SANDBOX_ERROR_THROW(ecs, "Unresolved virtual file system path: {}", virtual_path.string());
-        }
-
-        static const std::string entry_point = "SandboxLibraryMain";
-        load_module_from_library(physical_path, entry_point.c_str());
-    }
-
-    void engine::load_module_from_library(const std::filesystem::path& physical_library_path, std::string_view module_name) {
-        std::string clean_filename = filesystem::strip_extension(physical_library_path).string();
-        SANDBOX_DEBUG(ecs, "[Engine] Linking: {}::{}", physical_library_path.filename().string(), module_name);
-
-        auto library = ecs_import_from_library(ecs.c_ptr(), clean_filename.c_str(), module_name.data());
-
-        if (library) {
-            SANDBOX_INFO(ecs, "[Engine] Mounted: {}", physical_library_path.filename().string());
-        } else {
-            SANDBOX_ERROR(ecs, "[Engine] Mount failed: {}", physical_library_path.filename().string());
-        }
     }
 
 } // namespace sandbox

@@ -74,6 +74,11 @@ add_library(sandbox STATIC
         include/sandbox/macros/vfs.h
         include/sandbox/exceptions/vfs_exceptions.h
         source/exceptions/vfs_exceptions.cpp
+        include/sandbox/events/plugins.h
+        include/sandbox/exceptions/plugins.h
+        source/modules/plugins.cpp
+        source/modules/plugins.h
+        include/sandbox/macros/plugins.h
 )
 
 add_library(sandbox::library ALIAS sandbox)
