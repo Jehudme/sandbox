@@ -4,6 +4,9 @@ project(sandbox_engine LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_SKIP_RPATH OFF)
+set(CMAKE_SKIP_BUILD_RPATH OFF)
+set(CMAKE_SKIP_INSTALL_RPATH OFF)
 
 # ==========================================================
 # THE OFFICIAL WAY: Output everything to a single bin/ folder.
