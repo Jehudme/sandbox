@@ -45,6 +45,7 @@ target_link_libraries(sandbox PUBLIC flecs spdlog::spdlog glaze::glaze physfs-st
 target_precompile_headers(sandbox PRIVATE include/sandbox/pch.h)
 
 set_target_properties(sandbox PROPERTIES
+        BUILD_RPATH "\$ORIGIN"
         BUILD_WITH_INSTALL_RPATH TRUE
         INSTALL_RPATH "\$ORIGIN"
 )

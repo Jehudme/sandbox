@@ -12,6 +12,7 @@ target_precompile_headers(launcher
 
 set_target_properties(launcher PROPERTIES
         OUTPUT_NAME "sandbox_engine"
+        BUILD_RPATH "\$ORIGIN"
         BUILD_WITH_INSTALL_RPATH TRUE
         INSTALL_RPATH "\$ORIGIN"
 )
