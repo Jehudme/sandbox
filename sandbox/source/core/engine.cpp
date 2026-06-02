@@ -19,94 +19,123 @@
 namespace sandbox {
 
     // ============================================================================
-    // 1. Anonymous Helper Functions
+    // Helper Functions
     // ============================================================================
     namespace {
 
         void import_core_infrastructure(flecs::world& ecs) {
+            ecs.import<modules::logger>();
             ecs.import<modules::plugins>();
             ecs.import<modules::filesystem>();
-            ecs.import<modules::logger>();
             ecs.import<modules::runner>();
         }
 
-        void register_virtual_mounts(flecs::world& ecs, const std::filesystem::path& application_path) {
-            std::filesystem::path executable_path = filesystem::current_path();
-            std::filesystem::path user_path = filesystem::get_user_data_directory();
+        void register_virtual_mounts(flecs::world& ecs, const std::filesystem::path& app_path) {
+            const auto bin_path = filesystem::current_path();
+            const auto cache_path = filesystem::get_user_data_directory();
 
-            SANDBOX_VFS_MOUNT(ecs, user_path, "mount://user", false);
-            SANDBOX_VFS_MOUNT(ecs, executable_path, "mount://executable", true);
-            SANDBOX_VFS_MOUNT(ecs, application_path, "mount://application", true);
+            SANDBOX_VFS_MOUNT(ecs, cache_path, "mount://cache", false);
+            SANDBOX_VFS_MOUNT(ecs, bin_path, "mount://bin", true);
+            SANDBOX_VFS_MOUNT(ecs, app_path, "mount://app", true);
+
+            SANDBOX_INFO(ecs, "VFS mounts initialized (cache, bin, app).");
         }
 
         void build_local_modules_cache(flecs::world& ecs) {
-            std::vector<filesystem::path> discoverable_paths = {};
+            std::vector<filesystem::path> all_module_paths;
 
-            // Safeguard path lists to prevent crashing if module paths are absent
+            // Safely gather app modules
             try {
-                auto app_mods = SANDBOX_VFS_EXEC_LIST(ecs, "mount://application/modules", false);
-                discoverable_paths.insert(discoverable_paths.end(), app_mods.begin(), app_mods.end());
-            } catch (...) {}
+                auto app_modules = SANDBOX_VFS_EXEC_LIST(ecs, "mount://app/modules", false);
+                all_module_paths.insert(all_module_paths.end(), app_modules.begin(), app_modules.end());
+            } catch (const std::exception& e) {
+                SANDBOX_WARN(ecs, "Skipped app modules: {}", e.what());
+            }
+
+            // Safely gather bin modules
+            try {
+                auto bin_modules = SANDBOX_VFS_EXEC_LIST(ecs, "mount://bin/modules", false);
+                all_module_paths.insert(all_module_paths.end(), bin_modules.begin(), bin_modules.end());
+            } catch (const std::exception& e) {
+                SANDBOX_WARN(ecs, "Skipped bin modules: {}", e.what());
+            }
+
+            if (all_module_paths.empty()) {
+                SANDBOX_INFO(ecs, "No modules found to cache.");
+                return;
+            }
 
             try {
-                auto exe_mods = SANDBOX_VFS_EXEC_LIST(ecs, "mount://executable/modules", false);
-                discoverable_paths.insert(discoverable_paths.end(), exe_mods.begin(), exe_mods.end());
-            } catch (...) {}
+                SANDBOX_VFS_EXEC_MKDIR(ecs, "mount://cache/modules");
 
-            if (discoverable_paths.empty()) return;
-            SANDBOX_VFS_EXEC_MKDIR(ecs, "mount://user/modules");
-
-            for (const auto& path : discoverable_paths) {
-                if (path.extension() == SANDBOX_COMPATIBLE_MODULE_EXTENSION) {
-                    std::filesystem::path target_destination = std::filesystem::path("mount://user/modules") / path.filename();
-                    SANDBOX_VFS_EXEC_COPY(ecs, path, target_destination);
+                for (const auto& mod_path : all_module_paths) {
+                    if (mod_path.extension() == SANDBOX_COMPATIBLE_MODULE_EXTENSION) {
+                        auto dest_path = std::filesystem::path("mount://cache/modules") / mod_path.filename();
+                        SANDBOX_VFS_EXEC_COPY(ecs, mod_path, dest_path);
+                    }
                 }
+                SANDBOX_INFO(ecs, "Local module cache built successfully.");
+            } catch (const std::exception& e) {
+                SANDBOX_ERROR(ecs, "Failed building module cache: {}", e.what());
             }
         }
 
         void parse_and_register_manifest(flecs::world& ecs) {
-            std::vector<std::byte> data = SANDBOX_VFS_EXEC_READ(ecs, "mount://application/manifest.json");
+            try {
+                std::vector<std::byte> raw_data = SANDBOX_VFS_EXEC_READ(ecs, "mount://app/manifest.json");
 
-            if (data.empty()) {
-                SANDBOX_WARN(ecs, "[Engine] manifest.json was empty or could not be loaded.");
+                if (raw_data.empty()) {
+                    SANDBOX_WARN(ecs, "manifest.json is empty.");
+                    return;
+                }
+
+                std::string json_content(reinterpret_cast<const char*>(raw_data.data()), raw_data.size());
+                ecs.entity("::Manifest").set<properties>(properties(json_content));
+
+                SANDBOX_INFO(ecs, "Manifest loaded and registered.");
+            } catch (const std::exception& e) {
+                SANDBOX_WARN(ecs, "Could not load manifest.json: {}", e.what());
+            }
+        }
+
+        void load_manifest_requested_plugins(engine* engine_ptr) {
+            auto manifest_entity = engine_ptr->ecs.entity("::Manifest");
+            if (!manifest_entity.has<properties>()) {
+                SANDBOX_WARN(engine_ptr->ecs, "Manifest properties missing. Skipping plugin load.");
                 return;
             }
 
-            std::string json_string(reinterpret_cast<const char*>(data.data()), data.size());
-            ecs.entity("::Manifest").set<properties>(properties(json_string));
-        }
+            const auto& manifest = manifest_entity.get<properties>();
+            const std::filesystem::path cache_modules_dir = "mount://cache/modules";
 
-        void load_manifest_requested_plugins(engine* engine_instance) {
-            auto manifest_entity = engine_instance->ecs.entity("::Manifest");
-            if (!manifest_entity.has<properties>()) return;
+            auto requested_modules = manifest.get<std::vector<std::string>>({"modules"}).value_or(std::vector<std::string>{});
 
-            const properties& manifest = manifest_entity.get<properties>();
-            std::filesystem::path local_cache_root = "mount://user/modules";
+            if (requested_modules.empty()) {
+                SANDBOX_INFO(engine_ptr->ecs, "No modules requested in manifest.");
+                return;
+            }
 
-            auto modules_list = manifest.get<std::vector<std::string>>({"modules"}).value_or(std::vector<std::string>{});
+            for (const auto& module_name : requested_modules) {
+                auto module_vpath = cache_modules_dir / module_name;
 
-            for (const auto& module_name : modules_list) {
-                std::filesystem::path module_virtual_path = local_cache_root / module_name;
-
-                // Automatically append compatible extension (.so/.dll) if omitted by modder
-                if (!module_virtual_path.has_extension()) {
-                    module_virtual_path.replace_extension(SANDBOX_COMPATIBLE_MODULE_EXTENSION);
+                // Automatically append compatible extension (.so/.dll/.dylib) if omitted by modder
+                if (!module_vpath.has_extension()) {
+                    module_vpath.replace_extension(SANDBOX_COMPATIBLE_MODULE_EXTENSION);
                 }
 
                 try {
-                    SANDBOX_PLUGIN_LOAD(engine_instance->ecs, module_virtual_path);
-                } catch (const std::exception& error) {
-                    SANDBOX_ERROR(engine_instance->ecs, "[Engine] Failed to link manifest module '{}': {}", module_name, error.what());
+                    SANDBOX_PLUGIN_LOAD(engine_ptr->ecs, module_vpath);
+                    SANDBOX_INFO(engine_ptr->ecs, "Loaded plugin: {}", module_name);
+                } catch (const std::exception& e) {
+                    SANDBOX_ERROR(engine_ptr->ecs, "Failed to load plugin '{}': {}", module_name, e.what());
                 }
             }
         }
 
-    } // namespace
-
-
+    }
 
     // ============================================================================
-    // 2. Class Implementation
+    // Class Implementation
     // ============================================================================
 
     engine::engine() = default;
@@ -115,13 +144,13 @@ namespace sandbox {
         finalize();
     }
 
-    void engine::initialize(const sandbox::engine_arguments& arguments) {
+    void engine::initialize(const arguments& args) {
         sandbox::configure_plugin_os_api();
-        ecs.entity("arguments").set<sandbox::engine_arguments>(arguments);
+        ecs.entity("::Sandbox::Arguments").set(args);
 
         import_core_infrastructure(ecs);
 
-        register_virtual_mounts(ecs, arguments.mounts);
+        register_virtual_mounts(ecs, args.app_mount);
         build_local_modules_cache(ecs);
 
         parse_and_register_manifest(ecs);

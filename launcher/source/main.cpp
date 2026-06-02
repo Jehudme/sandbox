@@ -10,21 +10,21 @@
 
 int main(int argc, char* argv[]) {
     CLI::App app{"Sandbox Meta-Engine Runtime Launcher"};
-    sandbox::engine_arguments config;
+    sandbox::engine::arguments args;
     bool run = false;
 
     // 1. Core Boot Routing
-    app.add_option("--mount,-m", config.mounts, "Mount paths (e.g., --mount application=test-app.zip)")
+    app.add_option("--mount,-m", args.app_mount, "Mount paths (e.g., --mount application=test-app.zip)")
        ->required()
        ->check(CLI::ExistingPath);
 
-    app.add_flag("--dev,-d", config.developer_mode, "Enable developer mode layers");
+    app.add_flag("--dev,-d", args.dev_mode, "Enable developer mode layers");
     app.add_flag("--run,-r", run,"Run the engine immediately after boot");
 
     // 2. The Dynamic Module Payload
     // This allows users to pass infinite custom arguments without modifying the launcher!
     // Example: -p Renderer=Vulkan -p Physics.TickRate=120
-    app.add_option("--prop,-p", config.module_args, "Custom module properties (Key=Value)");
+    app.add_option("--prop,-p", args.module_args, "Custom module properties (Key=Value)");
 
     // 3. Execution Handoff
     CLI11_PARSE(app, argc, argv);
@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
 
     try {
         std::cout << "[Launcher] Booting engine core...\n";
-        engine_instance.initialize(config);
+        engine_instance.initialize(args);
 
         if (run) SANDBOX_RUNNER_RUN(engine_instance.ecs);
 
