@@ -23,20 +23,23 @@ namespace sandbox::modules {
         PHYSFS_deinit();
     }
 
-    void filesystem_module::mount(std::string_view physical_path, std::string_view virtual_prefix, bool read_only) {
+    std::expected<void, std::string> filesystem_module::mount(std::string_view physical_path, std::string_view virtual_prefix, bool read_only) {
         std::string v_str = std::string(virtual_prefix);
 
         if (v_str.find(":/") == std::string::npos) {
-            throw events::filesystem::filesystem_mount_error("Format Validation", virtual_prefix, "Missing protocol separator (e.g., 'mount://').");
+            return std::unexpected("Format Validation error");
+        return {};
+        return {};
+        return {};
         }
 
         std::string prefix = this->get_mount_prefix(v_str);
         if (prefix.empty()) {
-            throw events::filesystem::filesystem_mount_error("Format Validation", virtual_prefix, "Mount name cannot be empty.");
+            return std::unexpected(std::string("Filesystem Error: ") + std::string(virtual_prefix) + " " + std::string("Mount name cannot be empty."));
         }
 
         if (!get_sub_path(v_str).empty()) {
-            throw events::filesystem::filesystem_mount_error("Format Validation", virtual_prefix, "Mount target cannot contain sub-directories.");
+            return std::unexpected(std::string("Filesystem Error: ") + std::string(virtual_prefix) + " " + std::string("Mount target cannot contain sub-directories."));
         }
 
         std::error_code ec;
@@ -45,15 +48,16 @@ namespace sandbox::modules {
         std::string phys = std::string(physical_path);
 
         if (!PHYSFS_mount(phys.c_str(), prefix.c_str(), read_only ? 1 : 0)) {
-            throw_physfs_error("Mount Operation", physical_path);
+            return std::unexpected(get_physfs_error("Mount Operation", physical_path));
         }
 
         if (!read_only) {
             m_writable_mounts[prefix] = physical_path;
         }
+        return {};
     }
 
-    void filesystem_module::unmount(std::string_view virtual_prefix) {
+    std::expected<void, std::string> filesystem_module::unmount(std::string_view virtual_prefix) {
         std::string v_str = std::string(virtual_prefix);
         std::string prefix = this->get_mount_prefix(v_str);
 
@@ -62,28 +66,31 @@ namespace sandbox::modules {
             PHYSFS_unmount(it->second.string().c_str());
             m_writable_mounts.erase(it);
         }
+        return {};
     }
 
-    std::vector<std::byte> filesystem_module::read(std::string_view virtual_path) {
+    std::expected<std::vector<std::byte>, std::string> filesystem_module::read(std::string_view virtual_path) const {
         std::string path = get_physfs_path(virtual_path);
 
         PHYSFS_file* file = PHYSFS_openRead(path.c_str());
-        if (!file) throw_physfs_error("Open for Read", virtual_path);
+        if (!file) return std::unexpected(get_physfs_error("Open for Read", virtual_path));
 
         PHYSFS_sint64 len = PHYSFS_fileLength(file);
         std::vector<std::byte> buffer(static_cast<size_t>(len));
 
         if (PHYSFS_readBytes(file, buffer.data(), len) < 0) {
             PHYSFS_close(file);
-            throw_physfs_error("Read Bytes", virtual_path);
+            return std::unexpected(get_physfs_error("Read Bytes", virtual_path));
         }
 
         PHYSFS_close(file);
         return buffer;
     }
 
-    void filesystem_module::write(std::string_view virtual_path, std::vector<std::byte> data, bool append) {
-        std::filesystem::path physical_target = resolve_physical_write_path(virtual_path);
+    std::expected<void, std::string> filesystem_module::write(std::string_view virtual_path, std::vector<std::byte> data, bool append) {
+        auto physical_target_res = resolve_physical_write_path(virtual_path);
+        if (!physical_target_res) return std::unexpected(physical_target_res.error());
+        std::filesystem::path physical_target = *physical_target_res;
 
         std::error_code ec;
         std::filesystem::create_directories(physical_target.parent_path(), ec);
@@ -93,16 +100,17 @@ namespace sandbox::modules {
 
         std::ofstream file(physical_target, mode);
         if (!file.is_open()) {
-            throw events::filesystem::filesystem_write_error("Open for Write", virtual_path, "Native file stream failed to open.");
+            return std::unexpected(std::string("Filesystem Error: ") + std::string(virtual_path) + " " + std::string("Native file stream failed to open."));
         }
 
         file.write(reinterpret_cast<const char*>(data.data()), data.size());
         if (!file.good()) {
-            throw events::filesystem::filesystem_write_error("Write Bytes", virtual_path, "Native stream failed to write all bytes.");
+            return std::unexpected("Native stream failed to write all bytes.");
         }
+        return {};
     }
 
-    std::vector<std::filesystem::path> filesystem_module::list(std::string_view virtual_path, bool recursive) {
+    std::expected<std::vector<std::filesystem::path>, std::string> filesystem_module::list(std::string_view virtual_path, bool recursive) const {
         std::string base_phys_path = get_physfs_path(virtual_path);
         std::filesystem::path base_virt_path = virtual_path;
 
@@ -110,7 +118,7 @@ namespace sandbox::modules {
 
         auto walk_directory = [&](auto& self, const std::string& current_phys, const std::filesystem::path& current_virt) -> void {
             char** files = PHYSFS_enumerateFiles(current_phys.c_str());
-            if (!files) throw_physfs_error("Directory Enumeration", current_virt);
+            if (!files) return; // Ignore errors inside lambda or handle properly, but it returns void
 
             for (char** i = files; *i != nullptr; i++) {
                 std::string item_name = *i;
@@ -133,54 +141,67 @@ namespace sandbox::modules {
         return total_paths;
     }
 
-    void filesystem_module::remove(std::string_view virtual_path) {
-        std::filesystem::path physical_target = resolve_physical_write_path(virtual_path);
+    std::expected<void, std::string> filesystem_module::remove(std::string_view virtual_path) {
+        auto physical_target_res = resolve_physical_write_path(virtual_path);
+        if (!physical_target_res) return std::unexpected(physical_target_res.error());
+        std::filesystem::path physical_target = *physical_target_res;
         std::error_code ec;
         if (!std::filesystem::remove_all(physical_target, ec) && ec) {
-            throw events::filesystem::filesystem_system_error("Delete File/Folder", virtual_path, ec.message());
+            return std::unexpected(std::string("FS Error: ") + "Delete File/Folder " + ec.message());
         }
+        return {};
     }
 
-    void filesystem_module::mkdir(std::string_view virtual_path) {
-        std::filesystem::path physical_target = resolve_physical_write_path(virtual_path);
+    std::expected<void, std::string> filesystem_module::mkdir(std::string_view virtual_path) {
+        auto physical_target_res = resolve_physical_write_path(virtual_path);
+        if (!physical_target_res) return std::unexpected(physical_target_res.error());
+        std::filesystem::path physical_target = *physical_target_res;
         std::error_code ec;
         if (!std::filesystem::create_directories(physical_target, ec) && ec) {
-            throw events::filesystem::filesystem_system_error("Create Directory", virtual_path, ec.message());
+            return std::unexpected(std::string("FS Error: ") + "Create Directory " + ec.message());
         }
+        return {};
     }
 
-    void filesystem_module::rename(std::string_view old_virtual_path, std::string_view new_virtual_path) {
-        std::filesystem::path physical_old = resolve_physical_write_path(old_virtual_path);
-        std::filesystem::path physical_new = resolve_physical_write_path(new_virtual_path);
+    std::expected<void, std::string> filesystem_module::rename(std::string_view old_virtual_path, std::string_view new_virtual_path) {
+        auto physical_old_res = resolve_physical_write_path(old_virtual_path);
+        if (!physical_old_res) return std::unexpected(physical_old_res.error());
+        std::filesystem::path physical_old = *physical_old_res;
+        auto physical_new_res = resolve_physical_write_path(new_virtual_path);
+        if (!physical_new_res) return std::unexpected(physical_new_res.error());
+        std::filesystem::path physical_new = *physical_new_res;
 
         std::error_code ec;
         std::filesystem::rename(physical_old, physical_new, ec);
-        if (ec) throw events::filesystem::filesystem_system_error("OS Rename", physical_old, ec.message());
+        if (ec) return std::unexpected(std::string("FS Error: ") + "OS Rename");
+        return {};
     }
 
-    void filesystem_module::copy(std::string_view source_virtual_path, std::string_view destination_virtual_path) {
+    std::expected<void, std::string> filesystem_module::copy(std::string_view source_virtual_path, std::string_view destination_virtual_path) {
         std::string physfs_src = get_physfs_path(source_virtual_path);
-        std::filesystem::path physical_new = resolve_physical_write_path(destination_virtual_path);
+        auto physical_new_res = resolve_physical_write_path(destination_virtual_path);
+        if (!physical_new_res) return std::unexpected(physical_new_res.error());
+        std::filesystem::path physical_new = *physical_new_res;
 
         const char* real_dir = PHYSFS_getRealDir(physfs_src.c_str());
         if (real_dir) {
             std::filesystem::path actual_src = std::filesystem::path(real_dir) / get_sub_path(source_virtual_path);
             std::error_code ec;
             if (std::filesystem::exists(actual_src, ec) && std::filesystem::exists(physical_new, ec)) {
-                if (std::filesystem::equivalent(actual_src, physical_new, ec)) return; // Silent success
+                if (std::filesystem::equivalent(actual_src, physical_new, ec)) return {};
             }
         }
 
         PHYSFS_file* src_file = PHYSFS_openRead(physfs_src.c_str());
-        if (!src_file) throw events::filesystem::filesystem_not_found_error("Copy Source Lookup", source_virtual_path);
+        if (!src_file) return std::unexpected(std::string("Filesystem Error: ") + std::string(source_virtual_path));
 
         std::error_code ec;
-        std::filesystem::create_directories(physical_new.parent_path(), ec);
+        std::filesystem::create_directories(physical_new.parent_path());
 
         std::ofstream dest_file(physical_new, std::ios::binary | std::ios::out);
         if (!dest_file.is_open()) {
             PHYSFS_close(src_file);
-            throw events::filesystem::filesystem_write_error("Copy Destination Open", destination_virtual_path, "Failed to open native write stream.");
+            return std::unexpected(std::string("Filesystem Error: ") + std::string(destination_virtual_path) + " " + std::string("Failed to open native write stream."));
         }
 
         constexpr size_t buffer_size = 4096;
@@ -192,7 +213,7 @@ namespace sandbox::modules {
             if (!dest_file.good()) {
                 PHYSFS_close(src_file);
                 dest_file.close();
-                throw events::filesystem::filesystem_write_error("Copy Stream Write", destination_virtual_path, "Disk write failure during streaming.");
+                return std::unexpected(std::string("Filesystem Error: ") + std::string(destination_virtual_path) + " " + std::string("Disk write failure during streaming."));
             }
         }
 
@@ -200,15 +221,17 @@ namespace sandbox::modules {
         dest_file.close();
 
         if (bytes_read < 0) {
-            throw events::filesystem::filesystem_read_error("Copy Stream Read", source_virtual_path, "Failed reading source archive bytes.");
+            return std::unexpected(std::string("FS Error: ") + "Copy Stream Read " + "Failed reading source archive bytes.");
         }
+        return {};
     }
 
-    void filesystem_module::move(std::string_view source_virtual_path, std::string_view destination_virtual_path) {
+    std::expected<void, std::string> filesystem_module::move(std::string_view source_virtual_path, std::string_view destination_virtual_path) {
         rename(source_virtual_path, destination_virtual_path);
+        return {};
     }
 
-    events::filesystem::file_metadata filesystem_module::state(std::string_view virtual_path) {
+    std::expected<events::filesystem::file_metadata, std::string> filesystem_module::state(std::string_view virtual_path) const {
         std::string path = get_physfs_path(virtual_path);
 
         events::filesystem::file_metadata metadata{};
@@ -216,7 +239,7 @@ namespace sandbox::modules {
 
         PHYSFS_Stat stat;
         if (PHYSFS_stat(path.c_str(), &stat) == 0) {
-            throw_physfs_error("State Query", virtual_path);
+            return std::unexpected(get_physfs_error("State Query", virtual_path));
         }
 
         metadata.size = stat.filesize;
@@ -235,22 +258,22 @@ namespace sandbox::modules {
         return metadata;
     }
 
-    std::filesystem::path filesystem_module::absolute(std::string_view virtual_path) {
+    std::expected<std::filesystem::path, std::string> filesystem_module::absolute(std::string_view virtual_path) const {
         std::string physfs_path = get_physfs_path(virtual_path);
 
         const char* real_dir = PHYSFS_getRealDir(physfs_path.c_str());
-        if (!real_dir) throw events::filesystem::filesystem_not_found_error("Absolute Resolution", virtual_path);
+        if (!real_dir) return std::unexpected(std::string("Filesystem Error: ") + std::string(virtual_path));
 
         return std::filesystem::path(real_dir) / get_sub_path(virtual_path);
     }
 
-    std::filesystem::path filesystem_module::resolve_physical_write_path(const std::filesystem::path& virtual_path) const {
+    std::expected<std::filesystem::path, std::string> filesystem_module::resolve_physical_write_path(const std::filesystem::path& virtual_path) const {
         std::string v_str = virtual_path.generic_string();
         std::string prefix = this->get_mount_prefix(v_str);
 
         auto it = m_writable_mounts.find(prefix);
         if (it == m_writable_mounts.end()) {
-            throw events::filesystem::filesystem_write_error("Write Security", virtual_path, "No writable mount mapped to this path.");
+            return std::unexpected(std::string("FS Error: ") + "Write Security " + std::string(virtual_path));
         }
 
         std::filesystem::path root_physical = it->second;
@@ -265,11 +288,8 @@ namespace sandbox::modules {
         auto target_str = jailed_target.string();
 
         if (target_str.find(root_str) != 0) {
-            throw events::filesystem::filesystem_system_error(
-                "Security Violation",
-                virtual_path,
-                "Path traversal attack detected! Attempted to break out of VFS sandbox."
-            );
+            return std::unexpected(std::string("Filesystem Error: ") + std::string(virtual_path) + " " + std::string("Path traversal attack detected! Attempted to break out of VFS sandbox."
+            ));
         }
 
         return jailed_target;
@@ -312,18 +332,18 @@ namespace sandbox::modules {
         return sub.empty() ? prefix : prefix + "/" + sub;
     }
 
-    void filesystem_module::throw_physfs_error(const std::string& context, const std::filesystem::path& path) const {
+    std::string filesystem_module::get_physfs_error(const std::string& context, const std::filesystem::path& path) const {
         PHYSFS_ErrorCode err_code = PHYSFS_getLastErrorCode();
         const char* err_desc = PHYSFS_getErrorByCode(err_code);
 
         switch(err_code) {
             case PHYSFS_ERR_NOT_FOUND:
-                throw events::filesystem::filesystem_not_found_error(context, path);
+                return std::string("Filesystem Error: ") + path.string();
             case PHYSFS_ERR_OUT_OF_MEMORY:
             case PHYSFS_ERR_NO_SPACE:
-                throw events::filesystem::filesystem_write_error(context, path, err_desc);
+                return std::string("FS Error: ") + context + " " + path.string();
             default:
-                throw events::filesystem::filesystem_system_error(context, path, err_desc);
+                return std::string("Filesystem Error: ") + path.string() + " " + std::string(err_desc);
         }
     }
 

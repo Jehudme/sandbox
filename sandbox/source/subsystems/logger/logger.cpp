@@ -48,8 +48,8 @@ namespace sandbox::modules {
         spdlog::drop("sandbox_core");
     }
 
-    void logger::log(const events::log& log_event) {
-        if (!m_logger) return;
+    std::expected<void, std::string> logger::log(const events::log& log_event) {
+        if (!m_logger) return {};
 
         spdlog::level::level_enum native_spdlog_level = spdlog::level::info;
         bool should_trigger_exception = false;
@@ -68,6 +68,7 @@ namespace sandbox::modules {
                 native_spdlog_level = spdlog::level::critical;
                 should_trigger_exception = true;
                 break;
+        return {};
         }
 
         m_logger->log(native_spdlog_level, log_event.message);
@@ -82,8 +83,9 @@ namespace sandbox::modules {
 
         if (final_throw_decision) {
             m_logger->flush();
-            throw std::runtime_error(log_event.message);
+            return std::unexpected(log_event.message);
         }
+        return {};
     }
 
 } // namespace sandbox::modules

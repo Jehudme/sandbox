@@ -33,9 +33,9 @@ namespace sandbox {
             const auto bin_path     = filesystem::current_path();
             const auto cache_path   = filesystem::get_user_data_directory();
 
-            ecs.get<sandbox::filesystem_service>().api->mount(cache_path.generic_string(), "mount://cache", false);
-            ecs.get<sandbox::filesystem_service>().api->mount(bin_path.generic_string(), "mount://bin", true);
-            ecs.get<sandbox::filesystem_service>().api->mount(app_path.generic_string(), "mount://app", true);
+            if (auto result = ecs.get<sandbox::filesystem_service>().api->mount(cache_path.generic_string(), "mount://cache", false); !result) { SANDBOX_ERROR(ecs, "Mount failed: {}", result.error()); }
+            if (auto result = ecs.get<sandbox::filesystem_service>().api->mount(bin_path.generic_string(), "mount://bin", true); !result) { SANDBOX_ERROR(ecs, "Mount failed: {}", result.error()); }
+            if (auto result = ecs.get<sandbox::filesystem_service>().api->mount(app_path.generic_string(), "mount://app", true); !result) { SANDBOX_ERROR(ecs, "Mount failed: {}", result.error()); }
 
             SANDBOX_INFO(ecs, "VFS mounts initialized (cache, bin, app).");
         }
@@ -44,14 +44,22 @@ namespace sandbox {
             std::vector<filesystem::path> all_module_paths;
 
             try {
-                auto app_modules = ecs.get<sandbox::filesystem_service>().api->list("mount://app/modules", false);
+                auto app_modules_res = ecs.get<sandbox::filesystem_service>().api->list("mount://app/modules", false);
+                if (!app_modules_res) {
+                    throw std::runtime_error(app_modules_res.error());
+                }
+                auto app_modules = *app_modules_res;
                 all_module_paths.insert(all_module_paths.end(), app_modules.begin(), app_modules.end());
             } catch (const std::exception& e) {
                 SANDBOX_WARN(ecs, "Skipped app modules: {}", e.what());
             }
 
             try {
-                auto bin_modules = ecs.get<sandbox::filesystem_service>().api->list("mount://bin/modules", false);
+                auto bin_modules_res = ecs.get<sandbox::filesystem_service>().api->list("mount://bin/modules", false);
+                if (!bin_modules_res) {
+                    throw std::runtime_error(bin_modules_res.error());
+                }
+                auto bin_modules = *bin_modules_res;
                 all_module_paths.insert(all_module_paths.end(), bin_modules.begin(), bin_modules.end());
             } catch (const std::exception& e) {
                 SANDBOX_WARN(ecs, "Skipped bin modules: {}", e.what());
@@ -63,7 +71,7 @@ namespace sandbox {
             }
 
             try {
-                ecs.get<sandbox::filesystem_service>().api->mkdir("mount://cache/modules");
+                if (auto result = ecs.get<sandbox::filesystem_service>().api->mkdir("mount://cache/modules"); !result) { SANDBOX_ERROR(ecs, "mkdir failed: {}", result.error()); }
 
                 for (const auto& mod_path : all_module_paths) {
                     if (mod_path.extension() == SANDBOX_COMPATIBLE_MODULE_EXTENSION) {
@@ -79,7 +87,12 @@ namespace sandbox {
 
         void parse_and_register_manifest(flecs::world& ecs) {
             try {
-                std::vector<std::byte> raw_data = ecs.get<sandbox::filesystem_service>().api->read("mount://app/manifest.json");
+                auto raw_data_res = ecs.get<sandbox::filesystem_service>().api->read("mount://app/manifest.json");
+                if (!raw_data_res) {
+                    SANDBOX_WARN(ecs, "read failed: {}", raw_data_res.error());
+                    return;
+                }
+                std::vector<std::byte> raw_data = *raw_data_res;
 
                 if (raw_data.empty()) {
                     SANDBOX_WARN(ecs, "manifest.json is empty.");

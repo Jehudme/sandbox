@@ -1,4 +1,8 @@
 #pragma once
+#include <expected>
+#include <string>
+#include <expected>
+#include <string>
 
 #include <string_view>
 
@@ -7,7 +11,7 @@ namespace sandbox {
     class iplugins {
     public:
         virtual ~iplugins() = default;
-        virtual void load(std::string_view virtual_path, std::string_view entry_point = "SandboxLibraryMain") = 0;
+        [[nodiscard]] virtual std::expected<void, std::string> load(std::string_view virtual_path, std::string_view entry_point = "SandboxLibraryMain") = 0;
     };
 
     struct plugins_service {

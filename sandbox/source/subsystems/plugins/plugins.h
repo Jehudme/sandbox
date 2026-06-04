@@ -11,7 +11,7 @@ namespace sandbox::modules {
         plugins(world& ecs);
         ~plugins() override;
 
-        void load(std::string_view virtual_path, std::string_view entry_point = "SandboxLibraryMain") override;
+        [[nodiscard]] std::expected<void, std::string> load(std::string_view virtual_path, std::string_view entry_point = "SandboxLibraryMain") override;
 
     private:
         world* m_ecs{nullptr};

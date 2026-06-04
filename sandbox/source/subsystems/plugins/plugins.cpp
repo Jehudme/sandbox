@@ -21,14 +21,14 @@ namespace sandbox::modules {
 
     plugins::~plugins() = default;
 
-    void plugins::load(std::string_view virtual_path, std::string_view entry_point) {
-
-        // 1. Resolve virtual path to physical OS path
-        std::filesystem::path physical_path = m_ecs->get<sandbox::filesystem_service>().api->absolute(virtual_path);
+    std::expected<void, std::string> plugins::load(std::string_view virtual_path, std::string_view entry_point) {
+        auto physical_path_res = m_ecs->get<sandbox::filesystem_service>().api->absolute(virtual_path);
+        if (!physical_path_res) return std::unexpected(physical_path_res.error());
+        std::filesystem::path physical_path = *physical_path_res;
 
         if (physical_path.empty()) {
             SANDBOX_ERROR(*m_ecs, "[Plugins] VFS Resolution failed: {}", virtual_path);
-            return; // CRITICAL FIX: Do not throw inside an observer!
+            return std::unexpected("VFS Resolution failed");
         }
 
         // ====================================================================
@@ -45,10 +45,9 @@ namespace sandbox::modules {
         // 4. Validate success
         if (library) {
             SANDBOX_INFO(*m_ecs, "[Plugins] Mounted: {}", physical_path.filename().string());
+            return {};
         } else {
-            SANDBOX_ERROR(*m_ecs, "[Plugins] Mount failed: {}", physical_path.filename().string());
-            // CRITICAL FIX: Do not throw! Just log the error and return safely.
-            return;
+            return std::unexpected(std::string("Plugin Error: Failed to find entry point ") + std::string(entry_point) + " in " + physical_path.string());
         }
     }
 

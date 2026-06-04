@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <optional>
+#include <expected>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -27,27 +28,27 @@ namespace sandbox
         properties& operator=(const properties&) = default;
         properties(const properties&) = default;
 
-        void load_from_string(std::string_view json_string);
-        void load_from_bytes(const std::vector<std::byte>& byte_data);
+        [[nodiscard]] std::expected<void, std::string> load_from_string(std::string_view json_string);
+        [[nodiscard]] std::expected<void, std::string> load_from_bytes(const std::vector<std::byte>& byte_data);
         std::string save_to_string(const key_path& path = {}) const;
 
-        static properties parse(std::string_view json_string);
-        static properties parse(const std::vector<std::byte>& byte_data);
+        [[nodiscard]] static std::expected<properties, std::string> parse(std::string_view json_string);
+        [[nodiscard]] static std::expected<properties, std::string> parse(const std::vector<std::byte>& byte_data);
 
         void merge(const properties& other_properties);
-        void move(const key_path& source_path, const key_path& destination_path);
-        void rename(const key_path& path, const std::string& new_name);
-        void remove(const key_path& path);
+        [[nodiscard]] std::expected<void, std::string> move(const key_path& source_path, const key_path& destination_path);
+        [[nodiscard]] std::expected<void, std::string> rename(const key_path& path, const std::string& new_name);
+        [[nodiscard]] std::expected<void, std::string> remove(const key_path& path);
         void clear() noexcept;
 
         bool contains(const key_path& path) const;
-        properties get_subtree(const key_path& path) const;
+        [[nodiscard]] std::expected<properties, std::string> get_subtree(const key_path& path) const;
         key_list list_keys(const key_path& path = {}) const;
 
         void traverse(const visitor_callback& callback) const;
 
         template<typename target_type>
-        std::optional<target_type> get(const key_path& path) const;
+        [[nodiscard]] std::expected<target_type, std::string> get(const key_path& path) const;
 
         template<typename target_type>
         void set(const key_path& path, const target_type& value_to_set);

@@ -20,7 +20,7 @@ namespace sandbox::modules {
         logger(world& ecs, const logger_config& config = logger_config{});
         ~logger() override;
 
-        void log(const events::log& log_event) override;
+        std::expected<void, std::string> log(const events::log& log_event) override;
 
     private:
         std::shared_ptr<spdlog::logger> m_logger;

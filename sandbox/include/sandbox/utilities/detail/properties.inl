@@ -3,7 +3,7 @@
 namespace sandbox
 {
     template<typename target_type>
-    std::optional<target_type> properties::get(const key_path& path) const
+    std::expected<target_type, std::string> properties::get(const key_path& path) const
     {
         const glz::json_t* current_node_ptr = &m_root_node;
 
@@ -11,7 +11,7 @@ namespace sandbox
             if (current_node_ptr->is_object() && current_node_ptr->get_object().contains(key)) {
                 current_node_ptr = &current_node_ptr->get_object().at(key);
             } else {
-                return std::nullopt;
+                return std::unexpected("Key not found or invalid format");
             }
         }
 
@@ -21,7 +21,7 @@ namespace sandbox
         if (!error_context) {
             return deserialized_value;
         }
-        return std::nullopt;
+        return std::unexpected("Key not found or invalid format");
     }
 
     template<typename target_type>

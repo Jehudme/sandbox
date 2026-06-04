@@ -5,43 +5,51 @@ namespace sandbox
 {
     properties::properties(std::string_view json_string)
     {
-        load_from_string(json_string);
+        (void)load_from_string(json_string);
     }
 
     properties::properties(const std::vector<std::byte>& byte_data)
     {
-        load_from_bytes(byte_data);
+        (void)load_from_bytes(byte_data);
     }
 
-    void properties::load_from_bytes(const std::vector<std::byte>& byte_data)
+    std::expected<void, std::string> properties::load_from_bytes(const std::vector<std::byte>& byte_data)
     {
         if (byte_data.empty()) {
             m_root_node = glz::json_t::object_t{};
-            return;
+            return {};
         }
 
         // Cast the raw byte buffer into a string_view for instant parsing without copies
         std::string_view json_view(reinterpret_cast<const char*>(byte_data.data()), byte_data.size());
-        load_from_string(json_view);
+        return load_from_string(json_view);
     }
 
-    void properties::load_from_string(std::string_view json_string)
+    std::expected<void, std::string> properties::load_from_string(std::string_view json_string)
     {
         m_root_node = glz::json_t::object_t{}; // Reset the tree
         const auto error_context = glz::read_json(m_root_node, json_string);
         if (error_context) {
             m_root_node = glz::json_t::object_t{};
+            return std::unexpected(glz::format_error(error_context, json_string));
         }
+        return {};
     }
 
-    properties properties::parse(std::string_view json_string)
+    std::expected<properties, std::string> properties::parse(std::string_view json_string)
     {
-        return properties(json_string);
+        properties p;
+        auto res = p.load_from_string(json_string);
+        if (!res) return std::unexpected(res.error());
+        return p;
     }
 
-    properties properties::parse(const std::vector<std::byte>& byte_data)
+    std::expected<properties, std::string> properties::parse(const std::vector<std::byte>& byte_data)
     {
-        return properties(byte_data);
+        properties p;
+        auto res = p.load_from_bytes(byte_data);
+        if (!res) return std::unexpected(res.error());
+        return p;
     }
 
     std::string properties::save_to_string(const key_path& path) const
@@ -52,7 +60,9 @@ namespace sandbox
                 current_node_ptr = &current_node_ptr->get_object().at(key);
             } else return {};
         }
-        return current_node_ptr->dump().value();
+        auto dumped = current_node_ptr->dump();
+        if (dumped) return dumped.value();
+        return "";
     }
 
     // ========================================================================
@@ -82,19 +92,19 @@ namespace sandbox
         }
     }
 
-    void properties::move(const key_path& source_path, const key_path& destination_path)
+    std::expected<void, std::string> properties::move(const key_path& source_path, const key_path& destination_path)
     {
-        if (source_path == destination_path || source_path.empty()) return;
+        if (source_path == destination_path || source_path.empty()) return {};
 
         glz::json_t* source_parent_node_ptr = &m_root_node;
         for (size_t i = 0; i < source_path.size() - 1; ++i) {
-            if (!source_parent_node_ptr->is_object()) return;
+            if (!source_parent_node_ptr->is_object()) return std::unexpected("Source path not found");
             source_parent_node_ptr = &source_parent_node_ptr->get_object()[source_path[i]];
         }
 
         auto& source_object_map = source_parent_node_ptr->get_object();
         auto source_iterator = source_object_map.find(source_path.back());
-        if (source_iterator == source_object_map.end()) return;
+        if (source_iterator == source_object_map.end()) return std::unexpected("Source path not found");
 
         glz::json_t extracted_json_node = std::move(source_iterator->second);
         source_object_map.erase(source_iterator);
@@ -107,27 +117,34 @@ namespace sandbox
             destination_node_ptr = &destination_node_ptr->get_object()[key];
         }
         *destination_node_ptr = std::move(extracted_json_node);
+        return {};
     }
 
-    void properties::rename(const key_path& path, const std::string& new_name)
+    std::expected<void, std::string> properties::rename(const key_path& path, const std::string& new_name)
     {
-        if (path.empty() || new_name.empty()) return;
+        if (path.empty() || new_name.empty()) return std::unexpected("Invalid path or name");
         key_path renamed_key_path = path;
         renamed_key_path.back() = new_name;
-        move(path, renamed_key_path);
+        auto res = move(path, renamed_key_path);
+        if (!res) return std::unexpected(res.error());
+        return {};
     }
 
-    void properties::remove(const key_path& path)
+    std::expected<void, std::string> properties::remove(const key_path& path)
     {
-        if (path.empty()) return;
+        if (path.empty()) return {};
         glz::json_t* current_node_ptr = &m_root_node;
         for (size_t i = 0; i < path.size() - 1; ++i) {
-            if (!current_node_ptr->is_object()) return;
+            if (!current_node_ptr->is_object()) return {};
             current_node_ptr = &current_node_ptr->get_object()[path[i]];
+        return {};
+        return {};
+        return {};
         }
         if (current_node_ptr->is_object()) {
             current_node_ptr->get_object().erase(path.back());
         }
+        return {};
     }
 
     void properties::clear() noexcept
@@ -146,7 +163,7 @@ namespace sandbox
         return true;
     }
 
-    properties properties::get_subtree(const key_path& path) const
+    std::expected<properties, std::string> properties::get_subtree(const key_path& path) const
     {
         properties subtree_result;
         const glz::json_t* current_node_ptr = &m_root_node;
