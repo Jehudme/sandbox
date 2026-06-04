@@ -5,7 +5,7 @@
 
 namespace sandbox::events::runner {
 
-    // 1. The Runtime Interrupts
+    // MARK: - Runtime Interrupts
     struct state_change {
         enum class action {
             Quit,
@@ -16,7 +16,7 @@ namespace sandbox::events::runner {
         action state_request;
     };
 
-    // 2. The Execution Handshake
+    // MARK: - Execution Handshake
     struct execution_handshake {
         bool is_async = false;
         mutable std::function<void()> callback;
@@ -29,9 +29,7 @@ namespace sandbox::events::runner {
 
 namespace sandbox::runner_controls {
 
-    // ============================================================================
-    // 1. The Core Fetcher
-    // ============================================================================
+    // MARK: - Core Fetcher
 
     // Publishes the handshake event and returns the captured loop function
     [[nodiscard]] inline std::function<void()> fetch(flecs::world ecs, bool is_async) {
@@ -43,9 +41,7 @@ namespace sandbox::runner_controls {
         return handshake.callback; // Returns null if no backend responded
     }
 
-    // ============================================================================
-    // 2. Execution Helpers
-    // ============================================================================
+    // MARK: - Execution Helpers
 
     inline void start_async(flecs::world ecs) {
         if (auto execution_loop = fetch(ecs, true)) {
@@ -63,9 +59,7 @@ namespace sandbox::runner_controls {
         }
     }
 
-    // ============================================================================
-    // 3. Runtime Interrupt Helpers
-    // ============================================================================
+    // MARK: - Runtime Interrupt Helpers
 
     inline void quit(flecs::world ecs) {
         sandbox::events::publish(ecs, events::runner::state_change{
@@ -88,9 +82,7 @@ namespace sandbox::runner_controls {
 } // namespace sandbox::runner_controls
 
 
-// ============================================================================
-// Public Engine Control Macros
-// ============================================================================
+// MARK: - Public Engine Control Macros
 
 // Grabs the backend loop function manually if you want to store it
 #define SANDBOX_FETCH_RUNNER(world, async_flag) sandbox::runner_controls::fetch(world, async_flag)

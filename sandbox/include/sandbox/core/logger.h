@@ -11,9 +11,8 @@
         sandbox::events::log(__FILE__, __LINE__, sandbox::events::log::level::severity_enum, throw_override_val, format_literal, ##__VA_ARGS__) \
     )
 
-// ============================================================================
-// Standard Engine Logging Macros (Respects global file configuration settings)
-// ============================================================================
+// MARK: - Standard Engine Logging Macros
+// Respects global file configuration settings
 
 #ifndef NDEBUG
     #define SANDBOX_TRACE(world, format, ...) INTERNAL_SANDBOX_LOG_PUBLISH(world, Trace, std::nullopt, format, ##__VA_ARGS__)
@@ -28,9 +27,8 @@
 #define SANDBOX_ERROR(world, format, ...) INTERNAL_SANDBOX_LOG_PUBLISH(world, Error, std::nullopt, format, ##__VA_ARGS__)
 #define SANDBOX_FATAL(world, format, ...) INTERNAL_SANDBOX_LOG_PUBLISH(world, Fatal, std::nullopt, format, ##__VA_ARGS__)
 
-// ============================================================================
-// Force-Throw Error Macros (Guaranteed to bypass config files and throw instantly)
-// ============================================================================
+// MARK: - Force-Throw Error Macros
+// Guaranteed to bypass config files and throw instantly
 
 #define SANDBOX_WARN_THROW(world, format, ...)  INTERNAL_SANDBOX_LOG_PUBLISH(world, Warn,  true, format, ##__VA_ARGS__)
 #define SANDBOX_ERROR_THROW(world, format, ...) INTERNAL_SANDBOX_LOG_PUBLISH(world, Error, true, format, ##__VA_ARGS__)

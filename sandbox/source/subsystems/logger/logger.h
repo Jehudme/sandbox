@@ -17,9 +17,11 @@ namespace sandbox::modules {
 
     class logger : public ilogger {
     public:
+        // MARK: - Subsystem Lifecycle
         logger(world& ecs, const logger_config& config = logger_config{});
         ~logger() override;
 
+        // MARK: - Subsystem Implementation
         std::expected<void, std::string> log(const events::log& log_event) override;
 
     private:

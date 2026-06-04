@@ -10,9 +10,11 @@ namespace sandbox::modules {
 
     class runner : public irunner {
     public:
+        // MARK: - Subsystem Lifecycle
         runner(world& ecs);
         ~runner() override;
 
+        // MARK: - Subsystem Implementation
         void start_async(world& ecs) override;
         void run_sync(world& ecs) override;
 
@@ -21,6 +23,7 @@ namespace sandbox::modules {
         void resume() override;
 
     private:
+        // MARK: - Internal Mechanics
         void internal_tick_loop(world& ecs);
 
         enum class execution_state {

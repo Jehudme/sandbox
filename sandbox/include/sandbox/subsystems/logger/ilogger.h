@@ -1,8 +1,6 @@
 #pragma once
 #include <expected>
 #include <string>
-#include <expected>
-#include <string>
 
 #include "sandbox/event_bus/logger_events.h"
 

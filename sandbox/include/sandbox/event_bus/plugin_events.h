@@ -7,7 +7,7 @@
 
 namespace sandbox::events::plugins {
 
-    // Plugin exception classes (dissolved from exceptions/plugins.h)
+    // MARK: - Plugin Exception Classes
     class SANDBOX_API plugin_error : public std::runtime_error {
     public:
         plugin_error(const std::string& context, const std::filesystem::path& path, const std::string& details)
@@ -23,9 +23,7 @@ namespace sandbox::events::plugins {
 
 } // namespace sandbox::events::plugins
 
-// ============================================================================
-// Plugin Macros (dissolved from macros/plugins.h)
-// ============================================================================
+// MARK: - Plugin Macros
 
 #include "sandbox/subsystems/plugins/iplugins.h"
 

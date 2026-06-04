@@ -12,6 +12,8 @@
 
 namespace sandbox::modules {
 
+    // MARK: - Subsystem Lifecycle
+
     logger::logger(flecs::world& ecs, const logger_config& config)
         : m_throw_on_error(config.throw_on_error)
     {
@@ -20,13 +22,13 @@ namespace sandbox::modules {
         // Fetch the arguments class directly from the ECS world
         auto args = ecs.entity("::Sandbox::Arguments").get<engine::arguments>();
 
-        // 1. Setup a safe, synchronous "Boot Logger" to capture early startup events
+        // Setup a safe, synchronous "Boot Logger" to capture early startup events
         auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
 
         m_logger = std::make_shared<spdlog::logger>(config.logger_name, console_sink);
         m_logger->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
 
-        // 2. Evaluate log level (Override config with dev_mode if present)
+        // Evaluate log level (Override config with dev_mode if present)
         if (args && args->dev_mode) {
             m_logger->set_level(spdlog::level::trace);
         } else {
@@ -35,7 +37,7 @@ namespace sandbox::modules {
 
         spdlog::register_logger(m_logger);
 
-        // 3. Subscribe to the global logging event bus
+        // Subscribe to the global logging event bus
         sandbox::events::subscribe<events::log>(
             ecs,
             [this](const events::log& log_event) {
@@ -53,6 +55,8 @@ namespace sandbox::modules {
         }
         spdlog::drop("sandbox_core");
     }
+
+    // MARK: - Subsystem Implementation
 
     void logger::log(const events::log& log_event) {
         if (!m_logger) return;

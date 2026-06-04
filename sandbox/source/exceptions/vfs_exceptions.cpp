@@ -2,6 +2,8 @@
 
 namespace sandbox::events::vfs {
 
+    // MARK: - Exception Implementations
+
     vfs_error::vfs_error(const std::string& message)
         : std::runtime_error(message) {}
 

@@ -17,11 +17,11 @@
 
 namespace sandbox {
 
-    // ============================================================================
-    // Helper Functions
-    // ============================================================================
+    // MARK: - Engine Helpers
+
     namespace {
 
+        /// Registers fundamental core modules with the ECS world.
         void import_core_infrastructure(flecs::world& ecs) {
             ecs.import<modules::logger>();
             ecs.import<modules::plugins>();
@@ -29,6 +29,7 @@ namespace sandbox {
             ecs.import<modules::runner>();
         }
 
+        /// Mounts the essential virtual file systems required by the engine.
         void register_virtual_mounts(flecs::world& ecs, const std::filesystem::path& app_path) {
             const auto bin_path     = filesystem::current_path();
             const auto cache_path   = filesystem::get_user_data_directory();
@@ -40,6 +41,7 @@ namespace sandbox {
             SANDBOX_INFO(ecs, "VFS mounts initialized (cache, bin, app).");
         }
 
+        /// Scans app and bin mounts for modules and populates the cache directory.
         void build_local_modules_cache(flecs::world& ecs) {
             std::vector<filesystem::path> all_module_paths;
 
@@ -85,6 +87,7 @@ namespace sandbox {
             }
         }
 
+        /// Reads the application manifest and exposes it as a globally accessible entity.
         void parse_and_register_manifest(flecs::world& ecs) {
             try {
                 auto raw_data_res = ecs.get<sandbox::filesystem_service>().api->read("mount://app/manifest.json");
@@ -108,6 +111,7 @@ namespace sandbox {
             }
         }
 
+        /// Processes the loaded manifest and invokes the plugin subsystem to load requested modules.
         void load_manifest_requested_plugins(engine* engine_ptr) {
             auto manifest_entity = engine_ptr->ecs.entity("::Manifest");
             if (!manifest_entity.has<properties>()) {
@@ -144,9 +148,7 @@ namespace sandbox {
 
     }
 
-    // ============================================================================
-    // Class Implementation
-    // ============================================================================
+    // MARK: - Engine Implementation
 
     engine::engine() = default;
 

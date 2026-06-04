@@ -8,6 +8,8 @@
 
 namespace sandbox::modules {
 
+    // MARK: - Subsystem Lifecycle
+
     plugins::plugins(world& ecs) {
         ecs.module<plugins>("::Modules::Plugins");
 
@@ -21,8 +23,10 @@ namespace sandbox::modules {
 
     plugins::~plugins() = default;
 
+    // MARK: - Subsystem Implementation
+
     void plugins::on_load(world& ecs, const events::plugins::load_request& e) {
-        // 1. Resolve virtual path to physical OS path
+        // Resolve virtual path to physical OS path
         std::filesystem::path physical_path = SANDBOX_VFS_EXEC_ABSOLUTE(ecs, e.virtual_path);
 
         if (physical_path.empty()) {
@@ -30,18 +34,15 @@ namespace sandbox::modules {
             return; // CRITICAL FIX: Do not throw inside an observer!
         }
 
-        // ====================================================================
-        // CRITICAL FIX: Do NOT strip the extension!
-        // We pass the exact physical path so dlopen gets the true filename.
-        // ====================================================================
+        // CRITICAL FIX: Do NOT strip the extension! We pass the exact physical path so dlopen gets the true filename.
         std::string exact_path = physical_path.string();
 
         SANDBOX_DEBUG(ecs, "[Plugins] Linking: {}::{}", physical_path.filename().string(), e.entry_point);
 
-        // 3. Delegate to the OS dynamic linker via Flecs API
+        // Delegate to the OS dynamic linker via Flecs API
         auto library = ecs_import_from_library(ecs.c_ptr(), exact_path.c_str(), e.entry_point.c_str());
 
-        // 4. Validate success
+        // Validate success
         if (library) {
             SANDBOX_INFO(ecs, "[Plugins] Mounted: {}", physical_path.filename().string());
         } else {

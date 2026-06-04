@@ -5,7 +5,6 @@
 #include <string_view>
 #include <string>
 #include <expected>
-#include <expected>
 #include "sandbox/event_bus/filesystem_events.h"
 
 namespace sandbox {

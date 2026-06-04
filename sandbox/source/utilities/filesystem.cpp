@@ -3,6 +3,8 @@
 
 namespace sandbox::filesystem
 {
+    // MARK: - Path Queries
+
     bool is_file(const std::filesystem::path& path) {
         return std::filesystem::exists(path) && std::filesystem::is_regular_file(path);
     }
@@ -19,6 +21,7 @@ namespace sandbox::filesystem
         return path.parent_path() / path.stem();
     }
 
+    // MARK: - Directory Traversal
 
     std::vector<std::filesystem::path> get_items_in_directory(const std::filesystem::path& dir_path) {
         std::vector<std::filesystem::path> items;
@@ -53,6 +56,8 @@ namespace sandbox::filesystem
         }
         return directories;
     }
+
+    // MARK: - System Paths
 
     std::filesystem::path get_user_data_directory() {
         #if defined(SANDBOX_WINDOWS_PLATFORM)

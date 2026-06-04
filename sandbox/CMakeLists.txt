@@ -12,7 +12,7 @@ FetchContent_Declare(glaze GIT_REPOSITORY https://github.com/stephenberry/glaze.
 FetchContent_Declare(flecs GIT_REPOSITORY https://github.com/SanderMertens/flecs.git GIT_TAG v4.1.4 GIT_SHALLOW TRUE)
 FetchContent_Declare(physfs GIT_REPOSITORY https://github.com/icculus/physfs.git GIT_TAG release-3.2.0 GIT_SHALLOW TRUE)
 
-# --- Dependency Configurations ---
+# MARK: - Dependencies
 
 # Flecs MUST be shared for dynamic plugins to share the ECS world state
 set(FLECS_SHARED ON CACHE BOOL "" FORCE)
@@ -27,7 +27,7 @@ set(PHYSFS_BUILD_STATIC ON CACHE BOOL "" FORCE)
 
 FetchContent_MakeAvailable(spdlog glaze flecs physfs)
 
-# --- Engine Configuration ---
+# MARK: - Engine Configuration
 
 # Building the engine as a SHARED library (or change to STATIC if desired)
 add_library(sandbox SHARED

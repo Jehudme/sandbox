@@ -31,9 +31,7 @@ namespace sandbox::events {
 
 #include "detail/logger_events.inl"
 
-// ============================================================================
-// Log Macros (merged from macros/logger.h)
-// ============================================================================
+// MARK: - Log Macros
 
 #include "sandbox/subsystems/logger/ilogger.h"
 

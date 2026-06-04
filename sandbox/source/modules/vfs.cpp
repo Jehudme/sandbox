@@ -7,6 +7,8 @@
 
 namespace sandbox::modules {
 
+    // MARK: - Subsystem Lifecycle
+
     filesystem::filesystem(world& ecs) {
         ecs.module<filesystem>("::Modules::Filesystem");
 
@@ -35,6 +37,8 @@ namespace sandbox::modules {
     filesystem::~filesystem() {
         PHYSFS_deinit();
     }
+
+    // MARK: - Subsystem Implementation
 
     void filesystem::on_mount(world& ecs, const events::vfs::mount_path& e) {
         std::string v_str = e.virtual_prefix.generic_string();
@@ -283,6 +287,8 @@ namespace sandbox::modules {
             return std::filesystem::path(real_dir) / get_sub_path(virt_path.generic_string());
         };
     }
+
+    // MARK: - Subsystem Helpers
 
     std::filesystem::path filesystem::resolve_physical_write_path(const std::filesystem::path& virtual_path) const {
         std::string v_str = virtual_path.generic_string();

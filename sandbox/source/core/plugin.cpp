@@ -10,6 +10,10 @@
 
 namespace sandbox {
 
+    // MARK: - OS API Configuration
+
+    /// Configures the ECS OS API with platform-specific dynamic linking functionality
+    /// to support loading and executing external plugins at runtime.
     void configure_plugin_os_api() {
         ecs_os_set_api_defaults();
 

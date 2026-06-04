@@ -6,6 +6,8 @@
 
 namespace sandbox::modules {
 
+    // MARK: - Subsystem Lifecycle
+
     filesystem_module::filesystem_module(world& ecs) {
         ecs.module<filesystem_module>("::Modules::Filesystem");
         ecs.set<sandbox::filesystem_service>({this});
@@ -22,6 +24,8 @@ namespace sandbox::modules {
     filesystem_module::~filesystem_module() {
         PHYSFS_deinit();
     }
+
+    // MARK: - Subsystem Implementation
 
     std::expected<void, std::string> filesystem_module::mount(std::string_view physical_path, std::string_view virtual_prefix, bool read_only) {
         std::string v_str = std::string(virtual_prefix);
@@ -110,6 +114,7 @@ namespace sandbox::modules {
         return {};
     }
 
+    /// Recursively or flatly lists files and directories within a given virtual path.
     std::expected<std::vector<std::filesystem::path>, std::string> filesystem_module::list(std::string_view virtual_path, bool recursive) const {
         std::string base_phys_path = get_physfs_path(virtual_path);
         std::filesystem::path base_virt_path = virtual_path;
@@ -177,6 +182,7 @@ namespace sandbox::modules {
         return {};
     }
 
+    /// Safely copies a file from the virtual filesystem (potentially within an archive) to a physical destination.
     std::expected<void, std::string> filesystem_module::copy(std::string_view source_virtual_path, std::string_view destination_virtual_path) {
         std::string physfs_src = get_physfs_path(source_virtual_path);
         auto physical_new_res = resolve_physical_write_path(destination_virtual_path);
@@ -267,6 +273,9 @@ namespace sandbox::modules {
         return std::filesystem::path(real_dir) / get_sub_path(virtual_path);
     }
 
+    // MARK: - Internal Mechanics
+
+    /// Resolves a virtual path to a physical path and validates it to prevent path traversal attacks.
     std::expected<std::filesystem::path, std::string> filesystem_module::resolve_physical_write_path(const std::filesystem::path& virtual_path) const {
         std::string v_str = virtual_path.generic_string();
         std::string prefix = this->get_mount_prefix(v_str);
