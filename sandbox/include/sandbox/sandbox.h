@@ -10,23 +10,22 @@
 // ----------------------------------------------------------------------------
 #include "sandbox/core/platform.h"      // Always include platform first for API macros
 #include "sandbox/core/ecs.h"
-#include "sandbox/core/arguments.h"
 #include "sandbox/core/engine.h"
 #include "sandbox/core/plugin.h"
 
 // ----------------------------------------------------------------------------
-// 2. Events & Payloads
+// 2. Events, Payloads, Controls & Exceptions (unified headers)
 // ----------------------------------------------------------------------------
 #include "sandbox/events/logger.h"
 #include "sandbox/events/plugins.h"
-#include "sandbox/events/runner.h"
-#include "sandbox/events/vfs.h"
+#include "sandbox/events/runner.h"      // Also contains runner_controls + SANDBOX_RUNNER_* macros
+#include "sandbox/events/filesystem.h"  // Also contains filesystem_controls + SANDBOX_FS_* macros + exception classes
 
 // ----------------------------------------------------------------------------
-// 3. Exceptions
+// 3. Plugin Loader Macros
 // ----------------------------------------------------------------------------
-#include "sandbox/exceptions/plugins.h"
-#include "sandbox/exceptions/vfs_exceptions.h"
+#include "sandbox/macros/logger.h"
+#include "sandbox/macros/plugins.h"
 
 // ----------------------------------------------------------------------------
 // 4. Utilities & Helpers
@@ -34,11 +33,3 @@
 #include "sandbox/utilities/events.h"
 #include "sandbox/utilities/filesystem.h"
 #include "sandbox/utilities/properties.h"
-
-// ----------------------------------------------------------------------------
-// 5. Public Macros
-// ----------------------------------------------------------------------------
-#include "sandbox/macros/logger.h"
-#include "sandbox/macros/plugins.h"
-#include "sandbox/macros/runner.h"
-#include "sandbox/macros/vfs.h"

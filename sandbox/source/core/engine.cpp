@@ -2,16 +2,16 @@
 #include "sandbox/core/platform.h"
 #include "sandbox/utilities/filesystem.h"
 #include "sandbox/macros/logger.h"
-#include "sandbox/macros/runner.h"
-#include "sandbox/macros/vfs.h"
+#include "sandbox/events/runner.h"
+#include "sandbox/events/filesystem.h"
 #include "sandbox/utilities/events.h"
 #include <stdexcept>
 
 #include "physfs.h"
-#include "modules/logger.h"
-#include "modules/plugins.h"
-#include "modules/runner.h"
-#include "modules/vfs.h"
+#include "subsystems/logger/logger.h"
+#include "subsystems/plugins/plugins.h"
+#include "subsystems/runner/runner.h"
+#include "subsystems/filesystem/filesystem.h"
 #include "sandbox/core/plugin.h"
 #include "sandbox/macros/plugins.h"
 
@@ -25,7 +25,7 @@ namespace sandbox {
         void import_core_infrastructure(flecs::world& ecs) {
             ecs.import<modules::logger>();
             ecs.import<modules::plugins>();
-            ecs.import<modules::filesystem>();
+            ecs.import<modules::filesystem_module>();
             ecs.import<modules::runner>();
         }
 
@@ -33,9 +33,9 @@ namespace sandbox {
             const auto bin_path     = filesystem::current_path();
             const auto cache_path   = filesystem::get_user_data_directory();
 
-            SANDBOX_VFS_MOUNT(ecs, cache_path,  "mount://cache", false);
-            SANDBOX_VFS_MOUNT(ecs, bin_path,    "mount://bin", true);
-            SANDBOX_VFS_MOUNT(ecs, app_path,    "mount://app", true);
+            SANDBOX_FS_MOUNT(ecs, cache_path,  "mount://cache", false);
+            SANDBOX_FS_MOUNT(ecs, bin_path,    "mount://bin", true);
+            SANDBOX_FS_MOUNT(ecs, app_path,    "mount://app", true);
 
             SANDBOX_INFO(ecs, "VFS mounts initialized (cache, bin, app).");
         }
@@ -44,14 +44,14 @@ namespace sandbox {
             std::vector<filesystem::path> all_module_paths;
 
             try {
-                auto app_modules = SANDBOX_VFS_EXEC_LIST(ecs, "mount://app/modules", false);
+                auto app_modules = SANDBOX_FS_EXEC_LIST(ecs, "mount://app/modules", false);
                 all_module_paths.insert(all_module_paths.end(), app_modules.begin(), app_modules.end());
             } catch (const std::exception& e) {
                 SANDBOX_WARN(ecs, "Skipped app modules: {}", e.what());
             }
 
             try {
-                auto bin_modules = SANDBOX_VFS_EXEC_LIST(ecs, "mount://bin/modules", false);
+                auto bin_modules = SANDBOX_FS_EXEC_LIST(ecs, "mount://bin/modules", false);
                 all_module_paths.insert(all_module_paths.end(), bin_modules.begin(), bin_modules.end());
             } catch (const std::exception& e) {
                 SANDBOX_WARN(ecs, "Skipped bin modules: {}", e.what());
@@ -63,12 +63,12 @@ namespace sandbox {
             }
 
             try {
-                SANDBOX_VFS_EXEC_MKDIR(ecs, "mount://cache/modules");
+                SANDBOX_FS_EXEC_MKDIR(ecs, "mount://cache/modules");
 
                 for (const auto& mod_path : all_module_paths) {
                     if (mod_path.extension() == SANDBOX_COMPATIBLE_MODULE_EXTENSION) {
                         auto dest_path = std::filesystem::path("mount://cache/modules") / mod_path.filename();
-                        SANDBOX_VFS_EXEC_COPY(ecs, mod_path, dest_path);
+                        SANDBOX_FS_EXEC_COPY(ecs, mod_path, dest_path);
                     }
                 }
                 SANDBOX_INFO(ecs, "Local module cache built successfully.");
@@ -79,7 +79,7 @@ namespace sandbox {
 
         void parse_and_register_manifest(flecs::world& ecs) {
             try {
-                std::vector<std::byte> raw_data = SANDBOX_VFS_EXEC_READ(ecs, "mount://app/manifest.json");
+                std::vector<std::byte> raw_data = SANDBOX_FS_EXEC_READ(ecs, "mount://app/manifest.json");
 
                 if (raw_data.empty()) {
                     SANDBOX_WARN(ecs, "manifest.json is empty.");

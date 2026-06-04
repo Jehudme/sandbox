@@ -27,8 +27,6 @@ set(PHYSFS_BUILD_STATIC ON CACHE BOOL "" FORCE)
 
 FetchContent_MakeAvailable(spdlog glaze flecs physfs)
 
-FetchContent_MakeAvailable(spdlog glaze flecs physfs)
-
 # --- Engine Configuration ---
 
 # Building the engine as a SHARED library (or change to STATIC if desired)
@@ -37,11 +35,10 @@ add_library(sandbox SHARED
         source/core/engine.cpp
         source/utilities/filesystem.cpp
         source/core/plugin.cpp
-        source/modules/logger.cpp
-        source/modules/runner.cpp
-        source/modules/vfs.cpp
-        source/exceptions/vfs_exceptions.cpp
-        source/modules/plugins.cpp
+        source/subsystems/logger/logger.cpp
+        source/subsystems/runner/runner.cpp
+        source/subsystems/filesystem/filesystem.cpp
+        source/subsystems/plugins/plugins.cpp
         include/sandbox/sandbox.h
 )
 add_library(sandbox::library ALIAS sandbox)
