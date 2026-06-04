@@ -15,7 +15,7 @@
 
 
 #if defined(SANDBOX_WINDOWS_PLATFORM)
-    // Used by Engine Classes (Exports when building the engine, Imports when consumed by launcher/plugins)
+    // Used by Engine Classes (Exports when building the engine, Imports when consumed by launcher/loader)
     #if defined(SANDBOX_BUILD_SHARED)
         #define SANDBOX_API __declspec(dllexport)
     #else

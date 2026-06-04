@@ -38,7 +38,7 @@ add_library(sandbox SHARED
         source/subsystems/logger/logger.cpp
         source/subsystems/runner/runner.cpp
         source/subsystems/filesystem/filesystem.cpp
-        source/subsystems/plugins/plugins.cpp
+        source/utilities/loader.cpp
         include/sandbox/sandbox.h
 )
 add_library(sandbox::library ALIAS sandbox)

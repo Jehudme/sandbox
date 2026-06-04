@@ -4,16 +4,15 @@
 #include "sandbox/event_bus/logger_events.h"
 #include "sandbox/event_bus/runner_events.h"
 #include "sandbox/event_bus/filesystem_events.h"
-#include "sandbox/event_bus/plugin_events.h"
 #include "sandbox/event_bus/event_bus.h"
 #include <stdexcept>
 
 #include "physfs.h"
 #include "subsystems/logger/logger.h"
-#include "subsystems/plugins/plugins.h"
 #include "subsystems/runner/runner.h"
 #include "subsystems/filesystem/filesystem.h"
 #include "sandbox/core/plugin.h"
+#include "utilities/loader.h"
 
 namespace sandbox {
 
@@ -22,7 +21,6 @@ namespace sandbox {
         /// Registers fundamental core modules with the ECS world.
         void import_core_infrastructure(flecs::world& ecs) {
             ecs.import<modules::logger>();
-            ecs.import<modules::plugins>();
             ecs.import<modules::filesystem_module>();
             ecs.import<modules::runner>();
         }
@@ -135,7 +133,7 @@ namespace sandbox {
                 }
 
                 try {
-                    engine_ptr->ecs.get<sandbox::plugins_service>().api->load(module_vpath.generic_string());
+                    sandbox::internal::load(engine_ptr->ecs, module_vpath.generic_string());
 
                     SANDBOX_INFO(engine_ptr->ecs, "Loaded plugin: {}", module_name);
                 } catch (const std::exception& e) {

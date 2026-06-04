@@ -10,7 +10,6 @@
 
 // Unified event payloads, controls, exceptions, and macros
 #include "sandbox/event_bus/logger_events.h"
-#include "sandbox/event_bus/plugin_events.h"
 #include "sandbox/event_bus/runner_events.h"
 #include "sandbox/event_bus/filesystem_events.h"
 
