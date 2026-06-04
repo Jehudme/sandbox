@@ -8,7 +8,7 @@
 // ----------------------------------------------------------------------------
 // 1. Core Architecture
 // ----------------------------------------------------------------------------
-#include "sandbox/core/platform.h"      // Always include platform first for API macros
+#include "sandbox/core/platform.h"
 #include "sandbox/core/ecs.h"
 #include "sandbox/core/engine.h"
 #include "sandbox/core/plugin.h"
@@ -16,10 +16,10 @@
 // ----------------------------------------------------------------------------
 // 2. Event Bus (unified event payloads, controls, exceptions, and macros)
 // ----------------------------------------------------------------------------
-#include "sandbox/event_bus/logger_events.h"     // log struct + SANDBOX_INFO/WARN/ERROR etc.
-#include "sandbox/event_bus/plugin_events.h"     // plugins::load_request + SANDBOX_PLUGIN_LOAD
-#include "sandbox/event_bus/runner_events.h"     // runner events + SANDBOX_RUNNER_* macros
-#include "sandbox/event_bus/filesystem_events.h" // filesystem events + SANDBOX_FS_* macros + exceptions
+#include "sandbox/event_bus/logger_events.h"
+#include "sandbox/event_bus/plugin_events.h"
+#include "sandbox/event_bus/runner_events.h"
+#include "sandbox/event_bus/filesystem_events.h"
 
 // ----------------------------------------------------------------------------
 // 3. Utilities & Helpers

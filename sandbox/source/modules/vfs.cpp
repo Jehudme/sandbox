@@ -1,7 +1,7 @@
 #include "modules/vfs.h"
 #include "sandbox/exceptions/vfs_exceptions.h"
 #include "sandbox/utilities/events.h"
-#include "sandbox/macros/logger.h"
+#include "../../include/sandbox/core/logger.h"
 #include <physfs.h>
 #include <fstream>
 

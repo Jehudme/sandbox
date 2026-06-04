@@ -120,7 +120,8 @@ namespace sandbox {
                 }
 
                 try {
-                    SANDBOX_PLUGIN_LOAD(engine_ptr->ecs, module_vpath);
+                    events::publish(engine_ptr->ecs, sandbox::events::plugins::load_request{module_vpath});
+
                     SANDBOX_INFO(engine_ptr->ecs, "Loaded plugin: {}", module_name);
                 } catch (const std::exception& e) {
                     SANDBOX_ERROR(engine_ptr->ecs, "Failed to load plugin '{}': {}", module_name, e.what());

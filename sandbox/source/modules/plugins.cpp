@@ -2,7 +2,7 @@
 #include "sandbox/exceptions/plugins.h"
 #include "sandbox/utilities/events.h"
 #include "sandbox/utilities/filesystem.h"
-#include "sandbox/macros/logger.h"
+#include "../../include/sandbox/core/logger.h"
 #include "sandbox/macros/vfs.h"
 #include "sandbox/core/plugin.h"
 

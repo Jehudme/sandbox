@@ -1,7 +1,7 @@
 #include "modules/runner.h"
 
 #include "sandbox/utilities/events.h"
-#include "sandbox/macros/logger.h"
+#include "../../include/sandbox/core/logger.h"
 #include "sandbox/utilities/properties.h"
 
 namespace sandbox::modules {
