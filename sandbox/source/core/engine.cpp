@@ -12,7 +12,6 @@
 #include "modules/plugins.h"
 #include "modules/runner.h"
 #include "modules/vfs.h"
-#include "sandbox/core/arguments.h"
 #include "sandbox/core/plugin.h"
 #include "sandbox/macros/plugins.h"
 
@@ -31,12 +30,12 @@ namespace sandbox {
         }
 
         void register_virtual_mounts(flecs::world& ecs, const std::filesystem::path& app_path) {
-            const auto bin_path = filesystem::current_path();
-            const auto cache_path = filesystem::get_user_data_directory();
+            const auto bin_path     = filesystem::current_path();
+            const auto cache_path   = filesystem::get_user_data_directory();
 
-            SANDBOX_VFS_MOUNT(ecs, cache_path, "mount://cache", false);
-            SANDBOX_VFS_MOUNT(ecs, bin_path, "mount://bin", true);
-            SANDBOX_VFS_MOUNT(ecs, app_path, "mount://app", true);
+            SANDBOX_VFS_MOUNT(ecs, cache_path,  "mount://cache", false);
+            SANDBOX_VFS_MOUNT(ecs, bin_path,    "mount://bin", true);
+            SANDBOX_VFS_MOUNT(ecs, app_path,    "mount://app", true);
 
             SANDBOX_INFO(ecs, "VFS mounts initialized (cache, bin, app).");
         }
@@ -44,7 +43,6 @@ namespace sandbox {
         void build_local_modules_cache(flecs::world& ecs) {
             std::vector<filesystem::path> all_module_paths;
 
-            // Safely gather app modules
             try {
                 auto app_modules = SANDBOX_VFS_EXEC_LIST(ecs, "mount://app/modules", false);
                 all_module_paths.insert(all_module_paths.end(), app_modules.begin(), app_modules.end());
@@ -52,7 +50,6 @@ namespace sandbox {
                 SANDBOX_WARN(ecs, "Skipped app modules: {}", e.what());
             }
 
-            // Safely gather bin modules
             try {
                 auto bin_modules = SANDBOX_VFS_EXEC_LIST(ecs, "mount://bin/modules", false);
                 all_module_paths.insert(all_module_paths.end(), bin_modules.begin(), bin_modules.end());
@@ -118,7 +115,6 @@ namespace sandbox {
             for (const auto& module_name : requested_modules) {
                 auto module_vpath = cache_modules_dir / module_name;
 
-                // Automatically append compatible extension (.so/.dll/.dylib) if omitted by modder
                 if (!module_vpath.has_extension()) {
                     module_vpath.replace_extension(SANDBOX_COMPATIBLE_MODULE_EXTENSION);
                 }
@@ -158,6 +154,7 @@ namespace sandbox {
     }
 
     void engine::finalize() {
+        SANDBOX_RUNNER_QUIT(ecs);
         ecs.reset();
     }
 

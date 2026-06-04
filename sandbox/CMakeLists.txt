@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 project(sandbox LANGUAGES CXX)
 
 set(CMAKE_POLICY_VERSION_MINIMUM "3.5")
+# Crucial for static libraries being linked into a shared library
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 include(FetchContent)
@@ -11,13 +12,26 @@ FetchContent_Declare(glaze GIT_REPOSITORY https://github.com/stephenberry/glaze.
 FetchContent_Declare(flecs GIT_REPOSITORY https://github.com/SanderMertens/flecs.git GIT_TAG v4.1.4 GIT_SHALLOW TRUE)
 FetchContent_Declare(physfs GIT_REPOSITORY https://github.com/icculus/physfs.git GIT_TAG release-3.2.0 GIT_SHALLOW TRUE)
 
-# Must be shared to prevent ECS ID collisions between plugins and the host
+# --- Dependency Configurations ---
+
+# Flecs MUST be shared for dynamic plugins to share the ECS world state
 set(FLECS_SHARED ON CACHE BOOL "" FORCE)
 set(FLECS_STATIC OFF CACHE BOOL "" FORCE)
 
+# Spdlog should be shared so plugins write to the same registry/thread pool
+set(SPDLOG_BUILD_SHARED ON CACHE BOOL "" FORCE)
+
+# PhysFS can safely remain static as it is usually heavily wrapped by your VFS
+set(PHYSFS_BUILD_SHARED OFF CACHE BOOL "" FORCE)
+set(PHYSFS_BUILD_STATIC ON CACHE BOOL "" FORCE)
+
 FetchContent_MakeAvailable(spdlog glaze flecs physfs)
 
-# Build the engine as a SHARED library
+FetchContent_MakeAvailable(spdlog glaze flecs physfs)
+
+# --- Engine Configuration ---
+
+# Building the engine as a SHARED library (or change to STATIC if desired)
 add_library(sandbox SHARED
         source/core/properties.cpp
         source/core/engine.cpp
@@ -28,7 +42,6 @@ add_library(sandbox SHARED
         source/modules/vfs.cpp
         source/exceptions/vfs_exceptions.cpp
         source/modules/plugins.cpp
-        include/sandbox/core/arguments.h
         include/sandbox/sandbox.h
 )
 add_library(sandbox::library ALIAS sandbox)
@@ -41,7 +54,7 @@ target_include_directories(sandbox
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/source
 )
 
-# Link Flecs as a shared target (removed _static)
+# Link Flecs as a shared target again
 target_link_libraries(sandbox PUBLIC flecs spdlog::spdlog glaze::glaze physfs-static)
 
 target_precompile_headers(sandbox PRIVATE include/sandbox/pch.h)

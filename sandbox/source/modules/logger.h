@@ -15,7 +15,6 @@ namespace sandbox::modules {
 
     private:
         void log(const events::log& log_event);
-        void reconfigure(const properties& manifest); // Added reconfiguration handler
 
         std::shared_ptr<spdlog::logger> m_logger;
         bool m_throw_on_error{false};

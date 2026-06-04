@@ -6,7 +6,6 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "arguments.h"
 #include "platform.h"
 
 #include "sandbox/core/ecs.h"
@@ -37,7 +36,6 @@ namespace sandbox {
     struct engine::arguments {
         std::filesystem::path app_mount;
         bool dev_mode{false};
-
         std::unordered_map<std::string, std::string> module_args;
     };
 
