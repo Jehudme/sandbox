@@ -8,11 +8,9 @@ namespace sandbox::modules {
 
     class plugins : public iplugins {
     public:
-        // MARK: - Subsystem Lifecycle
         plugins(world& ecs);
         ~plugins() override;
 
-        // MARK: - Subsystem Implementation
         [[nodiscard]] std::expected<void, std::string> load(std::string_view virtual_path, std::string_view entry_point = "SandboxLibraryMain") override;
 
     private:

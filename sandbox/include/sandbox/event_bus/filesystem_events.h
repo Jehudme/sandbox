@@ -91,7 +91,6 @@ namespace sandbox::events::filesystem {
         std::filesystem::path virtual_prefix;
     };
 
-    // MARK: - Filesystem Exception Classes
     class filesystem_error : public std::runtime_error {
     public:
         explicit filesystem_error(const std::string& message)
@@ -129,8 +128,6 @@ namespace sandbox::events::filesystem {
     };
 
 } // namespace sandbox::events::filesystem
-
-// MARK: - Filesystem Controls
 
 #include "sandbox/core/ecs.h"
 #include "sandbox/event_bus/event_bus.h"
@@ -207,7 +204,6 @@ namespace sandbox::filesystem_controls {
 
 } // namespace sandbox::filesystem_controls
 
-// MARK: - Fetch Macros
 // Returns clean closures to be executed at your convenience
 
 #define SANDBOX_FS_FETCH_READ(world, path) \
@@ -240,7 +236,6 @@ namespace sandbox::filesystem_controls {
 #define SANDBOX_FS_FETCH_ABSOLUTE(world, path) \
     sandbox::filesystem_controls::absolute(world, path)
 
-// MARK: - Execute Macros
 // Evaluates inline immediately and returns values directly
 
 #define SANDBOX_FS_EXEC_READ(world, path) \
@@ -273,7 +268,6 @@ namespace sandbox::filesystem_controls {
 #define SANDBOX_FS_EXEC_ABSOLUTE(world, path) \
     sandbox::filesystem_controls::absolute(world, path)()
 
-// MARK: - Global Configuration Macros
 
 #define SANDBOX_FS_MOUNT(world, physical_path, virtual_prefix, read_only) \
     sandbox::filesystem_controls::mount(world, physical_path, virtual_prefix, read_only)

@@ -9,8 +9,6 @@
 
 namespace sandbox::modules {
 
-    // MARK: - Subsystem Lifecycle
-
     plugins::plugins(world& ecs) : m_ecs(&ecs) {
         ecs.module<plugins>("::Modules::Plugins");
         ecs.set<sandbox::plugins_service>({this});
@@ -23,8 +21,6 @@ namespace sandbox::modules {
 
     plugins::~plugins() = default;
 
-    // MARK: - Subsystem Implementation
-
     /// Resolves and dynamically links a plugin library into the active ECS world.
     std::expected<void, std::string> plugins::load(std::string_view virtual_path, std::string_view entry_point) {
         auto physical_path_res = m_ecs->get<sandbox::filesystem_service>().api->absolute(virtual_path);
@@ -36,8 +32,6 @@ namespace sandbox::modules {
             return std::unexpected("VFS Resolution failed");
         }
 
-        // CRITICAL FIX: Do NOT strip the extension!
-        // We pass the exact physical path so dlopen gets the true filename.
         std::string exact_path = physical_path.string();
 
         SANDBOX_DEBUG(*m_ecs, "[Plugins] Linking: {}::{}", physical_path.filename().string(), entry_point);

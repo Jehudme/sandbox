@@ -1,7 +1,5 @@
 #pragma once
 
-// MARK: - Explicit Platform Detection
-
 #if defined(_WIN32) || defined(_WIN64) || defined(__CYGWIN__)
     #define SANDBOX_WINDOWS_PLATFORM
 
@@ -15,8 +13,6 @@
     #error "[Sandbox Engine] Compilation failed: Unsupported or unknown platform detected!"
 #endif
 
-
-// MARK: - Platform-Specific Export & File Configuration
 
 #if defined(SANDBOX_WINDOWS_PLATFORM)
     // Used by Engine Classes (Exports when building the engine, Imports when consumed by launcher/plugins)

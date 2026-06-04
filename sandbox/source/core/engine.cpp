@@ -17,8 +17,6 @@
 
 namespace sandbox {
 
-    // MARK: - Engine Helpers
-
     namespace {
 
         /// Registers fundamental core modules with the ECS world.
@@ -147,8 +145,6 @@ namespace sandbox {
         }
 
     }
-
-    // MARK: - Engine Implementation
 
     engine::engine() = default;
 

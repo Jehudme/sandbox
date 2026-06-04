@@ -12,8 +12,6 @@
 
 namespace sandbox::modules {
 
-    // MARK: - Subsystem Lifecycle
-
     logger::logger(flecs::world& ecs, const logger_config& config)
         : m_throw_on_error(config.throw_on_error)
     {
@@ -50,7 +48,6 @@ namespace sandbox::modules {
         spdlog::drop("sandbox_core");
     }
 
-    // MARK: - Subsystem Implementation
 
     /// Emits a log event to the active spdlog sink, handling fatal errors synchronously.
     std::expected<void, std::string> logger::log(const events::log& log_event) {

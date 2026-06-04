@@ -6,8 +6,6 @@
 
 namespace sandbox::modules {
 
-    // MARK: - Subsystem Lifecycle
-
     filesystem_module::filesystem_module(world& ecs) {
         ecs.module<filesystem_module>("::Modules::Filesystem");
         ecs.set<sandbox::filesystem_service>({this});
@@ -24,8 +22,6 @@ namespace sandbox::modules {
     filesystem_module::~filesystem_module() {
         PHYSFS_deinit();
     }
-
-    // MARK: - Subsystem Implementation
 
     std::expected<void, std::string> filesystem_module::mount(std::string_view physical_path, std::string_view virtual_prefix, bool read_only) {
         std::string v_str = std::string(virtual_prefix);
@@ -272,8 +268,6 @@ namespace sandbox::modules {
 
         return std::filesystem::path(real_dir) / get_sub_path(virtual_path);
     }
-
-    // MARK: - Internal Mechanics
 
     /// Resolves a virtual path to a physical path and validates it to prevent path traversal attacks.
     std::expected<std::filesystem::path, std::string> filesystem_module::resolve_physical_write_path(const std::filesystem::path& virtual_path) const {

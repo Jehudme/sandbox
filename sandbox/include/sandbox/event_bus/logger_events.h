@@ -31,8 +31,6 @@ namespace sandbox::events {
 
 #include "detail/logger_events.inl"
 
-// MARK: - Log Macros
-
 #include "sandbox/subsystems/logger/ilogger.h"
 
 #define INTERNAL_SANDBOX_LOG_PUBLISH(world_context, severity_enum, throw_override_val, format_literal, ...) \

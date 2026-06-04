@@ -3,8 +3,6 @@
 
 namespace sandbox
 {
-    // MARK: - Core Implementation
-
     properties::properties(std::string_view json_string)
     {
         (void)load_from_string(json_string);
@@ -66,8 +64,6 @@ namespace sandbox
         if (dumped) return dumped.value();
         return "";
     }
-
-    // MARK: - Data Manipulation & Traversal
 
     void properties::merge(const properties& other_properties)
     {

@@ -14,11 +14,9 @@ namespace sandbox::modules {
 
     class filesystem_module : public ifilesystem {
     public:
-        // MARK: - Subsystem Lifecycle
         filesystem_module(world& ecs);
         ~filesystem_module() override;
 
-        // MARK: - Subsystem Implementation
         std::expected<void, std::string> mount(std::string_view physical_path, std::string_view virtual_prefix, bool read_only = true) override;
         std::expected<void, std::string> unmount(std::string_view virtual_prefix) override;
         std::expected<std::vector<std::byte>, std::string> read(std::string_view virtual_path) const override;
@@ -33,7 +31,6 @@ namespace sandbox::modules {
         std::expected<std::filesystem::path, std::string> absolute(std::string_view virtual_path) const override;
 
     private:
-        // MARK: - Internal Mechanics
         std::string get_mount_prefix(std::string_view v_path) const;
         std::string get_sub_path(std::string_view v_path) const;
         std::string get_physfs_path(std::string_view v_path) const;

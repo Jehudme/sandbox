@@ -6,8 +6,6 @@
 
 namespace sandbox::modules {
 
-    // MARK: - Subsystem Lifecycle
-
     runner::runner(world& ecs) {
         ecs.module<runner>("::Modules::Runner");
         ecs.set<sandbox::runner_service>({this});
@@ -20,8 +18,6 @@ namespace sandbox::modules {
             m_worker_thread.join();
         }
     }
-
-    // MARK: - Subsystem Implementation
 
     void runner::start_async(world& ecs) {
         std::lock_guard<std::mutex> lock(m_state_mutex);
