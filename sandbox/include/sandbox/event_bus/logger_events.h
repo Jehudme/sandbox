@@ -35,13 +35,14 @@ namespace sandbox::events {
 // Log Macros (merged from macros/logger.h)
 // ============================================================================
 
-#include "sandbox/event_bus/event_bus.h"
+#include "sandbox/subsystems/logger/ilogger.h"
 
 #define INTERNAL_SANDBOX_LOG_PUBLISH(world_context, severity_enum, throw_override_val, format_literal, ...) \
-    sandbox::events::publish( \
-        (world_context), \
-        sandbox::events::log(__FILE__, __LINE__, sandbox::events::log::level::severity_enum, throw_override_val, format_literal, ##__VA_ARGS__) \
-    )
+    do { \
+        if ((world_context).has<sandbox::logger_service>()) { \
+            (world_context).get<sandbox::logger_service>().api->log(sandbox::events::log(__FILE__, __LINE__, sandbox::events::log::level::severity_enum, throw_override_val, format_literal, ##__VA_ARGS__)); \
+        } \
+    } while(0)
 
 #ifndef NDEBUG
     #define SANDBOX_TRACE(world, format, ...) INTERNAL_SANDBOX_LOG_PUBLISH(world, Trace, std::nullopt, format, ##__VA_ARGS__)

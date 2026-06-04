@@ -21,24 +21,26 @@ namespace sandbox::events::plugins {
             : plugin_error("Plugin Load Error | " + context, path, details) {}
     };
 
-    // Event structs
-    struct load_request {
-        std::filesystem::path virtual_path;
-        std::string entry_point = "SandboxLibraryMain";
-    };
-
 } // namespace sandbox::events::plugins
 
 // ============================================================================
 // Plugin Macros (dissolved from macros/plugins.h)
 // ============================================================================
 
-#include "sandbox/event_bus/event_bus.h"
+#include "sandbox/subsystems/plugins/iplugins.h"
 
 // Standard loader: Assumes "SandboxLibraryMain" as the C-linkage entry point
 #define SANDBOX_PLUGIN_LOAD(ecs_ref, virtual_path) \
-    sandbox::events::publish(ecs_ref, sandbox::events::plugins::load_request{virtual_path})
+    do { \
+        if ((ecs_ref).has<sandbox::plugins_service>()) { \
+            (ecs_ref).get<sandbox::plugins_service>().api->load(virtual_path); \
+        } \
+    } while(0)
 
 // Custom loader: Allows specifying a custom module entry point function name
 #define SANDBOX_PLUGIN_LOAD_CUSTOM(ecs_ref, virtual_path, entry_point_name) \
-    sandbox::events::publish(ecs_ref, sandbox::events::plugins::load_request{virtual_path, entry_point_name})
+    do { \
+        if ((ecs_ref).has<sandbox::plugins_service>()) { \
+            (ecs_ref).get<sandbox::plugins_service>().api->load(virtual_path, entry_point_name); \
+        } \
+    } while(0)

@@ -2,16 +2,19 @@
 
 #include "sandbox/core/ecs.h"
 #include "sandbox/event_bus/plugin_events.h"
+#include "sandbox/subsystems/plugins/iplugins.h"
 
 namespace sandbox::modules {
 
-    class plugins {
+    class plugins : public iplugins {
     public:
         plugins(world& ecs);
-        ~plugins();
+        ~plugins() override;
+
+        void load(std::string_view virtual_path, std::string_view entry_point = "SandboxLibraryMain") override;
 
     private:
-        void on_load(world& ecs, const events::plugins::load_request& e);
+        world* m_ecs{nullptr};
     };
 
 } // namespace sandbox::modules

@@ -7,6 +7,7 @@
 #include "sandbox/core/engine.h"
 #include "sandbox/core/plugin.h"
 #include "sandbox/event_bus/runner_events.h"
+#include "sandbox/subsystems/runner/irunner.h"
 
 int main(int argc, char* argv[]) {
     CLI::App app{"Sandbox Meta-Engine Runtime Launcher"};
@@ -36,7 +37,7 @@ int main(int argc, char* argv[]) {
         std::cout << "[Launcher] Booting engine core...\n";
         engine_instance.initialize(args);
 
-        if (run) SANDBOX_RUNNER_RUN(engine_instance.ecs);
+        if (run) engine_instance.ecs.get<sandbox::runner_service>().api->run_sync(engine_instance.ecs);
 
     } catch (const std::exception& fatal_error) {
         std::cerr << "\n[Fatal Core Crash Caught]: " << fatal_error.what() << '\n';

@@ -1,4 +1,5 @@
 #include "subsystems/plugins/plugins.h"
+#include "sandbox/subsystems/filesystem/ifilesystem.h"
 #include "sandbox/event_bus/plugin_events.h"
 #include "sandbox/event_bus/event_bus.h"
 #include "sandbox/event_bus/filesystem_events.h"
@@ -8,25 +9,25 @@
 
 namespace sandbox::modules {
 
-    plugins::plugins(world& ecs) {
+    plugins::plugins(world& ecs) : m_ecs(&ecs) {
         ecs.module<plugins>("::Modules::Plugins");
+        ecs.set<sandbox::plugins_service>({this});
 
         // Bind the OS API pointers for Flecs before any dynamic libraries are loaded
         sandbox::configure_plugin_os_api();
-
-        sandbox::events::subscribe<events::plugins::load_request>(ecs, [this, &ecs](const auto& e) { on_load(ecs, e); });
 
         SANDBOX_INFO(ecs, "[Plugins] Dynamic linker subsystem operational.");
     }
 
     plugins::~plugins() = default;
 
-    void plugins::on_load(world& ecs, const events::plugins::load_request& e) {
+    void plugins::load(std::string_view virtual_path, std::string_view entry_point) {
+
         // 1. Resolve virtual path to physical OS path
-        std::filesystem::path physical_path = SANDBOX_FS_EXEC_ABSOLUTE(ecs, e.virtual_path);
+        std::filesystem::path physical_path = m_ecs->get<sandbox::filesystem_service>().api->absolute(virtual_path);
 
         if (physical_path.empty()) {
-            SANDBOX_ERROR(ecs, "[Plugins] VFS Resolution failed: {}", e.virtual_path.string());
+            SANDBOX_ERROR(*m_ecs, "[Plugins] VFS Resolution failed: {}", virtual_path);
             return; // CRITICAL FIX: Do not throw inside an observer!
         }
 
@@ -36,16 +37,16 @@ namespace sandbox::modules {
         // ====================================================================
         std::string exact_path = physical_path.string();
 
-        SANDBOX_DEBUG(ecs, "[Plugins] Linking: {}::{}", physical_path.filename().string(), e.entry_point);
+        SANDBOX_DEBUG(*m_ecs, "[Plugins] Linking: {}::{}", physical_path.filename().string(), entry_point);
 
         // 3. Delegate to the OS dynamic linker via Flecs API
-        auto library = ecs_import_from_library(ecs.c_ptr(), exact_path.c_str(), e.entry_point.c_str());
+        auto library = ecs_import_from_library(m_ecs->c_ptr(), exact_path.c_str(), std::string(entry_point).c_str());
 
         // 4. Validate success
         if (library) {
-            SANDBOX_INFO(ecs, "[Plugins] Mounted: {}", physical_path.filename().string());
+            SANDBOX_INFO(*m_ecs, "[Plugins] Mounted: {}", physical_path.filename().string());
         } else {
-            SANDBOX_ERROR(ecs, "[Plugins] Mount failed: {}", physical_path.filename().string());
+            SANDBOX_ERROR(*m_ecs, "[Plugins] Mount failed: {}", physical_path.filename().string());
             // CRITICAL FIX: Do not throw! Just log the error and return safely.
             return;
         }

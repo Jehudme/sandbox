@@ -8,39 +8,7 @@ namespace sandbox::modules {
 
     runner::runner(world& ecs) {
         ecs.module<runner>("::Modules::Runner");
-
-        // 1. Handshake Listener: Injects the correct execution callback based on the async flag
-        sandbox::events::subscribe<events::runner::execution_handshake>(
-            ecs,
-            [this, &ecs](const events::runner::execution_handshake& event) {
-                // If a callback has already been registered by an overriding module, skip
-                if (event.callback) return;
-
-                if (event.is_async) {
-                    event.callback = [this, &ecs]() { this->start_async(ecs); };
-                } else {
-                    event.callback = [this, &ecs]() { this->run_sync(ecs); };
-                }
-            }
-        );
-
-        // 2. Interrupt Listener: Manages engine runtime state events
-        sandbox::events::subscribe<events::runner::state_change>(
-            ecs,
-            [this](const events::runner::state_change& event) {
-                switch (event.state_request) {
-                    case events::runner::state_change::action::Quit:
-                        quit();
-                        break;
-                    case events::runner::state_change::action::Pause:
-                        pause();
-                        break;
-                    case events::runner::state_change::action::Resume:
-                        resume();
-                        break;
-                }
-            }
-        );
+        ecs.set<sandbox::runner_service>({this});
     }
 
     runner::~runner() {

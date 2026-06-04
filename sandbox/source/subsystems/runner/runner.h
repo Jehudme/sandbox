@@ -1,25 +1,26 @@
 #pragma once
 
 #include "sandbox/core/ecs.h"
-#include "sandbox/event_bus/runner_events.h"
+#include "sandbox/subsystems/runner/irunner.h"
+#include <thread>
 #include <mutex>
 #include <condition_variable>
-#include <thread>
 
 namespace sandbox::modules {
 
-    class runner {
+    class runner : public irunner {
     public:
         runner(world& ecs);
-        ~runner();
+        ~runner() override;
+
+        void start_async(world& ecs) override;
+        void run_sync(world& ecs) override;
+
+        void quit() override;
+        void pause() override;
+        void resume() override;
 
     private:
-        void run_sync(world& ecs);
-        void start_async(world& ecs);
-        void quit();
-        void pause();
-        void resume();
-
         void internal_tick_loop(world& ecs);
 
         enum class execution_state {

@@ -16,6 +16,7 @@ namespace sandbox::modules {
         : m_throw_on_error(config.throw_on_error)
     {
         ecs.module<logger>("::Modules::Logger");
+        ecs.set<sandbox::logger_service>({this});
 
         // Fetch the arguments class directly from the ECS world
         auto args = ecs.entity("::Sandbox::Arguments").get<engine::arguments>();
@@ -34,14 +35,6 @@ namespace sandbox::modules {
         }
 
         spdlog::register_logger(m_logger);
-
-        // 3. Subscribe to the global logging event bus
-        sandbox::events::subscribe<events::log>(
-            ecs,
-            [this](const events::log& log_event) {
-                this->log(log_event);
-            }
-        );
 
         // Using direct spdlog call here to avoid a circular macro dependency
         m_logger->info("[Logger] Boot logger mounted. Awaiting manifest...");
