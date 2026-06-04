@@ -1,7 +1,7 @@
 #include "subsystems/runner/runner.h"
 
-#include "sandbox/utilities/events.h"
-#include "sandbox/macros/logger.h"
+#include "sandbox/event_bus/event_bus.h"
+#include "sandbox/event_bus/logger_events.h"
 #include "sandbox/utilities/properties.h"
 
 namespace sandbox::modules {

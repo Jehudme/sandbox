@@ -1,7 +1,7 @@
 #pragma once
 
 #include "sandbox/core/ecs.h"
-#include "sandbox/events/plugins.h"
+#include "sandbox/event_bus/plugin_events.h"
 
 namespace sandbox::modules {
 

@@ -1,9 +1,9 @@
 #include "subsystems/plugins/plugins.h"
-#include "sandbox/exceptions/plugins.h"
-#include "sandbox/utilities/events.h"
+#include "sandbox/event_bus/plugin_events.h"
+#include "sandbox/event_bus/event_bus.h"
+#include "sandbox/event_bus/filesystem_events.h"
+#include "sandbox/event_bus/logger_events.h"
 #include "sandbox/utilities/filesystem.h"
-#include "sandbox/macros/logger.h"
-#include "sandbox/events/filesystem.h"
 #include "sandbox/core/plugin.h"
 
 namespace sandbox::modules {

@@ -1,7 +1,7 @@
 #include "subsystems/logger/logger.h"
 
-#include "sandbox/events/logger.h"
-#include "sandbox/utilities/events.h"
+#include "sandbox/event_bus/logger_events.h"
+#include "sandbox/event_bus/event_bus.h"
 #include "sandbox/core/engine.h"
 
 #include <spdlog/sinks/stdout_color_sinks.h>

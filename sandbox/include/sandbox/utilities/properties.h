@@ -60,4 +60,4 @@ namespace sandbox
     };
 }
 
-#include "properties.inl"
+#include "detail/properties.inl"

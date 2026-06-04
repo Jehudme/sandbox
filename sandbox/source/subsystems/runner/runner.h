@@ -1,7 +1,7 @@
 #pragma once
 
 #include "sandbox/core/ecs.h"
-#include "sandbox/events/runner.h"
+#include "sandbox/event_bus/runner_events.h"
 #include <mutex>
 #include <condition_variable>
 #include <thread>

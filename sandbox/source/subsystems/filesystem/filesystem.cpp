@@ -1,7 +1,6 @@
 #include "subsystems/filesystem/filesystem.h"
-#include "sandbox/events/filesystem.h"
-#include "sandbox/utilities/events.h"
-#include "sandbox/macros/logger.h"
+#include "sandbox/event_bus/filesystem_events.h"
+#include "sandbox/event_bus/logger_events.h"
 #include <physfs.h>
 #include <fstream>
 

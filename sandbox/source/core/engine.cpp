@@ -1,10 +1,11 @@
 #include "sandbox/core/engine.h"
 #include "sandbox/core/platform.h"
 #include "sandbox/utilities/filesystem.h"
-#include "sandbox/macros/logger.h"
-#include "sandbox/events/runner.h"
-#include "sandbox/events/filesystem.h"
-#include "sandbox/utilities/events.h"
+#include "sandbox/event_bus/logger_events.h"
+#include "sandbox/event_bus/runner_events.h"
+#include "sandbox/event_bus/filesystem_events.h"
+#include "sandbox/event_bus/plugin_events.h"
+#include "sandbox/event_bus/event_bus.h"
 #include <stdexcept>
 
 #include "physfs.h"
@@ -13,7 +14,6 @@
 #include "subsystems/runner/runner.h"
 #include "subsystems/filesystem/filesystem.h"
 #include "sandbox/core/plugin.h"
-#include "sandbox/macros/plugins.h"
 
 namespace sandbox {
 

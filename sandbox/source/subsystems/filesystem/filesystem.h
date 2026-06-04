@@ -1,7 +1,7 @@
 #pragma once
 
 #include "sandbox/core/ecs.h"
-#include "sandbox/events/filesystem.h"
+#include "sandbox/event_bus/filesystem_events.h"
 #include <string>
 #include <string_view>
 #include <filesystem>

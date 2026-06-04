@@ -1,7 +1,7 @@
 #pragma once
 
 #include "sandbox/core/ecs.h"
-#include "sandbox/events/logger.h"
+#include "sandbox/event_bus/logger_events.h"
 #include "sandbox/utilities/properties.h"
 #include <spdlog/spdlog.h>
 #include <memory>
