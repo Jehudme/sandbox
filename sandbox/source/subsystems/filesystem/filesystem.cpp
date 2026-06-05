@@ -6,17 +6,36 @@
 
 namespace sandbox::modules {
 
+    namespace {
+        /// RAII guard for PHYSFS_file handles. Ensures the handle is always
+        /// closed on any exit path, including exceptions.
+        struct PhysfsFileGuard {
+            explicit PhysfsFileGuard(PHYSFS_file* file_handle) : m_handle(file_handle) {}
+            ~PhysfsFileGuard() { if (m_handle) PHYSFS_close(m_handle); }
+
+            // Non-copyable, movable so it can be returned from factory functions.
+            PhysfsFileGuard(const PhysfsFileGuard&) = delete;
+            PhysfsFileGuard& operator=(const PhysfsFileGuard&) = delete;
+
+            [[nodiscard]] PHYSFS_file* get() const noexcept { return m_handle; }
+            [[nodiscard]] bool valid() const noexcept { return m_handle != nullptr; }
+
+        private:
+            PHYSFS_file* m_handle{nullptr};
+        };
+    } // anonymous namespace
+
     filesystem_module::filesystem_module(world& ecs) {
         ecs.module<filesystem_module>("::Modules::Filesystem");
         ecs.set<sandbox::filesystem_service>({this});
 
         if (!PHYSFS_init(nullptr)) {
-            SANDBOX_FATAL_THROW(ecs, "[Filesystem] Failed to initialize PhysFS context layer.");
+            SANDBOX_FATAL_THROW(ecs, "Failed to initialize PhysFS context layer.");
         }
 
         PHYSFS_permitSymbolicLinks(1);
 
-        SANDBOX_INFO(ecs, "[Filesystem] Functional command factory subsystem operational.");
+        SANDBOX_INFO(ecs, "[Filesystem] Subsystem operational.");
     }
 
     filesystem_module::~filesystem_module() {
@@ -27,10 +46,7 @@ namespace sandbox::modules {
         std::string v_str = std::string(virtual_prefix);
 
         if (v_str.find(":/") == std::string::npos) {
-            return std::unexpected("Format Validation error");
-        return {};
-        return {};
-        return {};
+            return std::unexpected("Format Validation error: virtual prefix must contain ':/'");
         }
 
         std::string prefix = this->get_mount_prefix(v_str);
@@ -72,18 +88,16 @@ namespace sandbox::modules {
     std::expected<std::vector<std::byte>, std::string> filesystem_module::read(std::string_view virtual_path) const {
         std::string path = get_physfs_path(virtual_path);
 
-        PHYSFS_file* file = PHYSFS_openRead(path.c_str());
-        if (!file) return std::unexpected(get_physfs_error("Open for Read", virtual_path));
+        PhysfsFileGuard guard{PHYSFS_openRead(path.c_str())};
+        if (!guard.valid()) return std::unexpected(get_physfs_error("Open for Read", virtual_path));
 
-        PHYSFS_sint64 len = PHYSFS_fileLength(file);
+        PHYSFS_sint64 len = PHYSFS_fileLength(guard.get());
         std::vector<std::byte> buffer(static_cast<size_t>(len));
 
-        if (PHYSFS_readBytes(file, buffer.data(), len) < 0) {
-            PHYSFS_close(file);
+        if (PHYSFS_readBytes(guard.get(), buffer.data(), len) < 0) {
             return std::unexpected(get_physfs_error("Read Bytes", virtual_path));
         }
 
-        PHYSFS_close(file);
         return buffer;
     }
 
@@ -119,10 +133,10 @@ namespace sandbox::modules {
 
         auto walk_directory = [&](auto& self, const std::string& current_phys, const std::filesystem::path& current_virt) -> void {
             char** files = PHYSFS_enumerateFiles(current_phys.c_str());
-            if (!files) return; // Ignore errors inside lambda or handle properly, but it returns void
+            if (!files) return;
 
-            for (char** i = files; *i != nullptr; i++) {
-                std::string item_name = *i;
+            for (char** file_entry = files; *file_entry != nullptr; ++file_entry) {
+                std::string item_name = *file_entry;
                 std::string next_phys = current_phys.empty() ? item_name : current_phys + "/" + item_name;
                 std::filesystem::path next_virt = current_virt / item_name;
 
@@ -174,11 +188,10 @@ namespace sandbox::modules {
 
         std::error_code ec;
         std::filesystem::rename(physical_old, physical_new, ec);
-        if (ec) return std::unexpected(std::string("FS Error: ") + "OS Rename");
+        if (ec) return std::unexpected("FS rename failed: " + ec.message());
         return {};
     }
 
-    /// Safely copies a file from the virtual filesystem (potentially within an archive) to a physical destination.
     std::expected<void, std::string> filesystem_module::copy(std::string_view source_virtual_path, std::string_view destination_virtual_path) {
         std::string physfs_src = get_physfs_path(source_virtual_path);
         auto physical_new_res = resolve_physical_write_path(destination_virtual_path);
@@ -194,43 +207,43 @@ namespace sandbox::modules {
             }
         }
 
-        PHYSFS_file* src_file = PHYSFS_openRead(physfs_src.c_str());
-        if (!src_file) return std::unexpected(std::string("Filesystem Error: ") + std::string(source_virtual_path));
+        PhysfsFileGuard src_guard{PHYSFS_openRead(physfs_src.c_str())};
+        if (!src_guard.valid()) {
+            return std::unexpected(get_physfs_error("Open source for copy", source_virtual_path));
+        }
 
         std::error_code ec;
-        std::filesystem::create_directories(physical_new.parent_path());
+        std::filesystem::create_directories(physical_new.parent_path(), ec);
 
         std::ofstream dest_file(physical_new, std::ios::binary | std::ios::out);
         if (!dest_file.is_open()) {
-            PHYSFS_close(src_file);
-            return std::unexpected(std::string("Filesystem Error: ") + std::string(destination_virtual_path) + " " + std::string("Failed to open native write stream."));
+            return std::unexpected(
+                "Failed to open destination for writing: " + physical_new.string());
         }
 
         constexpr size_t buffer_size = 4096;
         std::vector<char> buffer(buffer_size);
         PHYSFS_sint64 bytes_read = 0;
 
-        while ((bytes_read = PHYSFS_readBytes(src_file, buffer.data(), buffer_size)) > 0) {
+        while ((bytes_read = PHYSFS_readBytes(src_guard.get(), buffer.data(), buffer_size)) > 0) {
             dest_file.write(buffer.data(), bytes_read);
             if (!dest_file.good()) {
-                PHYSFS_close(src_file);
-                dest_file.close();
-                return std::unexpected(std::string("Filesystem Error: ") + std::string(destination_virtual_path) + " " + std::string("Disk write failure during streaming."));
+                return std::unexpected(
+                    "Disk write failure while streaming to: " + physical_new.string());
             }
         }
 
-        PHYSFS_close(src_file);
         dest_file.close();
 
         if (bytes_read < 0) {
-            return std::unexpected(std::string("FS Error: ") + "Copy Stream Read " + "Failed reading source archive bytes.");
+            return std::unexpected(get_physfs_error("Read during copy", source_virtual_path));
         }
         return {};
     }
 
     std::expected<void, std::string> filesystem_module::move(std::string_view source_virtual_path, std::string_view destination_virtual_path) {
-        rename(source_virtual_path, destination_virtual_path);
-        return {};
+        // Propagate the rename result — discarding it was a silent strong-guarantee violation
+        return rename(source_virtual_path, destination_virtual_path);
     }
 
     std::expected<events::filesystem::file_metadata, std::string> filesystem_module::state(std::string_view virtual_path) const {

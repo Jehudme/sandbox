@@ -44,8 +44,8 @@ namespace sandbox::modules {
         if (m_logger) {
             m_logger->info("[Logger] Shutting down.");
             m_logger->flush();
+            spdlog::drop(m_logger->name());
         }
-        spdlog::drop("sandbox_core");
     }
 
 
@@ -70,7 +70,6 @@ namespace sandbox::modules {
                 native_spdlog_level = spdlog::level::critical;
                 should_trigger_exception = true;
                 break;
-        return {};
         }
 
         m_logger->log(native_spdlog_level, log_event.message);

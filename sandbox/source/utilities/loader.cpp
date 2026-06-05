@@ -16,24 +16,24 @@ namespace sandbox::internal {
         std::filesystem::path physical_path = *physical_path_res;
 
         if (physical_path.empty()) {
-            SANDBOX_ERROR(ecs, "[Loader] VFS Resolution failed: {}", virtual_path);
-            return std::unexpected("VFS Resolution failed");
+            return std::unexpected(std::string("VFS resolution failed for: ") + std::string(virtual_path));
         }
 
         std::string exact_path = physical_path.string();
 
-        SANDBOX_DEBUG(ecs, "[Loader] Linking: {}", physical_path.filename().string());
+        SANDBOX_DEBUG(ecs, "Linking plugin: {}", physical_path.filename().string());
 
-        // Delegate to the OS dynamic linker via Flecs API
-        auto library = ecs_import_from_library(ecs.c_ptr(), exact_path.c_str(), std::string("SandboxLibraryMain").c_str());
+        // Delegate to the OS dynamic linker via the Flecs API
+        auto library = ecs_import_from_library(ecs.c_ptr(), exact_path.c_str(), "SandboxLibraryMain");
 
         // Validate success
         if (library) {
-            SANDBOX_INFO(ecs, "[Loader] Mounted: {}", physical_path.filename().string());
+            SANDBOX_INFO(ecs, "Linked plugin: {}", physical_path.filename().string());
             return {};
         } else {
-            return std::unexpected(std::string("Plugin Error: Failed to find entry point ") + " in " + physical_path.string());
+            return std::unexpected(
+                "Failed to find entry point 'SandboxLibraryMain' in '" + physical_path.string() + "'");
         }
     }
 
-} // namespace sandbox::modules
+} // namespace sandbox::internal

@@ -31,17 +31,15 @@ FetchContent_MakeAvailable(spdlog glaze flecs physfs)
 
 # Building the engine as a SHARED library (or change to STATIC if desired)
 add_library(sandbox SHARED
+        source/core/bootstrapper.cpp
         source/core/properties.cpp
         source/core/engine.cpp
-        source/utilities/filesystem.cpp
         source/core/plugin.cpp
+        source/utilities/filesystem.cpp
+        source/utilities/loader.cpp
         source/subsystems/logger/logger.cpp
         source/subsystems/runner/runner.cpp
         source/subsystems/filesystem/filesystem.cpp
-        source/utilities/loader.cpp
-        include/sandbox/sandbox.h
-        include/sandbox/core/module_info.h
-        include/sandbox/core/bootstrapper.h
 )
 add_library(sandbox::library ALIAS sandbox)
 

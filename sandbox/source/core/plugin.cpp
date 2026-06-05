@@ -5,8 +5,9 @@
     #include <dlfcn.h>
     #include <cstring>
     #include <cstdint>
-    #include <iostream> // For printing the raw kernel error
 #endif
+
+#include <spdlog/spdlog.h>
 
 namespace sandbox {
 
@@ -28,8 +29,15 @@ namespace sandbox {
             void* handle = dlopen(lib, RTLD_LAZY | RTLD_GLOBAL);
             if (!handle) {
                 const char* err = dlerror();
-                std::cerr << "\n[OS Linker] FATAL REJECTION: dlopen failed for '" << lib << "'\n"
-                          << "[OS Linker] EXACT REASON: " << (err ? err : "Unknown") << "\n\n";
+                const std::string msg = std::string("[Loader] dlopen failed for '") + lib
+                                      + "': " + (err ? err : "Unknown error");
+                // Route through the named spdlog logger if already registered,
+                // fall back to stderr for early-boot failures.
+                if (auto logger = spdlog::get("sandbox_core"); logger) {
+                    logger->error(msg);
+                } else {
+                    spdlog::error(msg);
+                }
             }
             return reinterpret_cast<uintptr_t>(handle);
         };

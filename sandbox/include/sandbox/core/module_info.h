@@ -33,13 +33,17 @@ namespace sandbox {
         std::vector<requirement> requirements;
     };
 
-    // FIX 1: Return by reference (&) so push_back modifies the actual static instance
+    /// Returns the per-library static registry by reference so that
+    /// SANDBOX_DECLARE_MODULE registrations accumulate into the same container
+    /// across all translation units within a single shared library.
     inline std::vector<module_info>& get_local_registry() {
         static std::vector<module_info> infos;
         return infos;
     }
 
-    // FIX 2: Return by value to avoid unnecessary unique_ptr heap allocations
+    /// Constructs a module_info by value, capturing a typed ECS import lambda.
+    /// The lambda avoids needing to store TModule directly (it may be incomplete
+    /// at the call site) while still producing a callable that Flecs can invoke.
     template<typename TModule>
     inline module_info create_module_info(
         std::string name,

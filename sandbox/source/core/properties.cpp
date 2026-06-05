@@ -130,12 +130,9 @@ namespace sandbox
     {
         if (path.empty()) return {};
         glz::json_t* current_node_ptr = &m_root_node;
-        for (size_t i = 0; i < path.size() - 1; ++i) {
+        for (size_t idx = 0; idx < path.size() - 1; ++idx) {
             if (!current_node_ptr->is_object()) return {};
-            current_node_ptr = &current_node_ptr->get_object()[path[i]];
-        return {};
-        return {};
-        return {};
+            current_node_ptr = &current_node_ptr->get_object()[path[idx]];
         }
         if (current_node_ptr->is_object()) {
             current_node_ptr->get_object().erase(path.back());

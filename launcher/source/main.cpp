@@ -14,33 +14,35 @@ int main(int argc, char* argv[]) {
     sandbox::engine::arguments args;
     bool run = false;
 
-    // 1. Core Boot Routing
-    app.add_option("--mount,-m", args.app_mount, "Mount paths (e.g., --mount application=test-app.zip)")
+    app.add_option("--mount,-m", args.app_mount, "Path to the application archive or directory")
        ->required()
        ->check(CLI::ExistingPath);
 
-    app.add_flag("--dev,-d", args.dev_mode, "Enable developer mode layers");
-    app.add_flag("--run,-r", run,"Run the engine immediately after boot");
+    app.add_flag("--dev,-d", args.dev_mode, "Enable developer mode (verbose logging)");
+    app.add_flag("--run,-r", run, "Run the engine main loop immediately after boot");
 
-    // 2. The Dynamic Module Payload
-    // This allows users to pass infinite custom arguments without modifying the launcher!
+    // Allows passing arbitrary module properties without modifying the launcher.
     // Example: -p Renderer=Vulkan -p Physics.TickRate=120
     app.add_option("--prop,-p", args.module_args, "Custom module properties (Key=Value)");
 
-    // 3. Execution Handoff
     CLI11_PARSE(app, argc, argv);
 
+    // Must be called before the first flecs::world is constructed.
+    // The OS API override (dlopen/dlsym callbacks) must be in place before
+    // any ecs_import_from_library call, which happens during engine::initialize().
     sandbox::configure_plugin_os_api();
     sandbox::engine engine_instance;
 
     try {
-        std::cout << "[Launcher] Booting engine core...\n";
         engine_instance.initialize(args);
 
-        if (run) engine_instance.ecs.get<sandbox::runner_service>().api->run_sync(engine_instance.ecs);
+        if (run) {
+            engine_instance.ecs.get<sandbox::runner_service>().api->run_sync(engine_instance.ecs);
+        }
 
     } catch (const std::exception& fatal_error) {
-        std::cerr << "\n[Fatal Core Crash Caught]: " << fatal_error.what() << '\n';
+        // The engine may not yet have a logger; write directly to stderr.
+        std::cerr << "[Launcher] Fatal crash: " << fatal_error.what() << '\n';
         return -1;
     }
 

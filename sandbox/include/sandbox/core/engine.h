@@ -5,6 +5,7 @@
 #include <vector>
 #include <cstddef>
 #include <cstdint>
+#include <unordered_map>
 
 #include "platform.h"
 
@@ -26,11 +27,22 @@ namespace sandbox {
         engine(engine&&) noexcept = default;
         engine& operator=(engine&&) noexcept = default;
 
-        void initialize(const arguments &args);
+        /// Initialises all core subsystems, mounts VFS paths, and loads manifest plugins.
+        /// Throws std::runtime_error on any unrecoverable failure (e.g. missing VFS mount).
+        void initialize(const arguments& args);
+
+        /// Signals the runner to stop and tears down the ECS world.
+        /// Safe to call explicitly; the destructor will not double-finalize.
         void finalize();
 
     public:
+        // Public ECS world — required for plugin interop across the DLL boundary.
+        // Consumers should prefer accessing subsystems via the service components
+        // (e.g. ecs.get<runner_service>()) rather than interacting with ecs directly.
         flecs::world ecs;
+
+    private:
+        bool m_initialized{false};
     };
 
     struct engine::arguments {
