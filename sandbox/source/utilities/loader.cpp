@@ -10,7 +10,7 @@ namespace sandbox::internal {
     
 
     /// Resolves and dynamically links a plugin library into the active ECS world.
-    std::expected<void, std::string> load(world& ecs, std::string_view virtual_path, std::string_view entry_point) {
+    std::expected<void, std::string> load(world& ecs, std::string_view virtual_path) {
         auto physical_path_res = ecs.get<sandbox::filesystem_service>().api->absolute(virtual_path);
         if (!physical_path_res) return std::unexpected(physical_path_res.error());
         std::filesystem::path physical_path = *physical_path_res;
@@ -22,17 +22,17 @@ namespace sandbox::internal {
 
         std::string exact_path = physical_path.string();
 
-        SANDBOX_DEBUG(ecs, "[Loader] Linking: {}::{}", physical_path.filename().string(), entry_point);
+        SANDBOX_DEBUG(ecs, "[Loader] Linking: {}", physical_path.filename().string());
 
         // Delegate to the OS dynamic linker via Flecs API
-        auto library = ecs_import_from_library(ecs.c_ptr(), exact_path.c_str(), std::string(entry_point).c_str());
+        auto library = ecs_import_from_library(ecs.c_ptr(), exact_path.c_str(), std::string("SandboxLibraryMain").c_str());
 
         // Validate success
         if (library) {
             SANDBOX_INFO(ecs, "[Loader] Mounted: {}", physical_path.filename().string());
             return {};
         } else {
-            return std::unexpected(std::string("Plugin Error: Failed to find entry point ") + std::string(entry_point) + " in " + physical_path.string());
+            return std::unexpected(std::string("Plugin Error: Failed to find entry point ") + " in " + physical_path.string());
         }
     }
 

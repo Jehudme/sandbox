@@ -1,42 +1,56 @@
 #pragma once
 
-#include "platform.h"
+#include "sandbox/core/platform.h"
+#include "sandbox/core/bootstrapper.h"
 #include <flecs.h>
 
 namespace sandbox::detail {
 
-    template<typename T>
-    inline void bootstrap_module(ecs_world_t* raw_world) {
-        flecs::world{raw_world}.import<T>();
-    }
-
-    template<typename DummyType, typename RealModule>
-    inline void bootstrap_library(ecs_world_t* raw_world, const char* expected_name) {
+    inline void stage_library(ecs_world_t* raw_world) {
         flecs::world world{raw_world};
 
-        world.import<RealModule>();
-        world.module<DummyType>(expected_name);
+        // FIX: get_mut() returns a pointer, so we use -> instead of .
+        world.get_mut<sandbox::bootstrapper>().stage(sandbox::get_local_registry());
     }
 
 } // namespace sandbox::detail
 
+// ============================================================================
+// MODULE SELF-REGISTRATION MACRO
+// ============================================================================
 
-#define SANDBOX_DEFINE_MODULE(ModuleClass, ModuleName)                         \
-extern "C" SANDBOX_EXPORT void ModuleName##Import(ecs_world_t* world) {        \
-    sandbox::detail::bootstrap_module<ModuleClass>(world);                     \
-}                                                                              \
-extern "C" SANDBOX_EXPORT void ModuleName(ecs_world_t* world) {                \
-    sandbox::detail::bootstrap_module<ModuleClass>(world);                     \
-}
+#define SANDBOX_DECLARE_MODULE(Class, Name, Major, Minor, Service, ...) \
+    static inline bool Class##_registered = []() { \
+        sandbox::get_local_registry().push_back( \
+            sandbox::create_module_info<Class>( \
+                #Name, \
+                Major, \
+                Minor, \
+                std::vector<sandbox::requirement>{__VA_ARGS__}, \
+                Service \
+            ) \
+        ); \
+        return true; \
+    }()
 
-#define SANDBOX_DEFINE_LIBRARY(MasterModuleClass)                              \
-struct SandboxLibraryMain_Dummy {};                                            \
-extern "C" SANDBOX_EXPORT void SandboxLibraryMainImport(ecs_world_t* world) {  \
-    sandbox::detail::bootstrap_library<SandboxLibraryMain_Dummy, MasterModuleClass>(world, "SandboxLibraryMain"); \
-}                                                                              \
-extern "C" SANDBOX_EXPORT void SandboxLibraryMain(ecs_world_t* world) {        \
-    sandbox::detail::bootstrap_library<SandboxLibraryMain_Dummy, MasterModuleClass>(world, "SandboxLibraryMain"); \
-}
+// ============================================================================
+// FLECS-COMPATIBLE DLL ENTRY POINT
+// ============================================================================
+
+#define SANDBOX_DECLARE_LIBRARY()                                               \
+    /* 1. Define a dummy struct to satisfy Flecs' strict type rules */          \
+    struct SandboxLibraryMain_Dummy {};                                         \
+                                                                                \
+    /* 2. The entry point Flecs searches for when using import_from_library */  \
+    extern "C" SANDBOX_EXPORT void SandboxLibraryMain(ecs_world_t* world) {     \
+        flecs::world ecs{world};                                                \
+                                                                                \
+        /* Trick Flecs into thinking the main library was imported */           \
+        ecs.module<SandboxLibraryMain_Dummy>("SandboxLibraryMain");             \
+                                                                                \
+        /* Push the hidden data to the Engine's Bootstrapper */                 \
+        sandbox::detail::stage_library(world);                                  \
+    }
 
 namespace sandbox {
     void configure_plugin_os_api();

@@ -109,37 +109,55 @@ namespace sandbox {
 
         /// Processes the loaded manifest and invokes the plugin subsystem to load requested modules.
         void load_manifest_requested_plugins(engine* engine_ptr) {
-            auto manifest_entity = engine_ptr->ecs.entity("::Manifest");
-            if (!manifest_entity.has<properties>()) {
-                SANDBOX_WARN(engine_ptr->ecs, "Manifest properties missing. Skipping plugin load.");
-                return;
-            }
+            // 1. Initialize Bootstrapper
+            engine_ptr->ecs.import<sandbox::bootstrapper>();
 
-            const auto& manifest = manifest_entity.get<properties>();
+            // FIX: Grab a POINTER so we operate on the live ECS component!
+            sandbox::bootstrapper boot = engine_ptr->ecs.get<sandbox::bootstrapper>();
+
             const std::filesystem::path cache_modules_dir = "mount://cache/modules";
 
-            auto requested_modules = manifest.get<std::vector<std::string>>({"modules"}).value_or(std::vector<std::string>{});
-
-            if (requested_modules.empty()) {
-                SANDBOX_INFO(engine_ptr->ecs, "No modules requested in manifest.");
-                return;
+            // 2. STAGE ALL LIBRARIES found in the cache
+            try {
+                auto cached_files_res = engine_ptr->ecs.get<sandbox::filesystem_service>().api->list(cache_modules_dir.generic_string(), false);
+                if (cached_files_res) {
+                    for (const auto& file : *cached_files_res) {
+                        if (file.extension() == SANDBOX_COMPATIBLE_MODULE_EXTENSION) {
+                            auto module_vpath = cache_modules_dir / file.filename();
+                            try {
+                                sandbox::internal::load(engine_ptr->ecs, module_vpath.generic_string());
+                                SANDBOX_INFO(engine_ptr->ecs, "Staged library: {}", file.filename().string());
+                            } catch (const std::exception& e) {
+                                SANDBOX_WARN(engine_ptr->ecs, "Failed to load library '{}': {}", file.filename().string(), e.what());
+                            }
+                        }
+                    }
+                }
+            } catch (const std::exception& e) {
+                SANDBOX_ERROR(engine_ptr->ecs, "Could not list cached modules: {}", e.what());
             }
 
-            for (const auto& module_name : requested_modules) {
-                auto module_vpath = cache_modules_dir / module_name;
+            // 3. ACTIVATE REQUESTED MODULES FROM MANIFEST
+            auto manifest_entity = engine_ptr->ecs.entity("::Manifest");
+            if (manifest_entity.has<properties>()) {
+                const auto& manifest = manifest_entity.get<properties>();
+                auto requested_modules = manifest.get<std::vector<std::string>>({"modules"}).value_or(std::vector<std::string>{});
 
-                if (!module_vpath.has_extension()) {
-                    module_vpath.replace_extension(SANDBOX_COMPATIBLE_MODULE_EXTENSION);
+                if (requested_modules.empty()) {
+                    SANDBOX_INFO(engine_ptr->ecs, "No modules requested in manifest.");
+                } else {
+                    for (const auto& module_name : requested_modules) {
+                        // FIX: Use arrow operator
+                        boot.activate(module_name);
+                    }
                 }
-
-                try {
-                    sandbox::internal::load(engine_ptr->ecs, module_vpath.generic_string());
-
-                    SANDBOX_INFO(engine_ptr->ecs, "Loaded plugin: {}", module_name);
-                } catch (const std::exception& e) {
-                    SANDBOX_ERROR(engine_ptr->ecs, "Failed to load plugin '{}': {}", module_name, e.what());
-                }
+            } else {
+                SANDBOX_WARN(engine_ptr->ecs, "Manifest properties missing. Skipping plugin activation.");
             }
+
+            // 4. EXECUTE BOOTSTRAPPER (Dependency Resolution & Boot)
+            // FIX: Use arrow operator
+            boot.execute(engine_ptr->ecs);
         }
 
     }
@@ -160,6 +178,8 @@ namespace sandbox {
         build_local_modules_cache(ecs);
 
         parse_and_register_manifest(ecs);
+
+        // Let the new architecture do its magic!
         load_manifest_requested_plugins(this);
     }
 

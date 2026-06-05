@@ -40,6 +40,8 @@ add_library(sandbox SHARED
         source/subsystems/filesystem/filesystem.cpp
         source/utilities/loader.cpp
         include/sandbox/sandbox.h
+        include/sandbox/core/module_info.h
+        include/sandbox/core/bootstrapper.h
 )
 add_library(sandbox::library ALIAS sandbox)
 
