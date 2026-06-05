@@ -1,4 +1,4 @@
-<![CDATA[<div align="center">
+<div align="center">
 
 # 🧱 Sandbox Meta-Engine
 
@@ -179,4 +179,3 @@ Copyright © 2026 Jehud. Released under the [MIT License](LICENSE.txt).
 3. Ensure a clean build with zero warnings before submitting a pull request.
 4. Include a test plugin demonstrating any new engine API surface.
 5. Update [WIKI.md](WIKI.md) for any public API changes.
-]]>

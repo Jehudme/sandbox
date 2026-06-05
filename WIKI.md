@@ -1,4 +1,4 @@
-<![CDATA[# Sandbox Engine — Developer Wiki
+# Sandbox Engine — Developer Wiki
 
 **Version:** 1.0 | **Standard:** C++23 | **License:** MIT
 
@@ -1163,4 +1163,3 @@ SANDBOX_INFO(ecs, "[{}] Loaded {} entities in {:.2f}ms.", module_name, count, du
 The `_THROW` variants bypass the `throw_on_error` configuration key and always cause `ilogger::log()` to return `std::unexpected(message)`. The engine propagates this as an exception in critical paths.
 
 All macros are guarded: if `logger_service` is not yet present in the world (`!world.has<sandbox::logger_service>()`), the publish call is silently skipped.
-]]>
