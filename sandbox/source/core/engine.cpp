@@ -113,7 +113,7 @@ namespace sandbox {
             engine_ptr->ecs.import<sandbox::bootstrapper>();
 
             // FIX: Grab a POINTER so we operate on the live ECS component!
-            sandbox::bootstrapper boot = engine_ptr->ecs.get<sandbox::bootstrapper>();
+            sandbox::bootstrapper& boot = engine_ptr->ecs.get_mut<sandbox::bootstrapper>();
 
             const std::filesystem::path cache_modules_dir = "mount://cache/modules";
 

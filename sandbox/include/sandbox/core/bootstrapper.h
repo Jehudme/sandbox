@@ -16,18 +16,35 @@ namespace sandbox {
         bootstrapper(flecs::world& ecs) {
             ecs.module<sandbox::bootstrapper>("::Bootstrapper");
             std::cout << "[Bootstrapper] Module initialized.\n";
+
+            std::cout << "[Bootstrapper DEBUG] Initial vector address: " << &modules_infos << "\n";
         }
 
         ~bootstrapper() = default;
 
         void stage(const std::vector<module_info>& info) {
-            std::cout << "[Bootstrapper] Staging " << info.size() << " modules...\n";
+            // 1. Print the memory address of the vector to check if we are in the same object
+            std::cout << "[Bootstrapper DEBUG] Staging " << info.size()
+                      << " modules into vector at address: " << &modules_infos << "\n";
+
+            // 2. Print every module name as it is added
+            for (const auto& mod : info) {
+                std::cout << "   [Bootstrapper DEBUG] Adding module: '" << mod.name << "'\n";
+            }
+
             modules_infos.insert(modules_infos.end(), info.begin(), info.end());
+
+            // 3. Print the new total size
+            std::cout << "[Bootstrapper DEBUG] Total modules now staged: " << modules_infos.size() << "\n";
+            std::cout << "[Bootstrapper] staging vector addrr " << &modules_infos << "\n";
         }
 
         bool activate(const std::string& module_name) {
+
+            std::cout << "[Bootstrapper] activstion vector addrr " << &modules_infos << "\n";
+
             bool found = false;
-            for (const auto& mod : modules_infos) {
+            for (const auto& mod : modules_infos ) {
                 if (mod.name == module_name) {
                     found = true;
                     break;
