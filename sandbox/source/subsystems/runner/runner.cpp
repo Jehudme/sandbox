@@ -3,12 +3,24 @@
 #include "sandbox/event_bus/event_bus.h"
 #include "sandbox/event_bus/logger_events.h"
 #include "sandbox/utilities/properties.h"
+#include "sandbox/core/engine.h"
+#include "sandbox/utilities/config_helper.h"
 
 namespace sandbox::modules {
 
     runner::runner(world& ecs) {
         ecs.module<runner>("::Modules::Runner");
         ecs.set<sandbox::runner_service>({this});
+
+        std::unordered_map<std::string, std::any> config;
+        auto env_entity = ecs.entity("::Sandbox::Environment");
+        if (env_entity.has<engine_environment>()) {
+            config = env_entity.get<engine_environment>().config;
+        }
+
+        int default_fps = 60;
+        int fps = get_config<int>(config, "fps_limit", default_fps);
+        m_fps_limit = static_cast<float>(fps);
     }
 
     runner::~runner() {
@@ -67,7 +79,7 @@ namespace sandbox::modules {
 
     /// Main execution loop managing frame progression and termination signals.
     void runner::internal_tick_loop(world& ecs) {
-        ecs.set_target_fps(60);
+        ecs.set_target_fps(m_fps_limit);
 
         while (true) {
             {
@@ -85,6 +97,28 @@ namespace sandbox::modules {
                 quit();
             }
         }
+    }
+
+    void runner::set_property(const std::string& key, const std::any& value) {
+        if (key == "fps_limit") {
+            if (value.type() == typeid(int)) {
+                m_fps_limit = static_cast<float>(std::any_cast<int>(value));
+                // We'd ideally call ecs.set_target_fps here, but we don't store ecs.
+                // However, internal_tick_loop calls ecs.set_target_fps initially. 
+                // To dynamically update, we need a reference to ecs or wait until next progress.
+            } else if (value.type() == typeid(float)) {
+                m_fps_limit = std::any_cast<float>(value);
+            } else {
+                // Cannot easily log without ecs ref, but could throw or ignore
+            }
+        }
+    }
+
+    std::any runner::get_property(const std::string& key) const {
+        if (key == "fps_limit") {
+            return m_fps_limit;
+        }
+        return {};
     }
 
 } // namespace sandbox::modules

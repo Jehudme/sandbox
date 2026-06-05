@@ -9,18 +9,15 @@
 
 namespace sandbox::modules {
 
-    struct logger_config {
-        std::string logger_name{"sandbox_core"};
-        spdlog::level::level_enum boot_level{spdlog::level::info};
-        bool throw_on_error{true};
-    };
-
     class logger : public ilogger {
     public:
-        logger(world& ecs, const logger_config& config = logger_config{});
+        logger(world& ecs);
         ~logger() override;
 
         std::expected<void, std::string> log(const events::log& log_event) override;
+
+        void set_property(const std::string& key, const std::any& value) override;
+        std::any get_property(const std::string& key) const override;
 
     private:
         std::shared_ptr<spdlog::logger> m_logger;

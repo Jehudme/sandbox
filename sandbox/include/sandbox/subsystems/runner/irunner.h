@@ -1,6 +1,8 @@
 #pragma once
 
 #include "sandbox/core/ecs.h"
+#include <string>
+#include <any>
 
 namespace sandbox {
 
@@ -13,6 +15,9 @@ namespace sandbox {
         virtual void quit() = 0;
         virtual void pause() = 0;
         virtual void resume() = 0;
+
+        virtual void set_property(const std::string& key, const std::any& value) = 0;
+        virtual std::any get_property(const std::string& key) const = 0;
     };
 
     struct runner_service {

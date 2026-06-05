@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <unordered_map>
+#include <any>
 
 #include "platform.h"
 
@@ -14,12 +15,14 @@
 
 namespace sandbox {
 
+    struct engine_environment {
+        std::unordered_map<std::string, std::any> config;
+    };
+
     class SANDBOX_API engine {
     public:
         engine();
         ~engine();
-
-        struct arguments;
 
         engine(const engine&) = delete;
         engine& operator=(const engine&) = delete;
@@ -29,7 +32,7 @@ namespace sandbox {
 
         /// Initialises all core subsystems, mounts VFS paths, and loads manifest plugins.
         /// Throws std::runtime_error on any unrecoverable failure (e.g. missing VFS mount).
-        void initialize(const arguments& args);
+        void initialize(const std::unordered_map<std::string, std::any>& config);
 
         /// Signals the runner to stop and tears down the ECS world.
         /// Safe to call explicitly; the destructor will not double-finalize.
@@ -45,10 +48,6 @@ namespace sandbox {
         bool m_initialized{false};
     };
 
-    struct engine::arguments {
-        std::filesystem::path app_mount;
-        bool dev_mode{false};
-        std::unordered_map<std::string, std::string> module_args;
-    };
+
 
 }

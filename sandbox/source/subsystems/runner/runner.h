@@ -20,6 +20,9 @@ namespace sandbox::modules {
         void pause() override;
         void resume() override;
 
+        void set_property(const std::string& key, const std::any& value) override;
+        std::any get_property(const std::string& key) const override;
+
     private:
         void internal_tick_loop(world& ecs);
 
@@ -35,6 +38,8 @@ namespace sandbox::modules {
         std::mutex m_state_mutex;
         std::condition_variable m_state_cv;
         std::thread m_worker_thread;
+        
+        float m_fps_limit{60.0f};
     };
 
 } // namespace sandbox::modules

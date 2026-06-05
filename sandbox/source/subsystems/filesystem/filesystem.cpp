@@ -277,9 +277,15 @@ namespace sandbox::modules {
         std::string physfs_path = get_physfs_path(virtual_path);
 
         const char* real_dir = PHYSFS_getRealDir(physfs_path.c_str());
-        if (!real_dir) return std::unexpected(std::string("Filesystem Error: ") + std::string(virtual_path));
-
         return std::filesystem::path(real_dir) / get_sub_path(virtual_path);
+    }
+
+    void filesystem_module::set_property(const std::string& key, const std::any& value) {
+        // Currently no configuration properties needed for filesystem
+    }
+
+    std::any filesystem_module::get_property(const std::string& key) const {
+        return {};
     }
 
     /// Resolves a virtual path to a physical path and validates it to prevent path traversal attacks.

@@ -1,6 +1,7 @@
 #include "sandbox/core/engine.h"
 #include "sandbox/core/platform.h"
 #include "sandbox/utilities/filesystem.h"
+#include "sandbox/utilities/config_helper.h"
 #include "sandbox/event_bus/logger_events.h"
 #include "sandbox/event_bus/runner_events.h"
 #include "sandbox/event_bus/filesystem_events.h"
@@ -28,6 +29,9 @@ namespace sandbox {
         /// Mounts the essential virtual file systems required by the engine.
         /// Throws on failure — a missing mount is unrecoverable for engine startup.
         void register_virtual_mounts(flecs::world& ecs, const std::filesystem::path& app_path) {
+            if (app_path.empty()) {
+                throw std::runtime_error("[Engine] Missing 'app_mount' in configuration.");
+            }
             const auto bin_path   = filesystem::current_path();
             const auto cache_path = filesystem::get_user_data_directory();
             const auto& fs        = ecs.get<sandbox::filesystem_service>().api;
@@ -165,16 +169,18 @@ namespace sandbox {
         }
     }
 
-    void engine::initialize(const arguments& args) {
+    void engine::initialize(const std::unordered_map<std::string, std::any>& config) {
         // Note: configure_plugin_os_api() must be called by the host (e.g. launcher)
         // BEFORE constructing the engine, as the flecs::world member is created
         // at engine construction time, before initialize() is ever called.
-        ecs.entity("::Sandbox::Arguments").set(args);
+        ecs.entity("::Sandbox::Environment").set<engine_environment>({config});
 
         import_core_infrastructure(ecs);
 
+        std::filesystem::path app_mount = get_config<std::filesystem::path>(config, "app_mount", "");
+
         // Throws on mount failure — no point continuing with a broken VFS.
-        register_virtual_mounts(ecs, args.app_mount);
+        register_virtual_mounts(ecs, app_mount);
         build_local_modules_cache(ecs);
 
         parse_and_register_manifest(ecs);

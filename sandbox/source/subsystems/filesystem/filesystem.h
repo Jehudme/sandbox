@@ -26,8 +26,11 @@ namespace sandbox::modules {
         std::expected<void, std::string> rename(std::string_view old_virtual_path, std::string_view new_virtual_path) override;
         std::expected<void, std::string> copy(std::string_view source_virtual_path, std::string_view destination_virtual_path) override;
         std::expected<void, std::string> move(std::string_view source_virtual_path, std::string_view destination_virtual_path) override;
-        std::expected<events::filesystem::file_metadata, std::string> state(std::string_view virtual_path) const override;
-        std::expected<std::filesystem::path, std::string> absolute(std::string_view virtual_path) const override;
+        [[nodiscard]] std::expected<events::filesystem::file_metadata, std::string> state(std::string_view virtual_path) const override;
+        [[nodiscard]] std::expected<std::filesystem::path, std::string> absolute(std::string_view virtual_path) const override;
+
+        void set_property(const std::string& key, const std::any& value) override;
+        std::any get_property(const std::string& key) const override;
 
     private:
         std::string get_mount_prefix(std::string_view v_path) const;

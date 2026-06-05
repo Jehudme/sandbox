@@ -5,6 +5,7 @@
 #include <string_view>
 #include <string>
 #include <expected>
+#include <any>
 #include "sandbox/event_bus/filesystem_events.h"
 
 namespace sandbox {
@@ -25,6 +26,9 @@ namespace sandbox {
         [[nodiscard]] virtual std::expected<void, std::string> move(std::string_view source_virtual_path, std::string_view destination_virtual_path) = 0;
         [[nodiscard]] virtual std::expected<events::filesystem::file_metadata, std::string> state(std::string_view virtual_path) const = 0;
         [[nodiscard]] virtual std::expected<std::filesystem::path, std::string> absolute(std::string_view virtual_path) const = 0;
+
+        virtual void set_property(const std::string& key, const std::any& value) = 0;
+        virtual std::any get_property(const std::string& key) const = 0;
     };
 
     struct filesystem_service {
