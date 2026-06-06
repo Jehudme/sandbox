@@ -3,7 +3,7 @@
 
 namespace sandbox {
 
-    #define SANDBOX_DECLARE_SERVICE(service_name, interface_type) \
+    #define SANDBOX_DECLARE_SERVICE(service_name, interface_type, ) \
         struct service_name { \
             static constexpr const char* type_name = #service_name; \
             interface_type* api{nullptr}; \

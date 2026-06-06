@@ -73,35 +73,35 @@ struct test_master_app {
 
 // 1. Register Master (Requires Renderer + Filesystem) - SHOULD BOOT LAST!
 SANDBOX_DECLARE_MODULE(
-    test_master_app, test_master, 1, 0, "",
+    test_master_app, test_master, 1, 0, 0, "",
     {sandbox::requirement::kind::module, sandbox::requirement::strictness::require, "test_renderer", 1, 0},
     {sandbox::requirement::kind::service, sandbox::requirement::strictness::require, "filesystem_service", 1, 0}
 );
 
 // 2. Register Renderer (Requires Window + Math)
 SANDBOX_DECLARE_MODULE(
-    test_renderer_module, test_renderer, 1, 0, "",
+    test_renderer_module, test_renderer, 1, 0, 0, "",
     {sandbox::requirement::kind::service, sandbox::requirement::strictness::require, "window_service", 1, 0},
     {sandbox::requirement::kind::module, sandbox::requirement::strictness::require, "test_math", 1, 0}
 );
 
 // 3. Register Window (Requires Logger)
 SANDBOX_DECLARE_MODULE(
-    test_window_module, test_window, 1, 0, "window_service",
+    test_window_module, test_window, 1, 0, 0, "window_service",
     {sandbox::requirement::kind::service, sandbox::requirement::strictness::require, "logger_service", 1, 0}
 );
 
 // 4. Register Filesystem (Requires Logger)
 SANDBOX_DECLARE_MODULE(
-    test_filesystem_module, test_filesystem, 1, 0, "filesystem_service",
+    test_filesystem_module, test_filesystem, 1, 0, 0, "filesystem_service",
     {sandbox::requirement::kind::service, sandbox::requirement::strictness::require, "logger_service", 1, 0}
 );
 
 // 5. Register Math (0 Dependencies) - SHOULD BOOT FIRST (Pass 1)
-SANDBOX_DECLARE_MODULE(test_math_module, test_math, 1, 0, "");
+SANDBOX_DECLARE_MODULE(test_math_module, test_math, 1, 0, 0, "");
 
 // 6. Register Logger (0 Dependencies) - SHOULD BOOT FIRST (Pass 1)
-SANDBOX_DECLARE_MODULE(test_logger_module, test_logger, 1, 0, "logger_service");
+SANDBOX_DECLARE_MODULE(test_logger_module, test_logger, 1, 0, 0, "logger_service");
 
 
 // ============================================================================

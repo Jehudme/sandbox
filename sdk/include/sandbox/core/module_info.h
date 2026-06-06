@@ -19,10 +19,17 @@ namespace sandbox {
         uint8_t min_minor{0};
     };
 
+    struct service_info {
+        std::string name;
+        uint8_t version_major{1};
+        uint8_t version_minor{0};
+    };
+
     struct module_info {
         std::string name;
         uint8_t version_major{1};
         uint8_t version_minor{0};
+        uint8_t version_patch{0};
 
         bool is_loaded{false};
 
@@ -33,22 +40,23 @@ namespace sandbox {
         std::vector<requirement> requirements;
     };
 
-    /// Returns the per-library static registry by reference so that
-    /// SANDBOX_DECLARE_MODULE registrations accumulate into the same container
-    /// across all translation units within a single shared library.
-    inline std::vector<module_info>& get_local_registry() {
-        static std::vector<module_info> infos;
-        return infos;
+    struct library_registry {
+        std::vector<service_info> services;
+        std::vector<module_info> modules;
+    };
+
+    /// Returns the per-library static registry by reference
+    inline library_registry& get_local_registry() {
+        static library_registry registry;
+        return registry;
     }
 
-    /// Constructs a module_info by value, capturing a typed ECS import lambda.
-    /// The lambda avoids needing to store TModule directly (it may be incomplete
-    /// at the call site) while still producing a callable that Flecs can invoke.
     template<typename TModule>
     inline module_info create_module_info(
         std::string name,
         uint8_t v_major,
         uint8_t v_minor,
+        uint8_t v_patch,
         std::vector<requirement> reqs,
         std::string provides_service = "")
     {
@@ -56,6 +64,7 @@ namespace sandbox {
         info.name = std::move(name);
         info.version_major = v_major;
         info.version_minor = v_minor;
+        info.version_patch = v_patch;
         info.provides_service = std::move(provides_service);
         info.requirements = std::move(reqs);
 
@@ -63,6 +72,18 @@ namespace sandbox {
             ecs.import<TModule>();
         };
 
+        return info;
+    }
+
+    inline service_info create_service_info(
+        std::string name,
+        uint8_t v_major,
+        uint8_t v_minor)
+    {
+        service_info info;
+        info.name = std::move(name);
+        info.version_major = v_major;
+        info.version_minor = v_minor;
         return info;
     }
 
