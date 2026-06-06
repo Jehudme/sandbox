@@ -39,11 +39,11 @@ Sandbox is built on two foundational principles: **Data-Driven Configuration** a
 
 **Data-Driven Configuration** means that no engine behavior is hard-coded into the runtime binary. What modules to load, at what FPS to run, where to write cache files — all of this is determined at runtime from configuration data. The engine binary itself is agnostic to the application it runs.
 
-**Plugin-Oriented Architecture** means that every application-level feature is a separate shared library (`.dll` / `.so` / `.dylib`). The engine binary contains only the core subsystems (Logger, Filesystem, Runner) and the infrastructure to load, link, and orchestrate plugins. The application's modules — renderer, physics, audio, UI — are plugins that the engine discovers and imports at runtime.
+**Plugin-Oriented Architecture** means that every application-level feature is a separate shared library (`.dll` / `.so` / `.dylib`). The engine binary contains only the core subsystems (Logger, Filesystem, Runner) and the infrastructure to load, link, and orchestrate plugins. The application's modules — whether they are renderers, data processors, web servers, or ML trainers — are plugins that the engine discovers and imports at runtime.
 
 The consequence of this design is strong **Separation of Concerns**:
-- The engine does not know what a renderer is.
-- A renderer module does not need to include engine headers to access a logger.
+- The engine does not know what a renderer or web server is.
+- A processing module does not need to include engine headers to access a logger.
 - Modules communicate entirely through **typed events** on the **ECS world** and **Service components**.
 
 ### Key Terminology
@@ -297,11 +297,11 @@ int fps = sandbox::get_config<int>(config, "fps_limit", 60);
 
 ## 4.1 Threading Model
 
-The Runner subsystem executes the main game loop and can operate in either synchronous or asynchronous mode. 
+The Runner subsystem executes the main engine loop and can operate in either synchronous or asynchronous mode. 
 
 **Synchronous Mode** (`run_sync`) blocks the calling thread (e.g., the main application thread). The ECS tick loop executes sequentially on the thread that invoked it. This is the standard behavior for most dedicated applications.
 
-**Asynchronous Mode** (`start_async`) spawns a dedicated background worker thread to process the ECS tick loop. This allows the host process to continue doing work on the main thread — such as processing OS window events or handling external UI frameworks — while the game logic ticks independently in the background.
+**Asynchronous Mode** (`start_async`) spawns a dedicated background worker thread to process the ECS tick loop. This allows the host process to continue doing work on the main thread — such as processing OS window events, handling external UI frameworks, or interfacing with external APIs — while the logic ticks independently in the background.
 
 ## 4.2 VFS Specification
 
