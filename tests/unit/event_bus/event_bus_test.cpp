@@ -1,0 +1,54 @@
+#include <catch2/catch_test_macros.hpp>
+#include "sandbox/event_bus/event_bus.h"
+#include "sandbox/core/ecs.h"
+
+struct test_event { int payload; };
+
+TEST_CASE("Event Bus operations", "[event_bus]") {
+    flecs::world ecs;
+
+    SECTION("Synchronous publish triggers a registered subscribe observer immediately") {
+        bool triggered = false;
+        sandbox::events::subscribe<test_event>(ecs, [&](const test_event& ev) {
+            triggered = true;
+        });
+
+        sandbox::events::publish(ecs, test_event{42});
+        REQUIRE(triggered == true);
+    }
+
+    SECTION("Payload data passes correctly to the subscriber") {
+        int received = 0;
+        sandbox::events::subscribe<test_event>(ecs, [&](const test_event& ev) {
+            received = ev.payload;
+        });
+
+        sandbox::events::publish(ecs, test_event{99});
+        REQUIRE(received == 99);
+    }
+
+    SECTION("Ensure subscribers restricted to specific flecs::entity channels only receive targeted events") {
+        flecs::entity channel_a = ecs.entity();
+        flecs::entity channel_b = ecs.entity();
+
+        int a_count = 0, b_count = 0, global_count = 0;
+
+        sandbox::events::subscribe<test_event>(ecs, [&](const test_event&) { a_count++; }, channel_a);
+        sandbox::events::subscribe<test_event>(ecs, [&](const test_event&) { b_count++; }, channel_b);
+        sandbox::events::subscribe<test_event>(ecs, [&](const test_event&) { global_count++; });
+
+        // Publish strictly to channel A
+        sandbox::events::publish(ecs, test_event{1}, channel_a);
+        
+        // Channel A subscriber gets it. Global and B do not.
+        REQUIRE(a_count == 1);
+        REQUIRE(b_count == 0);
+        
+        // Publish to global
+        sandbox::events::publish(ecs, test_event{2});
+        
+        // Only global subscriber gets it
+        REQUIRE(global_count == 1);
+        REQUIRE(a_count == 1); // Should remain 1
+    }
+}

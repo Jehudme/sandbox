@@ -63,7 +63,7 @@ namespace sandbox::events {
 
         flecs::entity observer = world.observer()
             .template event<EventType>()
-            .template with<ChannelTag>()
+            .template with<ChannelTag>().src(channel_entity)
             .run([callback_forward = std::forward<Func>(callback)](flecs::iter& iterator) {
                 const EventType* payload_pointer = static_cast<const EventType*>(iterator.param());
                 if (!payload_pointer) return;
