@@ -15,7 +15,7 @@ TEST_CASE("Bootstrapper & Dependency Graph", "[core][bootstrapper]") {
     SECTION("Flat Load: A module with zero requirements activates and imports successfully") {
         auto mod = create_module_info<mock_a>("mod_a", 1, 0, {});
         boot.stage({mod});
-        REQUIRE(boot.activate("mod_a"));
+        REQUIRE_NOTHROW(boot.activate("mod_a"));
         REQUIRE_NOTHROW(boot.execute(ecs));
         REQUIRE(ecs.has<mock_a>());
     }
@@ -26,7 +26,7 @@ TEST_CASE("Bootstrapper & Dependency Graph", "[core][bootstrapper]") {
             {requirement::kind::service, requirement::strictness::require, "service_b", 1, 0}
         });
         boot.stage({mod_a, mod_b});
-        REQUIRE(boot.activate("mod_a")); // Activating A should auto-resolve and activate B
+        REQUIRE_NOTHROW(boot.activate("mod_a")); // Activating A should auto-resolve and activate B
         REQUIRE_NOTHROW(boot.execute(ecs));
         REQUIRE(ecs.has<mock_b>());
         REQUIRE(ecs.has<mock_a>());
@@ -37,7 +37,7 @@ TEST_CASE("Bootstrapper & Dependency Graph", "[core][bootstrapper]") {
             {requirement::kind::service, requirement::strictness::require, "service_c", 1, 0}
         });
         boot.stage({mod_a});
-        REQUIRE(boot.activate("mod_a"));
+        REQUIRE_NOTHROW(boot.activate("mod_a"));
         REQUIRE_THROWS_AS(boot.execute(ecs), std::runtime_error);
     }
 
@@ -47,7 +47,7 @@ TEST_CASE("Bootstrapper & Dependency Graph", "[core][bootstrapper]") {
             {requirement::kind::service, requirement::strictness::require, "service_b", 2, 0}
         });
         boot.stage({mod_a, mod_b});
-        REQUIRE(boot.activate("mod_a"));
+        REQUIRE_NOTHROW(boot.activate("mod_a"));
         REQUIRE_THROWS_AS(boot.execute(ecs), std::runtime_error);
     }
 
@@ -59,7 +59,11 @@ TEST_CASE("Bootstrapper & Dependency Graph", "[core][bootstrapper]") {
             {requirement::kind::module, requirement::strictness::require, "mod_b", 1, 0}
         });
         boot.stage({mod_a, mod_b});
-        REQUIRE(boot.activate("mod_a"));
+        REQUIRE_NOTHROW(boot.activate("mod_a"));
         REQUIRE_THROWS_AS(boot.execute(ecs), std::runtime_error);
+    }
+
+    SECTION("Clean Failure: Activating an unknown module name throws immediately") {
+        REQUIRE_THROWS_AS(boot.activate("nonexistent_module"), std::runtime_error);
     }
 }

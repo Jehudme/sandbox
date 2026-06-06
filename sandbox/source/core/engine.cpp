@@ -144,8 +144,10 @@ namespace sandbox {
                     SANDBOX_INFO(ecs, "[Engine] No modules requested in manifest.");
                 } else {
                     for (const auto& module_name : requested) {
-                        if (!boot.activate(module_name)) {
-                            SANDBOX_WARN(ecs, "[Engine] Manifest requested '{}' but no staged library provides it.", module_name);
+                        try {
+                            boot.activate(module_name);
+                        } catch (const std::exception& e) {
+                            SANDBOX_WARN(ecs, "[Engine] Manifest requested '{}' but no staged library provides it: {}", module_name, e.what());
                         }
                     }
                 }
