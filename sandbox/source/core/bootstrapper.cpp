@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <format>
 #include <stdexcept>
+#include <queue>
 
 #define BOOT_FATAL(world, fmt_str, ...) \
     do { \
@@ -40,62 +41,97 @@ namespace sandbox {
         resolve_activations(ecs);
         audit_service_collisions(ecs);
 
-        bool processing = true;
-        while (processing) {
-            bool progressed_this_cycle = false;
+        // Kahn's Algorithm for Topological Sorting & Booting
+        std::unordered_map<std::string, int> in_degree;
+        std::unordered_map<std::string, std::vector<std::string>> graph; // node -> dependents
+        
+        // 1. Initialize in-degrees to 0 for all active modules
+        for (const auto& [mod_name, mod_idx] : m_active_modules) {
+            in_degree[mod_name] = 0;
+        }
 
-            for (auto& [mod_name, mod_idx] : m_active_modules) {
-                module_info& mod = m_modules[mod_idx];
-                if (mod.is_loaded) continue;
-
-                bool ready_to_boot = true;
-                for (const auto& req : mod.requirements) {
-                    if (req.policy != requirement::strictness::require) continue;
-
-                    if (req.target_kind == requirement::kind::module) {
-                        if (!is_module_loaded(req.target_name)) {
-                            ready_to_boot = false;
-                            break;
-                        }
-                    } else if (req.target_kind == requirement::kind::service) {
-                        if (!is_service_loaded(req.target_name)) {
-                            ready_to_boot = false;
+        // 2. Build the graph based on requirements
+        for (const auto& [mod_name, mod_idx] : m_active_modules) {
+            const module_info& mod = m_modules[mod_idx];
+            
+            for (const auto& req : mod.requirements) {
+                std::string dependency_name;
+                
+                if (req.target_kind == requirement::kind::module) {
+                    if (m_active_modules.count(req.target_name)) {
+                        dependency_name = req.target_name;
+                    }
+                } else if (req.target_kind == requirement::kind::service) {
+                    // Find which active module provides this service
+                    for (const auto& [active_name, active_idx] : m_active_modules) {
+                        if (m_modules[active_idx].provides_service == req.target_name) {
+                            dependency_name = active_name;
                             break;
                         }
                     }
                 }
-
-                if (ready_to_boot) {
-                    if (mod.import_fn) mod.import_fn(ecs);
-                    mod.is_loaded = true;
-                    progressed_this_cycle = true;
-                    SANDBOX_INFO(ecs, "[Bootstrapper] Loaded module: {} v{}.{}.{}",
-                                 mod.name, mod.version_major, mod.version_minor, mod.version_patch);
+                
+                if (!dependency_name.empty()) {
+                    graph[dependency_name].push_back(mod_name);
+                    in_degree[mod_name]++;
+                } else if (req.policy == requirement::strictness::require) {
+                    // This shouldn't happen as resolve_activations should have caught missing hard dependencies.
+                    BOOT_FATAL(ecs, "Fatal: Missing resolved hard dependency for '{}'.", mod_name);
                 }
-            }
-
-            if (!progressed_this_cycle) {
-                if (all_activated_modules_loaded()) {
-                    break;
-                }
-                BOOT_FATAL(ecs,
-                    "[Bootstrapper] Dependency deadlock detected: circular or "
-                    "unresolvable hard requirement in the activated module graph.");
+                // If it's an expect and not found, it's safely ignored (in_degree is not incremented).
             }
         }
+
+        // 3. Push modules with in-degree of 0 to a queue
+        std::queue<std::string> queue;
+        for (const auto& [mod_name, degree] : in_degree) {
+            if (degree == 0) {
+                queue.push(mod_name);
+            }
+        }
+
+        // 4. Process queue
+        int processed_count = 0;
+        while (!queue.empty()) {
+            std::string current = queue.front();
+            queue.pop();
+
+            module_info& mod = m_modules[m_active_modules[current]];
+            if (mod.import_fn) mod.import_fn(ecs);
+            mod.is_loaded = true;
+            processed_count++;
+            
+            SANDBOX_INFO(ecs, "[Bootstrapper] Loaded module: {} v{}.{}.{}",
+                         mod.name, mod.version_major, mod.version_minor, mod.version_patch);
+
+            for (const std::string& dependent : graph[current]) {
+                in_degree[dependent]--;
+                if (in_degree[dependent] == 0) {
+                    queue.push(dependent);
+                }
+            }
+        }
+
+        // 5. Cycle Detection check
+        if (processed_count != m_active_modules.size()) {
+            BOOT_FATAL(ecs, "Fatal: Circular dependency detected in module graph");
+        }
+
         SANDBOX_INFO(ecs, "[Bootstrapper] All activated modules loaded successfully.");
     }
 
     void bootstrapper::resolve_activations(flecs::world& ecs) {
         m_active_modules.clear();
         m_version_constraints.clear();
+        
+        // Major Version Collision Prevention
+        std::unordered_map<std::string, uint8_t> locked_service_majors;
 
         for (const auto& name : m_explicit_activations) {
             if (m_active_modules.count(name)) continue;
 
-            const std::size_t npos = m_modules.size();
             std::size_t best = find_best_module_version(name, 0, 0);
-            if (best == npos) {
+            if (best == m_modules.size()) {
                 BOOT_FATAL(ecs,
                     "[Bootstrapper] Explicit activation '{}' has no staged variant "
                     "(internal inconsistency — was stage() called before execute()?).", name);
@@ -117,10 +153,6 @@ namespace sandbox {
                     const module_info& mod = m_modules[m_active_modules.at(active_name)];
 
                     for (const auto& req : mod.requirements) {
-                        // In the first pass we ONLY do require.
-                        // In the second pass, we do expect (and if they add modules, we also do their requires).
-                        // So if filter_policy == require, we only evaluate requires.
-                        // If filter_policy == expect, we evaluate BOTH requires and expects.
                         if (filter_policy == requirement::strictness::require && req.policy != requirement::strictness::require) continue;
 
                         if (req.target_kind == requirement::kind::module) {
@@ -184,6 +216,22 @@ namespace sandbox {
                                 }
                             }
                         } else if (req.target_kind == requirement::kind::service) {
+                            // Major Version Collision Prevention for Services
+                            if (req.min_major != 0) {
+                                auto locked_it = locked_service_majors.find(req.target_name);
+                                if (locked_it != locked_service_majors.end()) {
+                                    if (locked_it->second != req.min_major) {
+                                        if (req.policy == requirement::strictness::require) {
+                                            BOOT_FATAL(ecs, "Fatal: Irreconcilable Major Version conflict detected for service {}", req.target_name);
+                                        } else {
+                                            continue;
+                                        }
+                                    }
+                                } else {
+                                    locked_service_majors[req.target_name] = req.min_major;
+                                }
+                            }
+
                             if (!is_service_active(req.target_name)) {
                                 std::size_t provider_idx = find_best_service_provider(ecs, req.target_name, req.min_major, req.min_minor);
                                 if (provider_idx == m_modules.size()) {

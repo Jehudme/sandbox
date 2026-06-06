@@ -7,6 +7,8 @@ add_executable(sandbox_tests
     bootstrapper_lock_test.cpp
     architecture_test.cpp
     integration_test.cpp
+    plugin_loader_test.cpp
+    graph_safety_test.cpp
 )
 
 target_link_libraries(sandbox_tests PRIVATE 
