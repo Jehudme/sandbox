@@ -15,7 +15,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-add_subdirectory(sdk)
 # ALWAYS build the core engine library (This is what Harmony needs)
 add_subdirectory(sandbox)
 
@@ -24,6 +23,5 @@ add_subdirectory(sandbox)
 # compiling the Sandbox repository directly.
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     add_subdirectory(launcher)
-    add_subdirectory(libtest)
     add_subdirectory(tests)
 endif()

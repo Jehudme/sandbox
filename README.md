@@ -144,11 +144,10 @@ sandbox/
 ├── launcher/                # Host executable
 │   └── source/main.cpp      # Bootstraps the engine
 ├── tests/                   # Professional Catch2 (v3) test suite
-│   ├── unit/                # Core and subsystem unit tests
-│   └── integration/         # Plugin loader and full bootstrapper tests
-├── libtest/                 # Example plugin
-│   ├── source/library.cpp   # Demo plugin implementation
-│   └── assets/test-app.zip  # Manifest + packaged assets
+│   ├── suite/               # Catch2 integration & unit tests
+│   └── libtest/             # Mock plugin used for loader testing
+│       ├── source/library.cpp   # Demo plugin implementation
+│       └── assets/manifest.json # Application manifest
 └── docs/                    # Extended documentation
 ```
 

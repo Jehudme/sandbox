@@ -174,16 +174,16 @@ set_target_properties(myplugin PROPERTIES
 
 **`source/myplugin.cpp` — Minimal "Hello World" Plugin:**
 ```cpp
-#include "sandbox/core/plugin.h"   // SANDBOX_DECLARE_MODULE, SANDBOX_DECLARE_LIBRARY
-#include "sandbox/core/service.h"  // SANDBOX_DECLARE_SERVICE
+#include "sandbox/core/plugin.h"   // SANDBOX_DECLARE_MODULE, SANDBOX_DECLARE_LIBRARY, SANDBOX_DECLARE_SERVICE
 
 // ============================================================================
 // Step 1: Declare any Services this Plugin produces or consumes
 // ============================================================================
 
 struct i_my_interface {};  // The abstract interface struct
+struct my_service { i_my_interface* api{nullptr}; };
 
-SANDBOX_DECLARE_SERVICE(my_service, i_my_interface)
+SANDBOX_DECLARE_SERVICE(my_service, 1, 0);
 
 // ============================================================================
 // Step 2: Define your Module
@@ -192,7 +192,7 @@ SANDBOX_DECLARE_SERVICE(my_service, i_my_interface)
 struct hello_module {
     hello_module(flecs::world& ecs) {
         // Register this module as the provider of my_service
-        ecs.set<my_service>({nullptr, 1, 0});
+        ecs.set<my_service>({nullptr});
 
         // Use the ECS-routed logger
         // (requires logger_service to already be loaded — declare it as a requirement below)
@@ -243,14 +243,9 @@ SANDBOX_DECLARE_LIBRARY()
 A **Service** is a singleton ECS component that exposes an abstract interface pointer. It is the canonical mechanism for inter-module communication.
 
 ```cpp
-#define SANDBOX_DECLARE_SERVICE(service_name, interface_type)
-// Expands to:
-struct service_name {
-    static constexpr const char* type_name = "service_name";
-    interface_type* api{nullptr};
-    uint8_t version_major{1};
-    uint8_t version_minor{0};
-};
+#define SANDBOX_DECLARE_SERVICE(Name, Major, Minor)
+// Dynamically registers the service contract with the engine's bootstrapper registry
+// at load time. Developers must manually declare their own payload struct for the ECS component.
 ```
 
 ## 3.4 Manifest Reference

@@ -1,7 +1,7 @@
 #include <iostream>
 #include <flecs.h>
 #include "sandbox/core/plugin.h"
-#include "sandbox/core/service.h"
+
 
 // ============================================================================
 // 0. DECLARE THE SERVICES (Bridges the string requirements with C++ structs)
@@ -11,9 +11,13 @@ struct i_logger {};
 struct i_window {};
 struct i_filesystem {};
 
-SANDBOX_DECLARE_SERVICE(logger_service, i_logger)
-SANDBOX_DECLARE_SERVICE(window_service, i_window)
-SANDBOX_DECLARE_SERVICE(filesystem_service, i_filesystem)
+struct logger_service { i_logger* api{nullptr}; };
+struct window_service { i_window* api{nullptr}; };
+struct filesystem_service { i_filesystem* api{nullptr}; };
+
+SANDBOX_DECLARE_SERVICE(logger_service, 1, 0);
+SANDBOX_DECLARE_SERVICE(window_service, 1, 0);
+SANDBOX_DECLARE_SERVICE(filesystem_service, 1, 0);
 
 
 // ============================================================================
@@ -29,7 +33,7 @@ struct test_math_module {
 struct test_logger_module {
     test_logger_module(flecs::world& ecs) {
         // Register the actual service data into Flecs
-        ecs.set<logger_service>({nullptr, 1, 0});
+        ecs.set<logger_service>({nullptr});
         std::cout << "  -> [Logger] Booted! Provides 'logger_service' (0 Dependencies)\n";
     }
 };
@@ -42,14 +46,14 @@ struct test_window_module {
 
 
         // Register the window service
-        ecs.set<window_service>({nullptr, 1, 0});
+        ecs.set<window_service>({nullptr});
         std::cout << "  -> [Window] Booted! Provides 'window_service'\n";
     }
 };
 
 struct test_filesystem_module {
     test_filesystem_module(flecs::world& ecs) {
-        ecs.set<filesystem_service>({nullptr, 1, 0});
+        ecs.set<filesystem_service>({nullptr});
         std::cout << "  -> [Filesystem] Booted! Provides 'filesystem_service'\n";
     }
 };

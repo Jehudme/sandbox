@@ -34,7 +34,7 @@ namespace sandbox::detail {
         return true; \
     }()
 
-#define SANDBOX_DECLARE_SERVICE_CONTRACT(Name, Major, Minor) \
+#define SANDBOX_DECLARE_SERVICE(Name, Major, Minor) \
     static inline bool Name##_contract_registered = []() { \
         sandbox::get_local_registry().services.push_back( \
             sandbox::create_service_info( \

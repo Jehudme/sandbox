@@ -12,7 +12,7 @@ public:
 };
 
 // Register service
-SANDBOX_DECLARE_SERVICE_CONTRACT(mock_service, 1, 0);
+SANDBOX_DECLARE_SERVICE(mock_service, 1, 0);
 
 // Register module
 SANDBOX_DECLARE_MODULE(mock_plugin, mock_plugin_impl, 1, 0, 0, "mock_service");

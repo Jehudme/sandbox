@@ -52,7 +52,7 @@ target_include_directories(sandbox
 )
 
 # Link Flecs as a shared target again
-target_link_libraries(sandbox PUBLIC sandbox::sdk flecs spdlog::spdlog glaze::glaze physfs-static)
+target_link_libraries(sandbox PUBLIC flecs spdlog::spdlog glaze::glaze physfs-static)
 
 target_precompile_headers(sandbox PRIVATE include/sandbox/pch.h)
 

@@ -34,7 +34,3 @@ set_target_properties(launcher PROPERTIES
         BUILD_WITH_INSTALL_RPATH TRUE
         INSTALL_RPATH "\$ORIGIN"
 )
-
-# Build Order Dependency
-# Ensures plugins are compiled before the final launcher link
-add_dependencies(launcher test_lib)
