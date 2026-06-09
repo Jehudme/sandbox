@@ -1,6 +1,7 @@
 #include "subsystems/filesystem/filesystem.h"
 #include "sandbox/event_bus/filesystem_events.h"
 #include "sandbox/event_bus/logger_events.h"
+#include "sandbox/generated/schemas/filesystem_generated.h"
 #include <physfs.h>
 #include <fstream>
 
@@ -381,9 +382,35 @@ namespace sandbox::modules {
         if (!virtual_path || !out_payload) return -1;
         auto res = state_impl(virtual_path);
         if (!res) return -1;
-        out_payload->bytes = nullptr;
-        out_payload->size = 0;
-        out_payload->free_func = nullptr;
+
+        flatbuffers::FlatBufferBuilder builder;
+        sandbox::schemas::FileType type = sandbox::schemas::FileType_Unknown;
+        switch (res->type) {
+            case events::filesystem::file_type::regular:   type = sandbox::schemas::FileType_Regular; break;
+            case events::filesystem::file_type::directory: type = sandbox::schemas::FileType_Directory; break;
+            case events::filesystem::file_type::symlink:   type = sandbox::schemas::FileType_Symlink; break;
+            default: type = sandbox::schemas::FileType_Unknown; break;
+        }
+
+        auto fb_offset = sandbox::schemas::CreateFileMetadataDirect(
+            builder,
+            res->virtual_path.c_str(),
+            res->size,
+            res->creation_time,
+            res->modification_time,
+            res->access_time,
+            type,
+            res->read_only
+        );
+        builder.Finish(fb_offset);
+
+        uint8_t* ptr = static_cast<uint8_t*>(std::malloc(builder.GetSize()));
+        if (!ptr) return -1;
+        std::memcpy(ptr, builder.GetBufferPointer(), builder.GetSize());
+        
+        out_payload->bytes = ptr;
+        out_payload->size = builder.GetSize();
+        out_payload->free_func = [](void* p) { std::free(p); };
         return 0;
     }
 

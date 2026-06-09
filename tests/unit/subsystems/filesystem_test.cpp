@@ -1,9 +1,11 @@
 #include <catch2/catch_test_macros.hpp>
 #include "subsystems/filesystem/filesystem.h"
 #include "sandbox/event_bus/filesystem_events.h"
+#include "sandbox/generated/schemas/filesystem_generated.h"
 #include <filesystem>
 #include <fstream>
 #include <cstring>
+#include <iostream>
 
 using namespace sandbox;
 
@@ -48,46 +50,39 @@ TEST_CASE("Filesystem Subsystem operations", "[subsystems][filesystem]") {
         if (payload.free_func) payload.free_func(payload.bytes);
     }
 
-    SECTION("Verify ECS Request/Response pattern for filesystem events") {
-        // Mock the observers for read and write requests
-        ecs.observer<sandbox::events::filesystem::write_request>()
-            .event(flecs::OnSet)
-            .each([&](flecs::entity e, sandbox::events::filesystem::write_request& req) {
-                int32_t res = ecs.get<sandbox::filesystem_service>().api->write(
-                    req.virtual_path.string().c_str(), 
-                    reinterpret_cast<const uint8_t*>(req.data.data()), 
-                    req.data.size(), 
-                    req.append_mode
-                );
-                // mock response
-                e.set<sandbox::events::filesystem::write_response>({});
-            });
 
-        ecs.observer<sandbox::events::filesystem::read_request>()
-            .event(flecs::OnSet)
-            .each([&](flecs::entity e, sandbox::events::filesystem::read_request& req) {
-                sandbox_payload payload{};
-                ecs.get<sandbox::filesystem_service>().api->read(req.virtual_path.string().c_str(), &payload);
-                e.set<sandbox::events::filesystem::read_response>({payload});
-            });
 
+    SECTION("Raw C-ABI methods return correct FlatBuffer payloads") {
         fs_api->mount(test_dir.string().c_str(), "mount://cache", false);
-        
-        // Dispatch write request using ECS
-        std::vector<std::byte> data{std::byte('Z')};
-        flecs::entity write_req = sandbox::filesystem_controls::write(ecs, "mount://cache/macro.txt", std::move(data), false);
-        REQUIRE(write_req.has<sandbox::events::filesystem::write_response>());
-        write_req.destruct();
-        
-        // Dispatch read request using ECS
-        flecs::entity read_req = sandbox::filesystem_controls::read(ecs, "mount://cache/macro.txt");
-        REQUIRE(read_req.has<sandbox::events::filesystem::read_response>());
-        
-        auto res = read_req.get<sandbox::events::filesystem::read_response>();
-        REQUIRE(res.payload.size == 1);
-        REQUIRE(res.payload.bytes[0] == static_cast<uint8_t>('Z'));
-        
-        if (res.payload.free_func) res.payload.free_func(res.payload.bytes);
-        read_req.destruct();
+
+        // write a file using raw API
+        uint8_t data[] = { 'Z', 'Z' };
+        REQUIRE(fs_api->write("mount://cache/macro.txt", data, 2, false) == 0);
+
+        // state query using raw API
+        sandbox_payload state_payload{};
+        REQUIRE(fs_api->state("mount://cache/macro.txt", &state_payload) == 0);
+        auto meta = flatbuffers::GetRoot<sandbox::schemas::FileMetadata>(state_payload.bytes);
+        REQUIRE(meta != nullptr);
+        REQUIRE(meta->size() == 2);
+        REQUIRE(meta->type() == sandbox::schemas::FileType_Regular);
+        if (state_payload.free_func) state_payload.free_func(state_payload.bytes);
+
+        // list files using raw API
+        sandbox_payload list_payload{};
+        REQUIRE(fs_api->list("mount://cache", false, &list_payload) == 0);
+        auto str_list = flatbuffers::GetRoot<sandbox::schemas::StringList>(list_payload.bytes);
+        REQUIRE(str_list != nullptr);
+        REQUIRE(str_list->items() != nullptr);
+        REQUIRE(str_list->items()->size() >= 1);
+        bool found = false;
+        for (size_t i = 0; i < str_list->items()->size(); ++i) {
+            std::string path = str_list->items()->Get(i)->c_str();
+            if (path.length() >= 9 && path.substr(path.length() - 9) == "macro.txt") {
+                found = true; break;
+            }
+        }
+        REQUIRE(found);
+        if (list_payload.free_func) list_payload.free_func(list_payload.bytes);
     }
 }

@@ -2,7 +2,6 @@
 
 #include "sandbox/core/ecs.h"
 #include <cstdint>
-#include <string>
 #include "sandbox/core/abi_types.h"
 
 namespace sandbox {

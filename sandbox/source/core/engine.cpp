@@ -15,6 +15,8 @@
 #include "sandbox/core/plugin.h"
 #include "utilities/loader.h"
 
+#include "sandbox/core/environment.h"
+
 namespace sandbox {
 
     namespace {
@@ -190,40 +192,9 @@ namespace sandbox {
         bool initialized{false};
     };
 
-    engine::engine() : m_impl(new impl()) {}
-
-    engine::~engine() {
-        if (m_impl) {
-            if (m_impl->initialized) {
-                finalize();
-            }
-            delete m_impl;
-            m_impl = nullptr;
-        }
-    }
-
-    engine::engine(engine&& other) noexcept : m_impl(other.m_impl) {
-        other.m_impl = nullptr;
-    }
-
-    engine& engine::operator=(engine&& other) noexcept {
-        if (this != &other) {
-            if (m_impl) {
-                if (m_impl->initialized) {
-                    finalize();
-                }
-                delete m_impl;
-            }
-            m_impl = other.m_impl;
-            other.m_impl = nullptr;
-        }
-        return *this;
-    }
-
-    void engine::initialize(const sandbox::properties& config) {
-        // Note: configure_plugin_os_api() must be called by the host (e.g. launcher)
-        // BEFORE constructing the engine, as the flecs::world member is created
-        // at engine construction time, before initialize() is ever called.
+    engine::engine(const char* json_config) : m_impl(new impl()) {
+        sandbox::properties config(json_config ? json_config : "{}");
+        
         m_impl->ecs.entity("::Sandbox::Environment").set<engine_environment>({config});
 
         import_core_infrastructure(m_impl->ecs);
@@ -240,20 +211,53 @@ namespace sandbox {
         m_impl->initialized = true;
     }
 
-    void engine::finalize() {
-        if (!m_impl || !m_impl->initialized) return;
-        m_impl->initialized = false;
-
-        if (m_impl->ecs.has<sandbox::runner_service>()) {
-            if (auto* runner = m_impl->ecs.get<sandbox::runner_service>().api; runner != nullptr) {
-                runner->quit();
+    engine::~engine() {
+        if (m_impl) {
+            if (m_impl->initialized) {
+                if (m_impl->ecs.has<sandbox::runner_service>()) {
+                    if (auto* runner = m_impl->ecs.get<sandbox::runner_service>().api; runner != nullptr) {
+                        runner->quit();
+                    }
+                }
+                m_impl->ecs.reset();
+                m_impl->initialized = false;
             }
+            delete m_impl;
+            m_impl = nullptr;
         }
-        m_impl->ecs.reset();
     }
 
-    void* engine::get_world() const {
-        return m_impl ? m_impl->ecs.c_ptr() : nullptr;
+    engine::engine(engine&& other) noexcept : m_impl(other.m_impl) {
+        other.m_impl = nullptr;
+    }
+
+    engine& engine::operator=(engine&& other) noexcept {
+        if (this != &other) {
+            if (m_impl) {
+                if (m_impl->initialized) {
+                    if (m_impl->ecs.has<sandbox::runner_service>()) {
+                        if (auto* runner = m_impl->ecs.get<sandbox::runner_service>().api; runner != nullptr) {
+                            runner->quit();
+                        }
+                    }
+                    m_impl->ecs.reset();
+                    m_impl->initialized = false;
+                }
+                delete m_impl;
+            }
+            m_impl = other.m_impl;
+            other.m_impl = nullptr;
+        }
+        return *this;
+    }
+
+    void engine::run() {
+        if (!m_impl || !m_impl->initialized) return;
+        if (m_impl->ecs.has<sandbox::runner_service>()) {
+            if (auto* runner = m_impl->ecs.get<sandbox::runner_service>().api; runner != nullptr) {
+                runner->run_sync(m_impl->ecs);
+            }
+        }
     }
 
 } // namespace sandbox

@@ -36,7 +36,7 @@ TEST_CASE("Plugin Loading (Integration)", "[integration][plugin]") {
             
             std::string path_str(virtual_path);
             if (path_str.find("test_lib_mock") != std::string::npos) {
-                path_str = std::string("../../bin/test_lib_mock") + LIB_EXT;
+                path_str = std::string("./test_lib_mock") + LIB_EXT;
             }
             
             uint8_t* ptr = static_cast<uint8_t*>(std::malloc(path_str.size() + 1));

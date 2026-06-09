@@ -6,12 +6,20 @@
 #include <expected>
 #include <stdexcept>
 
+#include "sandbox/core/ecs.h"
+
 namespace sandbox::sdk {
 
     class runner {
     public:
         explicit runner(irunner* api) : m_api(api) {
             if (!m_api) throw std::invalid_argument("Runner API pointer is null");
+        }
+
+        explicit runner(flecs::world& ecs) {
+            auto srv = ecs.get<sandbox::runner_service>();
+            m_api = srv.api;
+            if (!m_api) throw std::invalid_argument("Runner API is not available in ECS");
         }
 
         template <typename T>

@@ -5,6 +5,7 @@
 
 #include <CLI/CLI.hpp>
 #include "sandbox/core/engine.h"
+#include "sandbox/utilities/properties.h"
 #include "sandbox/core/ecs.h"
 #include "sandbox/core/plugin.h"
 #include "sandbox/event_bus/runner_events.h"
@@ -45,14 +46,13 @@ int main(int argc, char* argv[]) {
     // The OS API override (dlopen/dlsym callbacks) must be in place before
     // any ecs_import_from_library call, which happens during engine::initialize().
     sandbox::configure_plugin_os_api();
-    sandbox::engine engine_instance;
 
     try {
-        engine_instance.initialize(config);
+        std::string config_json = config.save_to_string();
+        sandbox::engine engine_instance(config_json.c_str());
 
         if (run) {
-            auto* ecs_ptr = static_cast<flecs::world*>(engine_instance.get_world());
-            ecs_ptr->get<sandbox::runner_service>().api->run_sync(*ecs_ptr);
+            engine_instance.run();
         }
 
     } catch (const std::exception& fatal_error) {

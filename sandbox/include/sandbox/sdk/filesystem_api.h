@@ -6,6 +6,8 @@
 #include <expected>
 #include <vector>
 #include <stdexcept>
+#include "sandbox/core/ecs.h"
+#include "sandbox/generated/schemas/filesystem_generated.h"
 
 namespace sandbox::sdk {
 
@@ -13,6 +15,12 @@ namespace sandbox::sdk {
     public:
         explicit filesystem(ifilesystem* api) : m_api(api) {
             if (!m_api) throw std::invalid_argument("Filesystem API pointer is null");
+        }
+
+        explicit filesystem(flecs::world& ecs) {
+            auto srv = ecs.get<sandbox::filesystem_service>();
+            m_api = srv.api;
+            if (!m_api) throw std::invalid_argument("Filesystem API is not available in ECS");
         }
 
         template <typename T>
@@ -86,10 +94,16 @@ namespace sandbox::sdk {
             if (m_api->list(virtual_path.c_str(), recursive, p.get()) != 0) {
                 return std::unexpected("Failed to list directory");
             }
+            if (!p.data() || p.size() == 0) return std::vector<std::string>{};
+
+            auto fb_list = flatbuffers::GetRoot<sandbox::schemas::StringList>(p.data());
             std::vector<std::string> result;
-            std::string json = p.as_string();
-            auto err = glz::read_json(result, json);
-            if (err) return std::unexpected("Failed to parse list result");
+            if (fb_list && fb_list->items()) {
+                result.reserve(fb_list->items()->size());
+                for (const auto& item : *fb_list->items()) {
+                    result.push_back(item->str());
+                }
+            }
             return result;
         }
 
@@ -122,6 +136,28 @@ namespace sandbox::sdk {
             payload p;
             if (m_api->absolute(virtual_path.c_str(), p.get()) != 0) return std::unexpected("Failed to get absolute path");
             return p.as_string();
+        }
+
+        struct file_state {
+            size_t size;
+            bool is_directory;
+            uint64_t modified_time;
+        };
+
+        std::expected<file_state, std::string> state(const std::string& virtual_path) const {
+            payload p;
+            if (m_api->state(virtual_path.c_str(), p.get()) != 0) {
+                return std::unexpected("Failed to get state");
+            }
+            if (!p.data() || p.size() == 0) return std::unexpected("Empty payload for state");
+            auto fb_meta = flatbuffers::GetRoot<sandbox::schemas::FileMetadata>(p.data());
+            if (!fb_meta) return std::unexpected("Failed to parse FileMetadata");
+
+            return file_state{
+                .size = fb_meta->size(),
+                .is_directory = fb_meta->type() == sandbox::schemas::FileType_Directory,
+                .modified_time = fb_meta->modification_time()
+            };
         }
 
     private:

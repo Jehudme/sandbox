@@ -5,6 +5,8 @@
 #include <string>
 #include <expected>
 #include <stdexcept>
+#include "sandbox/core/ecs.h"
+#include "sandbox/generated/schemas/common_generated.h"
 
 namespace sandbox::sdk {
 
@@ -12,6 +14,12 @@ namespace sandbox::sdk {
     public:
         explicit logger(ilogger* api) : m_api(api) {
             if (!m_api) throw std::invalid_argument("Logger API pointer is null");
+        }
+
+        explicit logger(flecs::world& ecs) {
+            auto srv = ecs.get<sandbox::logger_service>();
+            m_api = srv.api;
+            if (!m_api) throw std::invalid_argument("Logger API is not available in ECS");
         }
 
         template <typename T>
@@ -36,8 +44,13 @@ namespace sandbox::sdk {
             return value;
         }
 
-        std::expected<void, std::string> log(const uint8_t* log_msg_fb, size_t size) {
-            if (m_api->log(log_msg_fb, size) != 0) {
+        std::expected<void, std::string> log(int level, const std::string& message) {
+            flatbuffers::FlatBufferBuilder builder;
+            auto msg_offset = builder.CreateString(message);
+            auto log_fb = sandbox::schemas::CreateLogMessage(builder, static_cast<sandbox::schemas::LogLevel>(level), msg_offset);
+            builder.Finish(log_fb);
+            
+            if (m_api->log(builder.GetBufferPointer(), builder.GetSize()) != 0) {
                 return std::unexpected("Failed to log message");
             }
             return {};

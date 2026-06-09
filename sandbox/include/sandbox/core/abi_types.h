@@ -15,4 +15,8 @@ typedef struct sandbox_payload {
 
 #ifdef __cplusplus
 }
+
+namespace sandbox::abi {
+    using flatbuffer_payload = sandbox_payload;
+}
 #endif

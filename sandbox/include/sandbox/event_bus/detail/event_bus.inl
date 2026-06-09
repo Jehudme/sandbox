@@ -8,10 +8,8 @@ namespace sandbox::events {
     // Internal Routing Infrastructure
     // =========================================================================
 
-    // The component tag used to satisfy the observer's .with<ChannelTag>() filter
     struct ChannelTag {};
 
-    // Helper to lazily construct and retrieve the global default event bus
     inline flecs::entity default_channel(flecs::world world) {
         flecs::entity bus = world.entity("::sandbox::events::DefaultEventBus");
         if (!bus.has<ChannelTag>()) {
@@ -24,25 +22,23 @@ namespace sandbox::events {
     // Publisher Implementations
     // =========================================================================
 
-    template <typename EventType>
-    inline void publish(flecs::world world, const EventType& payload, flecs::entity channel) {
+    inline void publish_raw(flecs::world world, uint64_t event_id, const sandbox::abi::flatbuffer_payload& payload, flecs::entity channel) {
         flecs::entity channel_entity = channel.is_valid() ? channel : default_channel(world);
 
         if (!channel_entity.has<ChannelTag>()) {
             channel_entity.add<ChannelTag>();
         }
 
-        world.event<EventType>()
+        world.event(world.entity(event_id))
             .entity(channel_entity)
             .id(world.id<ChannelTag>())
-            .ctx(payload)
+            .ctx(const_cast<sandbox::abi::flatbuffer_payload*>(&payload))
             .emit();
     }
 
-    template <typename EventType>
-    inline void publish_async(flecs::world world, EventType payload, flecs::entity channel) {
-        world.defer([world, payload_copy = std::move(payload), channel]() mutable {
-            publish<EventType>(world, payload_copy, channel);
+    inline void publish_raw_async(flecs::world world, uint64_t event_id, sandbox::abi::flatbuffer_payload payload, flecs::entity channel) {
+        world.defer([world, event_id, payload, channel]() {
+            publish_raw(world, event_id, payload, channel);
         });
     }
 
@@ -50,27 +46,25 @@ namespace sandbox::events {
     // Subscriber Implementation
     // =========================================================================
 
-    template <typename EventType, typename Func>
-    inline flecs::entity subscribe(flecs::world world, Func&& callback, flecs::entity channel) {
+    template <typename Func>
+    inline flecs::entity subscribe_raw(flecs::world world, uint64_t event_id, Func&& callback, flecs::entity channel) {
         flecs::entity channel_entity = channel.is_valid() ? channel : default_channel(world);
 
         if (!channel_entity.has<ChannelTag>()) {
             channel_entity.add<ChannelTag>();
         }
 
-        // Break out of any active Module Namespace trap so this observer listens globally
         flecs::entity previous_scope = world.set_scope(0);
 
         flecs::entity observer = world.observer()
-            .template event<EventType>()
+            .event(world.entity(event_id))
             .template with<ChannelTag>().src(channel_entity)
             .run([callback_forward = std::forward<Func>(callback)](flecs::iter& iterator) {
-                const EventType* payload_pointer = static_cast<const EventType*>(iterator.param());
+                const sandbox::abi::flatbuffer_payload* payload_pointer = static_cast<const sandbox::abi::flatbuffer_payload*>(iterator.param());
                 if (!payload_pointer) return;
                 callback_forward(*payload_pointer);
             });
 
-        // Restore the original namespace scope
         world.set_scope(previous_scope);
 
         return observer;

@@ -1,4 +1,5 @@
 #include "subsystems/logger/logger.h"
+#include "sandbox/core/environment.h"
 
 #include "sandbox/event_bus/logger_events.h"
 #include "sandbox/event_bus/event_bus.h"

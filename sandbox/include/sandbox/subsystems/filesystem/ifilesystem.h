@@ -1,11 +1,6 @@
 #pragma once
 
-#include <filesystem>
-#include <vector>
-#include <string_view>
-#include <string>
-#include <expected>
-#include <any>
+// No STL includes allowed in the virtual C-ABI interface
 #include "sandbox/event_bus/filesystem_events.h"
 #include "sandbox/core/abi_types.h"
 
