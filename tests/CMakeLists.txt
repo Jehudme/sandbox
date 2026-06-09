@@ -11,3 +11,4 @@ FetchContent_MakeAvailable(Catch2)
 
 add_subdirectory(libtest)
 add_subdirectory(suite)
+add_subdirectory(unit)

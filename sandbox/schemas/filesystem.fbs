@@ -1,0 +1,24 @@
+include "common.fbs";
+
+namespace sandbox.schemas;
+
+enum FileType : int32 {
+    Unknown = 0,
+    Regular,
+    Directory,
+    Symlink
+}
+
+table FileMetadata {
+    virtual_path:string;
+    size:uint64;
+    creation_time:uint64;
+    modification_time:uint64;
+    access_time:uint64;
+    type:FileType;
+    read_only:bool;
+}
+
+table FileMetadataList {
+    files:[FileMetadata];
+}
