@@ -124,7 +124,7 @@ namespace sandbox::modules {
         std::string key_str(key);
         std::string out_json;
         if (key_str == "fps_limit") {
-            glz::write_json(m_fps_limit, out_json);
+            (void)glz::write_json(m_fps_limit, out_json);
         } else {
             return -1;
         }

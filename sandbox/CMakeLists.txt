@@ -28,6 +28,7 @@ set(PHYSFS_BUILD_STATIC ON CACHE BOOL "" FORCE)
 
 set(FLATBUFFERS_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(FLATBUFFERS_BUILD_FLATC ON CACHE BOOL "" FORCE)
+set(glaze_ENABLE_AVX2 OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(spdlog glaze flecs physfs flatbuffers)
 
 # MARK: - Engine Configuration

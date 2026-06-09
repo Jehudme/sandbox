@@ -134,12 +134,12 @@ namespace sandbox::modules {
         std::string out_json;
         if (key_str == "logger_level") {
             auto lvl = m_logger ? m_logger->level() : spdlog::level::info;
-            glz::write_json(lvl, out_json);
+            (void)glz::write_json(lvl, out_json);
         } else if (key_str == "throw_on_error") {
-            glz::write_json(m_throw_on_error, out_json);
+            (void)glz::write_json(m_throw_on_error, out_json);
         } else if (key_str == "logger_name") {
             auto name = m_logger ? m_logger->name() : std::string("");
-            glz::write_json(name, out_json);
+            (void)glz::write_json(name, out_json);
         } else {
             return -1;
         }

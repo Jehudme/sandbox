@@ -83,7 +83,7 @@ TEST_CASE("Properties serialization across C-ABI boundary", "[core][properties][
 
     SECTION("Serialize property, cross boundary via set_property, and retrieve via get_property") {
         std::string serialized;
-        glz::write_json(42, serialized);
+        (void)glz::write_json(42, serialized);
         
         mock.set_property("test_prop", serialized.c_str());
         
