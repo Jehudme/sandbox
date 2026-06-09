@@ -1,8 +1,10 @@
 #pragma once
 #include <expected>
+#include <cstdint>
 #include <string>
 #include <any>
 
+#include "sandbox/core/abi_types.h"
 #include "sandbox/event_bus/logger_events.h"
 
 namespace sandbox {
@@ -10,10 +12,10 @@ namespace sandbox {
     class ilogger {
     public:
         virtual ~ilogger() = default;
-        [[nodiscard]] virtual std::expected<void, std::string> log(const events::log& log_event) = 0;
+        [[nodiscard]] virtual int32_t log(const uint8_t* log_msg_fb, size_t size) = 0;
         
-        virtual void set_property(const std::string& key, const std::any& value) = 0;
-        virtual std::any get_property(const std::string& key) const = 0;
+        virtual void set_property(const char* key, const char* json_value) = 0;
+        virtual int32_t get_property(const char* key, sandbox_payload* out_payload) const = 0;
     };
 
     struct logger_service {

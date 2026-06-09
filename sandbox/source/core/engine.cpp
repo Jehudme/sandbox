@@ -36,14 +36,14 @@ namespace sandbox {
             const auto cache_path = filesystem::get_user_data_directory();
             const auto& fs        = ecs.get<sandbox::filesystem_service>().api;
 
-            if (auto res = fs->mount(cache_path.generic_string(), "mount://cache", false); !res) {
-                throw std::runtime_error("[Engine] Cache mount failed: " + res.error());
+            if (auto res = fs->mount(cache_path.generic_string().c_str(), "mount://cache", false); res != 0) {
+                throw std::runtime_error("[Engine] Cache mount failed.");
             }
-            if (auto res = fs->mount(bin_path.generic_string(), "mount://bin", true); !res) {
-                throw std::runtime_error("[Engine] Bin mount failed: " + res.error());
+            if (auto res = fs->mount(bin_path.generic_string().c_str(), "mount://bin", true); res != 0) {
+                throw std::runtime_error("[Engine] Bin mount failed.");
             }
-            if (auto res = fs->mount(app_path.generic_string(), "mount://app", true); !res) {
-                throw std::runtime_error("[Engine] App mount failed: " + res.error());
+            if (auto res = fs->mount(app_path.generic_string().c_str(), "mount://app", true); res != 0) {
+                throw std::runtime_error("[Engine] App mount failed.");
             }
 
             SANDBOX_INFO(ecs, "[Engine] VFS mounts ready (cache, bin, app).");
@@ -54,16 +54,30 @@ namespace sandbox {
             const auto& fs = ecs.get<sandbox::filesystem_service>().api;
             std::vector<std::filesystem::path> all_module_paths;
 
-            if (auto res = fs->list("mount://app/modules", false); res) {
-                all_module_paths.insert(all_module_paths.end(), res->begin(), res->end());
+            sandbox_payload app_payload{};
+            if (auto res = fs->list("mount://app/modules", false, &app_payload); res == 0 && app_payload.bytes) {
+                auto fb_list = flatbuffers::GetRoot<sandbox::schemas::StringList>(app_payload.bytes);
+                if (fb_list && fb_list->items()) {
+                    for (const auto& item : *fb_list->items()) {
+                        all_module_paths.push_back(std::filesystem::path(item->str()));
+                    }
+                }
+                if (app_payload.free_func) app_payload.free_func(app_payload.bytes);
             } else {
-                SANDBOX_WARN(ecs, "[Engine] No app modules found: {}", res.error());
+                SANDBOX_WARN(ecs, "[Engine] No app modules found.");
             }
 
-            if (auto res = fs->list("mount://bin/modules", false); res) {
-                all_module_paths.insert(all_module_paths.end(), res->begin(), res->end());
+            sandbox_payload bin_payload{};
+            if (auto res = fs->list("mount://bin/modules", false, &bin_payload); res == 0 && bin_payload.bytes) {
+                auto fb_list = flatbuffers::GetRoot<sandbox::schemas::StringList>(bin_payload.bytes);
+                if (fb_list && fb_list->items()) {
+                    for (const auto& item : *fb_list->items()) {
+                        all_module_paths.push_back(std::filesystem::path(item->str()));
+                    }
+                }
+                if (bin_payload.free_func) bin_payload.free_func(bin_payload.bytes);
             } else {
-                SANDBOX_WARN(ecs, "[Engine] No bin modules found: {}", res.error());
+                SANDBOX_WARN(ecs, "[Engine] No bin modules found.");
             }
 
             if (all_module_paths.empty()) {
@@ -71,15 +85,15 @@ namespace sandbox {
                 return;
             }
 
-            if (auto res = fs->mkdir("mount://cache/modules"); !res) {
-                SANDBOX_ERROR(ecs, "[Engine] Cache mkdir failed: {}", res.error());
+            if (auto res = fs->mkdir("mount://cache/modules"); res != 0) {
+                SANDBOX_ERROR(ecs, "[Engine] Cache mkdir failed.");
             }
 
             for (const auto& mod_path : all_module_paths) {
                 if (mod_path.extension() == SANDBOX_COMPATIBLE_MODULE_EXTENSION) {
                     auto dest = std::filesystem::path("mount://cache/modules") / mod_path.filename();
-                    if (auto res = fs->copy(mod_path.generic_string(), dest.generic_string()); !res) {
-                        SANDBOX_WARN(ecs, "[Engine] Failed to cache '{}': {}", mod_path.filename().string(), res.error());
+                    if (auto res = fs->copy(mod_path.generic_string().c_str(), dest.generic_string().c_str()); res != 0) {
+                        SANDBOX_WARN(ecs, "[Engine] Failed to cache '{}'", mod_path.filename().string());
                     }
                 }
             }
@@ -91,20 +105,24 @@ namespace sandbox {
         void parse_and_register_manifest(flecs::world& ecs) {
             const auto& fs = ecs.get<sandbox::filesystem_service>().api;
 
-            auto raw_data_res = fs->read("mount://app/manifest.json");
-            if (!raw_data_res) {
-                SANDBOX_WARN(ecs, "[Engine] manifest.json not found: {}", raw_data_res.error());
+            sandbox_payload raw_data_res{};
+            auto read_res = fs->read("mount://app/manifest.json", &raw_data_res);
+            if (read_res != 0) {
+                SANDBOX_WARN(ecs, "[Engine] manifest.json not found.");
                 return;
             }
 
-            if (raw_data_res->empty()) {
+            if (raw_data_res.size == 0) {
                 SANDBOX_WARN(ecs, "[Engine] manifest.json is empty.");
+                if (raw_data_res.free_func) raw_data_res.free_func(raw_data_res.bytes);
                 return;
             }
 
             std::string json_content(
-                reinterpret_cast<const char*>(raw_data_res->data()),
-                raw_data_res->size());
+                reinterpret_cast<const char*>(raw_data_res.bytes),
+                raw_data_res.size);
+            
+            if (raw_data_res.free_func) raw_data_res.free_func(raw_data_res.bytes);
 
             ecs.entity("::Manifest").set<properties>(properties(json_content));
             SANDBOX_INFO(ecs, "[Engine] Manifest loaded.");
@@ -120,17 +138,23 @@ namespace sandbox {
             const auto& fs = ecs.get<sandbox::filesystem_service>().api;
 
             // Stage every compatible library found in the module cache.
-            if (auto cached_res = fs->list(cache_modules_dir, false); cached_res) {
-                for (const auto& file : *cached_res) {
-                    if (file.extension() == SANDBOX_COMPATIBLE_MODULE_EXTENSION) {
-                        auto vpath = std::filesystem::path(cache_modules_dir) / file.filename();
-                        if (auto load_res = sandbox::internal::load(ecs, vpath.generic_string()); !load_res) {
-                            SANDBOX_WARN(ecs, "[Engine] Failed to stage '{}': {}", file.filename().string(), load_res.error());
+            sandbox_payload cached_res{};
+            if (auto list_res = fs->list(cache_modules_dir.c_str(), false, &cached_res); list_res == 0 && cached_res.bytes) {
+                auto fb_list = flatbuffers::GetRoot<sandbox::schemas::StringList>(cached_res.bytes);
+                if (fb_list && fb_list->items()) {
+                    for (const auto& item : *fb_list->items()) {
+                        std::filesystem::path file(item->str());
+                        if (file.extension() == SANDBOX_COMPATIBLE_MODULE_EXTENSION) {
+                            auto vpath = std::filesystem::path(cache_modules_dir) / file.filename();
+                            if (auto load_res = sandbox::internal::load(ecs, vpath.generic_string()); !load_res) {
+                                SANDBOX_WARN(ecs, "[Engine] Failed to stage '{}': {}", file.filename().string(), load_res.error());
+                            }
                         }
                     }
                 }
+                if (cached_res.free_func) cached_res.free_func(cached_res.bytes);
             } else {
-                SANDBOX_WARN(ecs, "[Engine] Could not list cached modules: {}", cached_res.error());
+                SANDBOX_WARN(ecs, "[Engine] Could not list cached modules.");
             }
 
             // Activate modules listed in the manifest.
@@ -161,46 +185,75 @@ namespace sandbox {
 
     } // anonymous namespace
 
-    engine::engine() = default;
+    struct engine::impl {
+        flecs::world ecs;
+        bool initialized{false};
+    };
+
+    engine::engine() : m_impl(new impl()) {}
 
     engine::~engine() {
-        // Guard against double-finalize and against calling finalize when initialize()
-        // was never invoked (which would leave runner_service null).
-        if (m_initialized) {
-            finalize();
+        if (m_impl) {
+            if (m_impl->initialized) {
+                finalize();
+            }
+            delete m_impl;
+            m_impl = nullptr;
         }
     }
 
-    void engine::initialize(const std::unordered_map<std::string, std::any>& config) {
+    engine::engine(engine&& other) noexcept : m_impl(other.m_impl) {
+        other.m_impl = nullptr;
+    }
+
+    engine& engine::operator=(engine&& other) noexcept {
+        if (this != &other) {
+            if (m_impl) {
+                if (m_impl->initialized) {
+                    finalize();
+                }
+                delete m_impl;
+            }
+            m_impl = other.m_impl;
+            other.m_impl = nullptr;
+        }
+        return *this;
+    }
+
+    void engine::initialize(const sandbox::properties& config) {
         // Note: configure_plugin_os_api() must be called by the host (e.g. launcher)
         // BEFORE constructing the engine, as the flecs::world member is created
         // at engine construction time, before initialize() is ever called.
-        ecs.entity("::Sandbox::Environment").set<engine_environment>({config});
+        m_impl->ecs.entity("::Sandbox::Environment").set<engine_environment>({config});
 
-        import_core_infrastructure(ecs);
+        import_core_infrastructure(m_impl->ecs);
 
-        std::filesystem::path app_mount = get_config<std::filesystem::path>(config, "app_mount", "");
+        std::filesystem::path app_mount = get_config<std::string>(config, "app_mount", "");
 
         // Throws on mount failure — no point continuing with a broken VFS.
-        register_virtual_mounts(ecs, app_mount);
-        build_local_modules_cache(ecs);
+        register_virtual_mounts(m_impl->ecs, app_mount);
+        build_local_modules_cache(m_impl->ecs);
 
-        parse_and_register_manifest(ecs);
-        load_manifest_requested_plugins(ecs);
+        parse_and_register_manifest(m_impl->ecs);
+        load_manifest_requested_plugins(m_impl->ecs);
 
-        m_initialized = true;
+        m_impl->initialized = true;
     }
 
     void engine::finalize() {
-        if (!m_initialized) return;
-        m_initialized = false;
+        if (!m_impl || !m_impl->initialized) return;
+        m_impl->initialized = false;
 
-        if (ecs.has<sandbox::runner_service>()) {
-            if (auto* runner = ecs.get<sandbox::runner_service>().api; runner != nullptr) {
+        if (m_impl->ecs.has<sandbox::runner_service>()) {
+            if (auto* runner = m_impl->ecs.get<sandbox::runner_service>().api; runner != nullptr) {
                 runner->quit();
             }
         }
-        ecs.reset();
+        m_impl->ecs.reset();
+    }
+
+    void* engine::get_world() const {
+        return m_impl ? m_impl->ecs.c_ptr() : nullptr;
     }
 
 } // namespace sandbox

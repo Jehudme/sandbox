@@ -3,6 +3,9 @@ project(sandbox_unit_tests CXX)
 
 add_executable(sandbox_unit_tests
     core/abi_payload_test.cpp
+    subsystems/filesystem_test.cpp
+    subsystems/logger_test.cpp
+    subsystems/runner_test.cpp
 )
 
 target_link_libraries(sandbox_unit_tests PRIVATE 

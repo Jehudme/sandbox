@@ -7,6 +7,7 @@
 #include <expected>
 #include <any>
 #include "sandbox/event_bus/filesystem_events.h"
+#include "sandbox/core/abi_types.h"
 
 namespace sandbox {
 
@@ -14,21 +15,21 @@ namespace sandbox {
     public:
         virtual ~ifilesystem() = default;
 
-        [[nodiscard]] virtual std::expected<void, std::string> mount(std::string_view physical_path, std::string_view virtual_prefix, bool read_only = true) = 0;
-        [[nodiscard]] virtual std::expected<void, std::string> unmount(std::string_view virtual_prefix) = 0;
-        [[nodiscard]] virtual std::expected<std::vector<std::byte>, std::string> read(std::string_view virtual_path) const = 0;
-        [[nodiscard]] virtual std::expected<void, std::string> write(std::string_view virtual_path, std::vector<std::byte> data, bool append = false) = 0;
-        [[nodiscard]] virtual std::expected<std::vector<std::filesystem::path>, std::string> list(std::string_view virtual_path, bool recursive = false) const = 0;
-        [[nodiscard]] virtual std::expected<void, std::string> remove(std::string_view virtual_path) = 0;
-        [[nodiscard]] virtual std::expected<void, std::string> mkdir(std::string_view virtual_path) = 0;
-        [[nodiscard]] virtual std::expected<void, std::string> rename(std::string_view old_virtual_path, std::string_view new_virtual_path) = 0;
-        [[nodiscard]] virtual std::expected<void, std::string> copy(std::string_view source_virtual_path, std::string_view destination_virtual_path) = 0;
-        [[nodiscard]] virtual std::expected<void, std::string> move(std::string_view source_virtual_path, std::string_view destination_virtual_path) = 0;
-        [[nodiscard]] virtual std::expected<events::filesystem::file_metadata, std::string> state(std::string_view virtual_path) const = 0;
-        [[nodiscard]] virtual std::expected<std::filesystem::path, std::string> absolute(std::string_view virtual_path) const = 0;
+        [[nodiscard]] virtual int32_t mount(const char* physical_path, const char* virtual_prefix, bool read_only) = 0;
+        [[nodiscard]] virtual int32_t unmount(const char* virtual_prefix) = 0;
+        [[nodiscard]] virtual int32_t read(const char* virtual_path, sandbox_payload* out_payload) const = 0;
+        [[nodiscard]] virtual int32_t write(const char* virtual_path, const uint8_t* data, size_t size, bool append) = 0;
+        [[nodiscard]] virtual int32_t list(const char* virtual_path, bool recursive, sandbox_payload* out_payload) const = 0;
+        [[nodiscard]] virtual int32_t remove(const char* virtual_path) = 0;
+        [[nodiscard]] virtual int32_t mkdir(const char* virtual_path) = 0;
+        [[nodiscard]] virtual int32_t rename(const char* old_virtual_path, const char* new_virtual_path) = 0;
+        [[nodiscard]] virtual int32_t copy(const char* source_virtual_path, const char* destination_virtual_path) = 0;
+        [[nodiscard]] virtual int32_t move(const char* source_virtual_path, const char* destination_virtual_path) = 0;
+        [[nodiscard]] virtual int32_t state(const char* virtual_path, sandbox_payload* out_payload) const = 0;
+        [[nodiscard]] virtual int32_t absolute(const char* virtual_path, sandbox_payload* out_payload) const = 0;
 
-        virtual void set_property(const std::string& key, const std::any& value) = 0;
-        virtual std::any get_property(const std::string& key) const = 0;
+        virtual void set_property(const char* key, const char* json_value) = 0;
+        virtual int32_t get_property(const char* key, sandbox_payload* out_payload) const = 0;
     };
 
     struct filesystem_service {

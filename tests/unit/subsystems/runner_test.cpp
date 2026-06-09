@@ -4,6 +4,7 @@
 #include "sandbox/event_bus/event_bus.h"
 #include <thread>
 #include <chrono>
+#include <glaze/glaze.hpp>
 
 using namespace sandbox;
 
@@ -39,8 +40,14 @@ TEST_CASE("Runner Subsystem operations", "[subsystems][runner]") {
     }
 
     SECTION("set_property(\"fps_limit\", X) registers the new target FPS") {
-        runner_api->set_property("fps_limit", 144);
-        auto val = std::any_cast<float>(runner_api->get_property("fps_limit"));
+        runner_api->set_property("fps_limit", "144.0");
+        sandbox_payload payload{};
+        REQUIRE(runner_api->get_property("fps_limit", &payload) == 0);
+        REQUIRE(payload.bytes != nullptr);
+        std::string json(reinterpret_cast<const char*>(payload.bytes), payload.size);
+        float val = 0.0f;
+        REQUIRE(glz::read_json(val, json) == glz::error_code::none);
         REQUIRE(val == 144.0f);
+        if (payload.free_func) payload.free_func(payload.bytes);
     }
 }

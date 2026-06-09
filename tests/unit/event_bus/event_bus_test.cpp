@@ -4,6 +4,9 @@
 
 struct test_event { int payload; };
 
+struct test_request { int a; int b; };
+struct test_response { int sum; };
+
 TEST_CASE("Event Bus operations", "[event_bus]") {
     flecs::world ecs;
 
@@ -50,5 +53,24 @@ TEST_CASE("Event Bus operations", "[event_bus]") {
         // Only global subscriber gets it
         REQUIRE(global_count == 1);
         REQUIRE(a_count == 1); // Should remain 1
+    }
+}
+
+TEST_CASE("ECS Request/Response loop", "[event_bus][request_response]") {
+    flecs::world ecs;
+
+    SECTION("Observers can process a request component and append a response component statelessly") {
+        ecs.observer<test_request>()
+            .event(flecs::OnSet)
+            .each([](flecs::entity e, test_request& req) {
+                e.set<test_response>({req.a + req.b});
+            });
+
+        flecs::entity req_ent = ecs.entity().set<test_request>({10, 20});
+        
+        REQUIRE(req_ent.has<test_response>());
+        REQUIRE(req_ent.get<test_response>()->sum == 30);
+        
+        req_ent.destruct();
     }
 }

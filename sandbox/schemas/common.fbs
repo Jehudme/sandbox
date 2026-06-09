@@ -16,3 +16,7 @@ table LogMessage {
     source_line:int32;
     throw_on_error:bool;
 }
+
+table StringList {
+    items:[string];
+}

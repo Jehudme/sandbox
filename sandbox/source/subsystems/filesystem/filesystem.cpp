@@ -42,7 +42,7 @@ namespace sandbox::modules {
         PHYSFS_deinit();
     }
 
-    std::expected<void, std::string> filesystem_module::mount(std::string_view physical_path, std::string_view virtual_prefix, bool read_only) {
+    std::expected<void, std::string> filesystem_module::mount_impl(std::string_view physical_path, std::string_view virtual_prefix, bool read_only) {
         std::string v_str = std::string(virtual_prefix);
 
         if (v_str.find(":/") == std::string::npos) {
@@ -73,7 +73,7 @@ namespace sandbox::modules {
         return {};
     }
 
-    std::expected<void, std::string> filesystem_module::unmount(std::string_view virtual_prefix) {
+    std::expected<void, std::string> filesystem_module::unmount_impl(std::string_view virtual_prefix) {
         std::string v_str = std::string(virtual_prefix);
         std::string prefix = this->get_mount_prefix(v_str);
 
@@ -85,7 +85,7 @@ namespace sandbox::modules {
         return {};
     }
 
-    std::expected<std::vector<std::byte>, std::string> filesystem_module::read(std::string_view virtual_path) const {
+    std::expected<std::vector<std::byte>, std::string> filesystem_module::read_impl(std::string_view virtual_path) const {
         std::string path = get_physfs_path(virtual_path);
 
         PhysfsFileGuard guard{PHYSFS_openRead(path.c_str())};
@@ -101,7 +101,7 @@ namespace sandbox::modules {
         return buffer;
     }
 
-    std::expected<void, std::string> filesystem_module::write(std::string_view virtual_path, std::vector<std::byte> data, bool append) {
+    std::expected<void, std::string> filesystem_module::write_impl(std::string_view virtual_path, std::vector<std::byte> data, bool append) {
         auto physical_target_res = resolve_physical_write_path(virtual_path);
         if (!physical_target_res) return std::unexpected(physical_target_res.error());
         std::filesystem::path physical_target = *physical_target_res;
@@ -125,7 +125,7 @@ namespace sandbox::modules {
     }
 
     /// Recursively or flatly lists files and directories within a given virtual path.
-    std::expected<std::vector<std::filesystem::path>, std::string> filesystem_module::list(std::string_view virtual_path, bool recursive) const {
+    std::expected<std::vector<std::filesystem::path>, std::string> filesystem_module::list_impl(std::string_view virtual_path, bool recursive) const {
         std::string base_phys_path = get_physfs_path(virtual_path);
         std::filesystem::path base_virt_path = virtual_path;
 
@@ -156,7 +156,7 @@ namespace sandbox::modules {
         return total_paths;
     }
 
-    std::expected<void, std::string> filesystem_module::remove(std::string_view virtual_path) {
+    std::expected<void, std::string> filesystem_module::remove_impl(std::string_view virtual_path) {
         auto physical_target_res = resolve_physical_write_path(virtual_path);
         if (!physical_target_res) return std::unexpected(physical_target_res.error());
         std::filesystem::path physical_target = *physical_target_res;
@@ -167,7 +167,7 @@ namespace sandbox::modules {
         return {};
     }
 
-    std::expected<void, std::string> filesystem_module::mkdir(std::string_view virtual_path) {
+    std::expected<void, std::string> filesystem_module::mkdir_impl(std::string_view virtual_path) {
         auto physical_target_res = resolve_physical_write_path(virtual_path);
         if (!physical_target_res) return std::unexpected(physical_target_res.error());
         std::filesystem::path physical_target = *physical_target_res;
@@ -178,7 +178,7 @@ namespace sandbox::modules {
         return {};
     }
 
-    std::expected<void, std::string> filesystem_module::rename(std::string_view old_virtual_path, std::string_view new_virtual_path) {
+    std::expected<void, std::string> filesystem_module::rename_impl(std::string_view old_virtual_path, std::string_view new_virtual_path) {
         auto physical_old_res = resolve_physical_write_path(old_virtual_path);
         if (!physical_old_res) return std::unexpected(physical_old_res.error());
         std::filesystem::path physical_old = *physical_old_res;
@@ -192,7 +192,7 @@ namespace sandbox::modules {
         return {};
     }
 
-    std::expected<void, std::string> filesystem_module::copy(std::string_view source_virtual_path, std::string_view destination_virtual_path) {
+    std::expected<void, std::string> filesystem_module::copy_impl(std::string_view source_virtual_path, std::string_view destination_virtual_path) {
         std::string physfs_src = get_physfs_path(source_virtual_path);
         auto physical_new_res = resolve_physical_write_path(destination_virtual_path);
         if (!physical_new_res) return std::unexpected(physical_new_res.error());
@@ -241,12 +241,12 @@ namespace sandbox::modules {
         return {};
     }
 
-    std::expected<void, std::string> filesystem_module::move(std::string_view source_virtual_path, std::string_view destination_virtual_path) {
+    std::expected<void, std::string> filesystem_module::move_impl(std::string_view source_virtual_path, std::string_view destination_virtual_path) {
         // Propagate the rename result — discarding it was a silent strong-guarantee violation
-        return rename(source_virtual_path, destination_virtual_path);
+        return rename_impl(source_virtual_path, destination_virtual_path);
     }
 
-    std::expected<events::filesystem::file_metadata, std::string> filesystem_module::state(std::string_view virtual_path) const {
+    std::expected<events::filesystem::file_metadata, std::string> filesystem_module::state_impl(std::string_view virtual_path) const {
         std::string path = get_physfs_path(virtual_path);
 
         events::filesystem::file_metadata metadata{};
@@ -273,19 +273,145 @@ namespace sandbox::modules {
         return metadata;
     }
 
-    std::expected<std::filesystem::path, std::string> filesystem_module::absolute(std::string_view virtual_path) const {
+    std::expected<std::filesystem::path, std::string> filesystem_module::absolute_impl(std::string_view virtual_path) const {
         std::string physfs_path = get_physfs_path(virtual_path);
 
         const char* real_dir = PHYSFS_getRealDir(physfs_path.c_str());
         return std::filesystem::path(real_dir) / get_sub_path(virtual_path);
     }
 
-    void filesystem_module::set_property(const std::string& key, const std::any& value) {
+    int32_t filesystem_module::mount(const char* physical_path, const char* virtual_prefix, bool read_only) {
+        if (!physical_path || !virtual_prefix) return -1;
+        auto res = mount_impl(physical_path, virtual_prefix, read_only);
+        return res ? 0 : -1;
+    }
+
+    int32_t filesystem_module::unmount(const char* virtual_prefix) {
+        if (!virtual_prefix) return -1;
+        auto res = unmount_impl(virtual_prefix);
+        return res ? 0 : -1;
+    }
+
+    int32_t filesystem_module::read(const char* virtual_path, sandbox_payload* out_payload) const {
+        if (!virtual_path || !out_payload) return -1;
+        auto res = read_impl(virtual_path);
+        if (!res) return -1;
+        if (res->empty()) {
+            out_payload->bytes = nullptr;
+            out_payload->size = 0;
+            out_payload->free_func = nullptr;
+            return 0;
+        }
+        uint8_t* ptr = static_cast<uint8_t*>(std::malloc(res->size()));
+        if (!ptr) return -1;
+        std::memcpy(ptr, res->data(), res->size());
+        out_payload->bytes = ptr;
+        out_payload->size = res->size();
+        out_payload->free_func = [](void* p) { std::free(p); };
+        return 0;
+    }
+
+    int32_t filesystem_module::write(const char* virtual_path, const uint8_t* data, size_t size, bool append) {
+        if (!virtual_path || (!data && size > 0)) return -1;
+        std::vector<std::byte> buf;
+        if (size > 0) {
+            buf.resize(size);
+            std::memcpy(buf.data(), data, size);
+        }
+        auto res = write_impl(virtual_path, std::move(buf), append);
+        return res ? 0 : -1;
+    }
+
+    int32_t filesystem_module::list(const char* virtual_path, bool recursive, sandbox_payload* out_payload) const {
+        if (!virtual_path || !out_payload) return -1;
+        auto res = list_impl(virtual_path, recursive);
+        if (!res) return -1;
+
+        flatbuffers::FlatBufferBuilder builder;
+        std::vector<flatbuffers::Offset<flatbuffers::String>> fb_strings;
+        for (const auto& path : *res) {
+            fb_strings.push_back(builder.CreateString(path.generic_string()));
+        }
+        auto vector_offset = builder.CreateVector(fb_strings);
+        sandbox::schemas::StringListBuilder slb(builder);
+        slb.add_items(vector_offset);
+        builder.Finish(slb.Finish());
+
+        uint8_t* ptr = static_cast<uint8_t*>(std::malloc(builder.GetSize()));
+        if (!ptr) return -1;
+        std::memcpy(ptr, builder.GetBufferPointer(), builder.GetSize());
+
+        out_payload->bytes = ptr;
+        out_payload->size = builder.GetSize();
+        out_payload->free_func = [](void* p) { std::free(p); };
+        return 0;
+    }
+
+    int32_t filesystem_module::remove(const char* virtual_path) {
+        if (!virtual_path) return -1;
+        auto res = remove_impl(virtual_path);
+        return res ? 0 : -1;
+    }
+
+    int32_t filesystem_module::mkdir(const char* virtual_path) {
+        if (!virtual_path) return -1;
+        auto res = mkdir_impl(virtual_path);
+        return res ? 0 : -1;
+    }
+
+    int32_t filesystem_module::rename(const char* old_virtual_path, const char* new_virtual_path) {
+        if (!old_virtual_path || !new_virtual_path) return -1;
+        auto res = rename_impl(old_virtual_path, new_virtual_path);
+        return res ? 0 : -1;
+    }
+
+    int32_t filesystem_module::copy(const char* source_virtual_path, const char* destination_virtual_path) {
+        if (!source_virtual_path || !destination_virtual_path) return -1;
+        auto res = copy_impl(source_virtual_path, destination_virtual_path);
+        return res ? 0 : -1;
+    }
+
+    int32_t filesystem_module::move(const char* source_virtual_path, const char* destination_virtual_path) {
+        if (!source_virtual_path || !destination_virtual_path) return -1;
+        auto res = move_impl(source_virtual_path, destination_virtual_path);
+        return res ? 0 : -1;
+    }
+
+    int32_t filesystem_module::state(const char* virtual_path, sandbox_payload* out_payload) const {
+        if (!virtual_path || !out_payload) return -1;
+        auto res = state_impl(virtual_path);
+        if (!res) return -1;
+        out_payload->bytes = nullptr;
+        out_payload->size = 0;
+        out_payload->free_func = nullptr;
+        return 0;
+    }
+
+    int32_t filesystem_module::absolute(const char* virtual_path, sandbox_payload* out_payload) const {
+        if (!virtual_path || !out_payload) return -1;
+        auto res = absolute_impl(virtual_path);
+        if (!res) return -1;
+        std::string path_str = res->string();
+        uint8_t* ptr = static_cast<uint8_t*>(std::malloc(path_str.size() + 1));
+        if (!ptr) return -1;
+        std::memcpy(ptr, path_str.data(), path_str.size());
+        ptr[path_str.size()] = '\0';
+        out_payload->bytes = ptr;
+        out_payload->size = path_str.size();
+        out_payload->free_func = [](void* p) { std::free(p); };
+        return 0;
+    }
+
+    void filesystem_module::set_property(const char* key, const char* json_value) {
         // Currently no configuration properties needed for filesystem
     }
 
-    std::any filesystem_module::get_property(const std::string& key) const {
-        return {};
+    int32_t filesystem_module::get_property(const char* key, sandbox_payload* out_payload) const {
+        if (!out_payload) return -1;
+        out_payload->bytes = nullptr;
+        out_payload->size = 0;
+        out_payload->free_func = nullptr;
+        return 0;
     }
 
     /// Resolves a virtual path to a physical path and validates it to prevent path traversal attacks.

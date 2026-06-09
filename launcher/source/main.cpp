@@ -5,6 +5,7 @@
 
 #include <CLI/CLI.hpp>
 #include "sandbox/core/engine.h"
+#include "sandbox/core/ecs.h"
 #include "sandbox/core/plugin.h"
 #include "sandbox/event_bus/runner_events.h"
 #include "sandbox/subsystems/runner/irunner.h"
@@ -30,15 +31,15 @@ int main(int argc, char* argv[]) {
 
     CLI11_PARSE(app, argc, argv);
 
-    std::unordered_map<std::string, std::any> config;
-    config["app_mount"] = app_mount;
-    config["dev_mode"] = dev_mode;
-    config["module_args"] = module_args;
+    auto config = sandbox::properties::parse("{}").value();
+    config.set<std::string>({"app_mount"}, app_mount.string());
+    config.set<bool>({"dev_mode"}, dev_mode);
+    config.set<std::unordered_map<std::string, std::string>>({"module_args"}, module_args);
     
     // Add default subsystem properties explicitly required by user instructions
-    config["logger_level"] = spdlog::level::info;
-    config["enable_async"] = true;
-    config["fps_limit"] = 60;
+    config.set<int>({"logger_level"}, spdlog::level::info);
+    config.set<bool>({"enable_async"}, true);
+    config.set<int>({"fps_limit"}, 60);
 
     // Must be called before the first flecs::world is constructed.
     // The OS API override (dlopen/dlsym callbacks) must be in place before
@@ -50,7 +51,8 @@ int main(int argc, char* argv[]) {
         engine_instance.initialize(config);
 
         if (run) {
-            engine_instance.ecs.get<sandbox::runner_service>().api->run_sync(engine_instance.ecs);
+            auto* ecs_ptr = static_cast<flecs::world*>(engine_instance.get_world());
+            ecs_ptr->get<sandbox::runner_service>().api->run_sync(*ecs_ptr);
         }
 
     } catch (const std::exception& fatal_error) {

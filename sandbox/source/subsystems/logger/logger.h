@@ -14,10 +14,10 @@ namespace sandbox::modules {
         logger(world& ecs);
         ~logger() override;
 
-        std::expected<void, std::string> log(const events::log& log_event) override;
+        int32_t log(const uint8_t* log_msg_fb, size_t size) override;
 
-        void set_property(const std::string& key, const std::any& value) override;
-        std::any get_property(const std::string& key) const override;
+        void set_property(const char* key, const char* json_value) override;
+        int32_t get_property(const char* key, sandbox_payload* out_payload) const override;
 
     private:
         std::shared_ptr<spdlog::logger> m_logger;

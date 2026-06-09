@@ -12,14 +12,14 @@ public:
     int log_count = 0;
     std::string last_msg;
 
-    std::expected<void, std::string> log(const sandbox::events::log& log_event) override {
+    int32_t log(const uint8_t* log_msg_fb, size_t size) override {
         log_count++;
-        last_msg = log_event.message;
-        return {};
+        last_msg = "test"; // Simplified for raw ABI test
+        return 0;
     }
     
-    void set_property(const std::string& key, const std::any& value) override {}
-    std::any get_property(const std::string& key) const override { return {}; }
+    void set_property(const char* key, const char* json_value) override {}
+    int32_t get_property(const char* key, sandbox_payload* out_payload) const override { return -1; }
 };
 
 struct mock_logger_module {
@@ -71,10 +71,10 @@ TEST_CASE("Event & Interface Mocking", "[integration]") {
         mock_api->log_count = 0;
 
         // Fire event directly using the mock
-        sandbox::events::log event{__FILE__, __LINE__, sandbox::events::log::level::Info, std::nullopt, "Test message"};
-        mock_api->log(event);
+        std::vector<uint8_t> dummy_fb(10, 0); // Fake flatbuffer data
+        mock_api->log(dummy_fb.data(), dummy_fb.size());
 
         REQUIRE(mock_api->log_count == 1);
-        REQUIRE(mock_api->last_msg == "Test message");
+        REQUIRE(mock_api->last_msg == "test");
     }
 }

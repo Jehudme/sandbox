@@ -5,6 +5,9 @@
 #include "sandbox/utilities/properties.h"
 #include "sandbox/core/engine.h"
 #include "sandbox/utilities/config_helper.h"
+#include <thread>
+#include <chrono>
+#include <glaze/glaze.hpp>
 
 namespace sandbox::modules {
 
@@ -12,10 +15,11 @@ namespace sandbox::modules {
         ecs.module<runner>("::Modules::Runner");
         ecs.set<sandbox::runner_service>({this});
 
-        std::unordered_map<std::string, std::any> config;
+        sandbox::properties config;
         auto env_entity = ecs.entity("::Sandbox::Environment");
         if (env_entity.has<engine_environment>()) {
-            config = env_entity.get<engine_environment>().config;
+            auto env = env_entity.get<engine_environment>();
+            config = env.config;
         }
 
         int default_fps = 60;
@@ -31,48 +35,53 @@ namespace sandbox::modules {
         }
     }
 
-    void runner::start_async(world& ecs) {
+    int32_t runner::start_async(world& ecs) {
         std::lock_guard<std::mutex> lock(m_state_mutex);
-        if (m_state != execution_state::Idle) return;
+        if (m_state != execution_state::Idle) return -1;
 
         m_state = execution_state::Running;
         SANDBOX_INFO(ecs, "[Runner] Starting async pipeline thread.");
 
         m_worker_thread = std::thread(&runner::internal_tick_loop, this, std::ref(ecs));
+        return 0;
     }
 
-    void runner::run_sync(world& ecs) {
+    int32_t runner::run_sync(world& ecs) {
         {
             std::lock_guard<std::mutex> lock(m_state_mutex);
-            if (m_state != execution_state::Idle) return;
+            if (m_state != execution_state::Idle) return -1;
             m_state = execution_state::Running;
         }
 
         SANDBOX_INFO(ecs, "[Runner] Entering main execution loop on the calling thread.");
         internal_tick_loop(ecs);
+        return 0;
     }
 
-    void runner::quit() {
+    int32_t runner::quit() {
         std::lock_guard<std::mutex> lock(m_state_mutex);
-        if (m_state == execution_state::Quitting) return;
+        if (m_state == execution_state::Quitting) return 0;
 
         m_state = execution_state::Quitting;
         m_state_cv.notify_all();
+        return 0;
     }
 
-    void runner::pause() {
+    int32_t runner::pause() {
         std::lock_guard<std::mutex> lock(m_state_mutex);
         if (m_state == execution_state::Running) {
             m_state = execution_state::Paused;
         }
+        return 0;
     }
 
-    void runner::resume() {
+    int32_t runner::resume() {
         std::lock_guard<std::mutex> lock(m_state_mutex);
         if (m_state == execution_state::Paused) {
             m_state = execution_state::Running;
             m_state_cv.notify_all();
         }
+        return 0;
     }
 
     // MARK: - Internal Mechanics
@@ -99,26 +108,33 @@ namespace sandbox::modules {
         }
     }
 
-    void runner::set_property(const std::string& key, const std::any& value) {
-        if (key == "fps_limit") {
-            if (value.type() == typeid(int)) {
-                m_fps_limit = static_cast<float>(std::any_cast<int>(value));
-                // We'd ideally call ecs.set_target_fps here, but we don't store ecs.
-                // However, internal_tick_loop calls ecs.set_target_fps initially. 
-                // To dynamically update, we need a reference to ecs or wait until next progress.
-            } else if (value.type() == typeid(float)) {
-                m_fps_limit = std::any_cast<float>(value);
-            } else {
-                // Cannot easily log without ecs ref, but could throw or ignore
+    void runner::set_property(const char* key, const char* json_value) {
+        if (!key || !json_value) return;
+        std::string key_str(key);
+        if (key_str == "fps_limit") {
+            float fps;
+            if (glz::read_json(fps, json_value) == glz::error_code::none) {
+                m_fps_limit = fps;
             }
         }
     }
 
-    std::any runner::get_property(const std::string& key) const {
-        if (key == "fps_limit") {
-            return m_fps_limit;
+    int32_t runner::get_property(const char* key, sandbox_payload* out_payload) const {
+        if (!key || !out_payload) return -1;
+        std::string key_str(key);
+        std::string out_json;
+        if (key_str == "fps_limit") {
+            glz::write_json(m_fps_limit, out_json);
+        } else {
+            return -1;
         }
-        return {};
+        
+        uint8_t* ptr = static_cast<uint8_t*>(std::malloc(out_json.size() + 1));
+        std::memcpy(ptr, out_json.c_str(), out_json.size() + 1);
+        out_payload->bytes = ptr;
+        out_payload->size = out_json.size();
+        out_payload->free_func = [](void* p) { std::free(p); };
+        return 0;
     }
 
 } // namespace sandbox::modules

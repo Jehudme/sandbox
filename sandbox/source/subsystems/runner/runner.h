@@ -13,15 +13,15 @@ namespace sandbox::modules {
         runner(world& ecs);
         ~runner() override;
 
-        void start_async(world& ecs) override;
-        void run_sync(world& ecs) override;
+        int32_t start_async(world& ecs) override;
+        int32_t run_sync(world& ecs) override;
 
-        void quit() override;
-        void pause() override;
-        void resume() override;
+        int32_t quit() override;
+        int32_t pause() override;
+        int32_t resume() override;
 
-        void set_property(const std::string& key, const std::any& value) override;
-        std::any get_property(const std::string& key) const override;
+        void set_property(const char* key, const char* json_value) override;
+        int32_t get_property(const char* key, sandbox_payload* out_payload) const override;
 
     private:
         void internal_tick_loop(world& ecs);

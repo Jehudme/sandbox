@@ -19,6 +19,9 @@ namespace schemas {
 struct LogMessage;
 struct LogMessageBuilder;
 
+struct StringList;
+struct StringListBuilder;
+
 enum LogLevel : int32_t {
   LogLevel_Trace = 0,
   LogLevel_Debug = 1,
@@ -160,6 +163,58 @@ inline ::flatbuffers::Offset<LogMessage> CreateLogMessageDirect(
       source_file__,
       source_line,
       throw_on_error);
+}
+
+struct StringList FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef StringListBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ITEMS = 4
+  };
+  const ::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>> *items() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>> *>(VT_ITEMS);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_ITEMS) &&
+           verifier.VerifyVector(items()) &&
+           verifier.VerifyVectorOfStrings(items()) &&
+           verifier.EndTable();
+  }
+};
+
+struct StringListBuilder {
+  typedef StringList Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_items(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> items) {
+    fbb_.AddOffset(StringList::VT_ITEMS, items);
+  }
+  explicit StringListBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<StringList> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<StringList>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<StringList> CreateStringList(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> items = 0) {
+  StringListBuilder builder_(_fbb);
+  builder_.add_items(items);
+  return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<StringList> CreateStringListDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const std::vector<::flatbuffers::Offset<::flatbuffers::String>> *items = nullptr) {
+  auto items__ = items ? _fbb.CreateVector<::flatbuffers::Offset<::flatbuffers::String>>(*items) : 0;
+  return sandbox::schemas::CreateStringList(
+      _fbb,
+      items__);
 }
 
 }  // namespace schemas

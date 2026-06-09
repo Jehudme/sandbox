@@ -20,26 +20,34 @@ TEST_CASE("Plugin Loading (Integration)", "[integration][plugin]") {
     auto& boot = ecs.get_mut<sandbox::bootstrapper>();
 
     struct mock_fs : public sandbox::ifilesystem {
-        std::expected<void, std::string> mount(std::string_view physical_path, std::string_view virtual_prefix, bool read_only) override { return {}; }
-        std::expected<void, std::string> unmount(std::string_view virtual_prefix) override { return {}; }
-        std::expected<std::vector<std::byte>, std::string> read(std::string_view virtual_path) const override { return std::vector<std::byte>(); }
-        std::expected<void, std::string> write(std::string_view virtual_path, std::vector<std::byte> data, bool append) override { return {}; }
-        std::expected<std::vector<std::filesystem::path>, std::string> list(std::string_view virtual_path, bool recursive) const override { return std::vector<std::filesystem::path>(); }
-        std::expected<void, std::string> remove(std::string_view virtual_path) override { return {}; }
-        std::expected<void, std::string> mkdir(std::string_view virtual_path) override { return {}; }
-        std::expected<void, std::string> rename(std::string_view old_virtual_path, std::string_view new_virtual_path) override { return {}; }
-        std::expected<void, std::string> copy(std::string_view source_virtual_path, std::string_view destination_virtual_path) override { return {}; }
-        std::expected<void, std::string> move(std::string_view source_virtual_path, std::string_view destination_virtual_path) override { return {}; }
-        std::expected<sandbox::events::filesystem::file_metadata, std::string> state(std::string_view virtual_path) const override { return sandbox::events::filesystem::file_metadata{}; }
-        std::expected<std::filesystem::path, std::string> absolute(std::string_view virtual_path) const override {
-#ifdef TEST_MOUNT_DIR
-            return std::filesystem::path(TEST_MOUNT_DIR) / virtual_path;
-#else
-            return std::filesystem::current_path() / virtual_path;
-#endif
+        int32_t mount(const char* physical_path, const char* virtual_prefix, bool read_only) override { return 0; }
+        int32_t unmount(const char* virtual_prefix) override { return 0; }
+        int32_t read(const char* virtual_path, sandbox_payload* out_payload) const override { return -1; }
+        int32_t write(const char* virtual_path, const uint8_t* data, size_t size, bool append) override { return 0; }
+        int32_t list(const char* virtual_path, bool recursive, sandbox_payload* out_payload) const override { return 0; }
+        int32_t remove(const char* virtual_path) override { return 0; }
+        int32_t mkdir(const char* virtual_path) override { return 0; }
+        int32_t rename(const char* old_virtual_path, const char* new_virtual_path) override { return 0; }
+        int32_t copy(const char* source_virtual_path, const char* destination_virtual_path) override { return 0; }
+        int32_t move(const char* source_virtual_path, const char* destination_virtual_path) override { return 0; }
+        int32_t state(const char* virtual_path, sandbox_payload* out_payload) const override { return 0; }
+        int32_t absolute(const char* virtual_path, sandbox_payload* out_payload) const override {
+            if (!out_payload) return -1;
+            
+            std::string path_str(virtual_path);
+            if (path_str.find("test_lib_mock") != std::string::npos) {
+                path_str = std::string("../../bin/test_lib_mock") + LIB_EXT;
+            }
+            
+            uint8_t* ptr = static_cast<uint8_t*>(std::malloc(path_str.size() + 1));
+            std::memcpy(ptr, path_str.c_str(), path_str.size() + 1);
+            out_payload->bytes = ptr;
+            out_payload->size = path_str.size();
+            out_payload->free_func = [](void* p) { std::free(p); };
+            return 0;
         }
-        void set_property(const std::string& key, const std::any& value) override {}
-        std::any get_property(const std::string& key) const override { return {}; }
+        void set_property(const char* key, const char* json_value) override {}
+        int32_t get_property(const char* key, sandbox_payload* out_payload) const override { return -1; }
     } mock;
     ecs.set<sandbox::filesystem_service>({&mock});
 

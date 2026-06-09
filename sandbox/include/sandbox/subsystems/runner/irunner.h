@@ -1,8 +1,9 @@
 #pragma once
 
 #include "sandbox/core/ecs.h"
+#include <cstdint>
 #include <string>
-#include <any>
+#include "sandbox/core/abi_types.h"
 
 namespace sandbox {
 
@@ -10,14 +11,14 @@ namespace sandbox {
     public:
         virtual ~irunner() = default;
 
-        virtual void start_async(flecs::world& ecs) = 0;
-        virtual void run_sync(flecs::world& ecs) = 0;
-        virtual void quit() = 0;
-        virtual void pause() = 0;
-        virtual void resume() = 0;
+        virtual int32_t start_async(flecs::world& ecs) = 0;
+        virtual int32_t run_sync(flecs::world& ecs) = 0;
+        virtual int32_t quit() = 0;
+        virtual int32_t pause() = 0;
+        virtual int32_t resume() = 0;
 
-        virtual void set_property(const std::string& key, const std::any& value) = 0;
-        virtual std::any get_property(const std::string& key) const = 0;
+        virtual void set_property(const char* key, const char* json_value) = 0;
+        virtual int32_t get_property(const char* key, sandbox_payload* out_payload) const = 0;
     };
 
     struct runner_service {
