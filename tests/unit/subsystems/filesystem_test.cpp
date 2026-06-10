@@ -1,6 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include "subsystems/filesystem/filesystem.h"
-#include "sandbox/event_bus/filesystem_events.h"
+
 #include "sandbox/generated/schemas/filesystem_generated.h"
 #include <filesystem>
 #include <fstream>

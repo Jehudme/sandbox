@@ -67,12 +67,13 @@ namespace sandbox::sdk {
             return p.as_string();
         }
 
-        std::expected<std::vector<uint8_t>, std::string> read_binary(const std::string& virtual_path) const {
+        std::expected<std::vector<std::byte>, std::string> read_binary(const std::string& virtual_path) const {
             payload p;
             if (m_api->read(virtual_path.c_str(), p.get()) != 0) {
                 return std::unexpected("Failed to read file");
             }
-            return std::vector<uint8_t>(p.data(), p.data() + p.size());
+            auto data_ptr = reinterpret_cast<const std::byte*>(p.data());
+            return std::vector<std::byte>(data_ptr, data_ptr + p.size());
         }
 
         std::expected<void, std::string> write(const std::string& virtual_path, const std::string& data, bool append = false) {
@@ -82,8 +83,8 @@ namespace sandbox::sdk {
             return {};
         }
 
-        std::expected<void, std::string> write(const std::string& virtual_path, const std::vector<uint8_t>& data, bool append = false) {
-            if (m_api->write(virtual_path.c_str(), data.data(), data.size(), append) != 0) {
+        std::expected<void, std::string> write(const std::string& virtual_path, const std::vector<std::byte>& data, bool append = false) {
+            if (m_api->write(virtual_path.c_str(), reinterpret_cast<const uint8_t*>(data.data()), data.size(), append) != 0) {
                 return std::unexpected("Failed to write to file");
             }
             return {};

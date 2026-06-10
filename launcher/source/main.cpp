@@ -8,7 +8,7 @@
 #include "sandbox/utilities/properties.h"
 #include "sandbox/core/ecs.h"
 #include "sandbox/core/plugin.h"
-#include "sandbox/event_bus/runner_events.h"
+
 #include "sandbox/subsystems/runner/irunner.h"
 
 int main(int argc, char* argv[]) {

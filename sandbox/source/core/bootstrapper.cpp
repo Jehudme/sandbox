@@ -1,5 +1,5 @@
 #include "sandbox/core/bootstrapper.h"
-#include "sandbox/event_bus/logger_events.h"
+#include "sandbox/subsystems/logger/ilogger.h"
 
 #include <algorithm>
 #include <format>

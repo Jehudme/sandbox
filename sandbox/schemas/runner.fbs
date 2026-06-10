@@ -1,0 +1,11 @@
+namespace sandbox.schemas.runner;
+
+enum Action : int32 {
+    Quit = 0,
+    Pause,
+    Resume
+}
+
+table StateChange {
+    state_request:Action;
+}

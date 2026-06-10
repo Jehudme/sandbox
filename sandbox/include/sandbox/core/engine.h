@@ -2,6 +2,8 @@
 
 #include "sandbox/core/platform.h"
 
+namespace flecs { struct world; }
+
 namespace sandbox {
 
     class SANDBOX_API engine {
@@ -16,6 +18,8 @@ namespace sandbox {
         engine& operator=(engine&&) noexcept;
 
         void run();
+
+        flecs::world& get_ecs();
 
     private:
         struct impl;

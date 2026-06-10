@@ -1,21 +1,6 @@
 namespace sandbox.schemas;
 
-enum LogLevel : int32 {
-    Trace = 0,
-    Debug,
-    Info,
-    Warn,
-    Error,
-    Fatal
-}
 
-table LogMessage {
-    level:LogLevel;
-    message:string;
-    source_file:string;
-    source_line:int32;
-    throw_on_error:bool;
-}
 
 table StringList {
     items:[string];

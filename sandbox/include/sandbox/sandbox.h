@@ -9,9 +9,9 @@
 #include "sandbox/core/plugin.h"
 
 // Unified event payloads, controls, exceptions, and macros
-#include "sandbox/event_bus/logger_events.h"
-#include "sandbox/event_bus/runner_events.h"
-#include "sandbox/event_bus/filesystem_events.h"
+#include "sandbox/subsystems/logger/ilogger.h"
+
+
 
 #include "sandbox/event_bus/event_bus.h"
 #include "sandbox/utilities/filesystem.h"

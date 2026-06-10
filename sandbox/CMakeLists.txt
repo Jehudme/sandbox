@@ -37,6 +37,8 @@ FetchContent_MakeAvailable(spdlog glaze flecs physfs flatbuffers)
 set(FBS_SCHEMAS
         ${CMAKE_CURRENT_SOURCE_DIR}/schemas/common.fbs
         ${CMAKE_CURRENT_SOURCE_DIR}/schemas/filesystem.fbs
+        ${CMAKE_CURRENT_SOURCE_DIR}/schemas/logger.fbs
+        ${CMAKE_CURRENT_SOURCE_DIR}/schemas/runner.fbs
 )
 set(FBS_GENERATED_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/generated/schemas)
 file(MAKE_DIRECTORY ${FBS_GENERATED_DIR})
@@ -44,11 +46,13 @@ file(MAKE_DIRECTORY ${FBS_GENERATED_DIR})
 set(FBS_GENERATED_HEADERS
         ${FBS_GENERATED_DIR}/common_generated.h
         ${FBS_GENERATED_DIR}/filesystem_generated.h
+        ${FBS_GENERATED_DIR}/logger_generated.h
+        ${FBS_GENERATED_DIR}/runner_generated.h
 )
 
 add_custom_command(
         OUTPUT ${FBS_GENERATED_HEADERS}
-        COMMAND flatc --cpp -o ${FBS_GENERATED_DIR} ${FBS_SCHEMAS}
+        COMMAND flatc --cpp --gen-object-api -o ${FBS_GENERATED_DIR} ${FBS_SCHEMAS}
         DEPENDS ${FBS_SCHEMAS} flatc
         COMMENT "Generating FlatBuffers headers"
 )

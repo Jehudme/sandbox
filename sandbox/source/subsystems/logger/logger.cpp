@@ -1,7 +1,7 @@
 #include "subsystems/logger/logger.h"
 #include "sandbox/core/environment.h"
 
-#include "sandbox/event_bus/logger_events.h"
+#include "sandbox/subsystems/logger/ilogger.h"
 #include "sandbox/event_bus/event_bus.h"
 #include "sandbox/core/engine.h"
 #include "sandbox/utilities/config_helper.h"
@@ -65,23 +65,23 @@ namespace sandbox::modules {
     int32_t logger::log(const uint8_t* log_msg_fb, size_t size) {
         if (!m_logger || !log_msg_fb) return -1;
 
-        auto log_msg = flatbuffers::GetRoot<sandbox::schemas::LogMessage>(log_msg_fb);
+        auto log_msg = flatbuffers::GetRoot<sandbox::schemas::logger::LogMessage>(log_msg_fb);
         if (!log_msg) return -1;
 
         spdlog::level::level_enum native_spdlog_level = spdlog::level::info;
         bool should_trigger_exception = false;
 
         switch (log_msg->level()) {
-            case sandbox::schemas::LogLevel_Trace: native_spdlog_level = spdlog::level::trace; break;
-            case sandbox::schemas::LogLevel_Debug: native_spdlog_level = spdlog::level::debug; break;
-            case sandbox::schemas::LogLevel_Info:  native_spdlog_level = spdlog::level::info;  break;
-            case sandbox::schemas::LogLevel_Warn:  native_spdlog_level = spdlog::level::warn;  break;
+            case sandbox::schemas::logger::LogLevel_Trace: native_spdlog_level = spdlog::level::trace; break;
+            case sandbox::schemas::logger::LogLevel_Debug: native_spdlog_level = spdlog::level::debug; break;
+            case sandbox::schemas::logger::LogLevel_Info:  native_spdlog_level = spdlog::level::info;  break;
+            case sandbox::schemas::logger::LogLevel_Warn:  native_spdlog_level = spdlog::level::warn;  break;
 
-            case sandbox::schemas::LogLevel_Error:
+            case sandbox::schemas::logger::LogLevel_Error:
                 native_spdlog_level = spdlog::level::err;
                 should_trigger_exception = true;
                 break;
-            case sandbox::schemas::LogLevel_Fatal:
+            case sandbox::schemas::logger::LogLevel_Fatal:
                 native_spdlog_level = spdlog::level::critical;
                 should_trigger_exception = true;
                 break;

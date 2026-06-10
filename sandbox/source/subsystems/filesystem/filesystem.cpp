@@ -1,6 +1,6 @@
 #include "subsystems/filesystem/filesystem.h"
-#include "sandbox/event_bus/filesystem_events.h"
-#include "sandbox/event_bus/logger_events.h"
+
+#include "sandbox/subsystems/logger/ilogger.h"
 #include "sandbox/generated/schemas/filesystem_generated.h"
 #include <physfs.h>
 #include <fstream>
@@ -247,10 +247,10 @@ namespace sandbox::modules {
         return rename_impl(source_virtual_path, destination_virtual_path);
     }
 
-    std::expected<events::filesystem::file_metadata, std::string> filesystem_module::state_impl(std::string_view virtual_path) const {
+    std::expected<sandbox::schemas::FileMetadataT, std::string> filesystem_module::state_impl(std::string_view virtual_path) const {
         std::string path = get_physfs_path(virtual_path);
 
-        events::filesystem::file_metadata metadata{};
+        sandbox::schemas::FileMetadataT metadata{};
         metadata.virtual_path = virtual_path;
 
         PHYSFS_Stat stat;
@@ -265,10 +265,10 @@ namespace sandbox::modules {
         metadata.read_only = (stat.readonly != 0);
 
         switch (stat.filetype) {
-            case PHYSFS_FILETYPE_REGULAR:   metadata.type = events::filesystem::file_type::regular;   break;
-            case PHYSFS_FILETYPE_DIRECTORY: metadata.type = events::filesystem::file_type::directory; break;
-            case PHYSFS_FILETYPE_SYMLINK:   metadata.type = events::filesystem::file_type::symlink;   break;
-            default:                        metadata.type = events::filesystem::file_type::unknown;   break;
+            case PHYSFS_FILETYPE_REGULAR:   metadata.type = sandbox::schemas::FileType_Regular;   break;
+            case PHYSFS_FILETYPE_DIRECTORY: metadata.type = sandbox::schemas::FileType_Directory; break;
+            case PHYSFS_FILETYPE_SYMLINK:   metadata.type = sandbox::schemas::FileType_Symlink;   break;
+            default:                        metadata.type = sandbox::schemas::FileType_Unknown;   break;
         }
 
         return metadata;
@@ -384,24 +384,7 @@ namespace sandbox::modules {
         if (!res) return -1;
 
         flatbuffers::FlatBufferBuilder builder;
-        sandbox::schemas::FileType type = sandbox::schemas::FileType_Unknown;
-        switch (res->type) {
-            case events::filesystem::file_type::regular:   type = sandbox::schemas::FileType_Regular; break;
-            case events::filesystem::file_type::directory: type = sandbox::schemas::FileType_Directory; break;
-            case events::filesystem::file_type::symlink:   type = sandbox::schemas::FileType_Symlink; break;
-            default: type = sandbox::schemas::FileType_Unknown; break;
-        }
-
-        auto fb_offset = sandbox::schemas::CreateFileMetadataDirect(
-            builder,
-            res->virtual_path.c_str(),
-            res->size,
-            res->creation_time,
-            res->modification_time,
-            res->access_time,
-            type,
-            res->read_only
-        );
+        auto fb_offset = sandbox::schemas::FileMetadata::Pack(builder, &res.value());
         builder.Finish(fb_offset);
 
         uint8_t* ptr = static_cast<uint8_t*>(std::malloc(builder.GetSize()));

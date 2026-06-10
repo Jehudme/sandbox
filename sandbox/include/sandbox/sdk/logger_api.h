@@ -47,7 +47,7 @@ namespace sandbox::sdk {
         std::expected<void, std::string> log(int level, const std::string& message) {
             flatbuffers::FlatBufferBuilder builder;
             auto msg_offset = builder.CreateString(message);
-            auto log_fb = sandbox::schemas::CreateLogMessage(builder, static_cast<sandbox::schemas::LogLevel>(level), msg_offset);
+            auto log_fb = sandbox::schemas::logger::CreateLogMessage(builder, static_cast<sandbox::schemas::logger::LogLevel>(level), msg_offset);
             builder.Finish(log_fb);
             
             if (m_api->log(builder.GetBufferPointer(), builder.GetSize()) != 0) {

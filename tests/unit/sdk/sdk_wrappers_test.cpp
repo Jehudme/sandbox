@@ -99,6 +99,22 @@ TEST_CASE("SDK Filesystem Wrapper", "[sdk][filesystem]") {
         REQUIRE(res.value().is_directory == false);
         REQUIRE(res.value().modified_time == 123456789);
     }
+
+    SECTION("read_binary uses std::vector<std::byte>") {
+        mock_fs mock_read;
+        sdk::filesystem fs_read(&mock_read);
+        auto res = fs_read.read_binary("mount://test/file.txt");
+        // Our mock returns empty payload without error, so the std::expected succeeds
+        REQUIRE(res.has_value());
+    }
+
+    SECTION("write uses std::vector<std::byte>") {
+        mock_fs mock_write;
+        sdk::filesystem fs_write(&mock_write);
+        std::vector<std::byte> data = {std::byte{0x01}, std::byte{0x02}};
+        auto res = fs_write.write("mount://test/file.txt", data, false);
+        REQUIRE(res.has_value());
+    }
 }
 
 TEST_CASE("SDK Logger Wrapper", "[sdk][logger]") {
@@ -107,7 +123,7 @@ TEST_CASE("SDK Logger Wrapper", "[sdk][logger]") {
         std::string last_log_msg;
         int last_log_level = -1;
         int32_t log(const uint8_t* log_msg_fb, size_t size) override {
-            auto fb = flatbuffers::GetRoot<sandbox::schemas::LogMessage>(log_msg_fb);
+            auto fb = flatbuffers::GetRoot<sandbox::schemas::logger::LogMessage>(log_msg_fb);
             if (fb) {
                 last_log_level = fb->level();
                 if (fb->message()) last_log_msg = fb->message()->str();

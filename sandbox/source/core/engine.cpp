@@ -2,9 +2,9 @@
 #include "sandbox/core/platform.h"
 #include "sandbox/utilities/filesystem.h"
 #include "sandbox/utilities/config_helper.h"
-#include "sandbox/event_bus/logger_events.h"
-#include "sandbox/event_bus/runner_events.h"
-#include "sandbox/event_bus/filesystem_events.h"
+#include "sandbox/subsystems/logger/ilogger.h"
+
+
 #include "sandbox/event_bus/event_bus.h"
 #include <stdexcept>
 
@@ -258,6 +258,10 @@ namespace sandbox {
                 runner->run_sync(m_impl->ecs);
             }
         }
+    }
+
+    flecs::world& engine::get_ecs() {
+        return m_impl->ecs;
     }
 
 } // namespace sandbox

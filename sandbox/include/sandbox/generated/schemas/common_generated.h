@@ -16,156 +16,17 @@ static_assert(FLATBUFFERS_VERSION_MAJOR == 23 &&
 namespace sandbox {
 namespace schemas {
 
-struct LogMessage;
-struct LogMessageBuilder;
-
 struct StringList;
 struct StringListBuilder;
+struct StringListT;
 
-enum LogLevel : int32_t {
-  LogLevel_Trace = 0,
-  LogLevel_Debug = 1,
-  LogLevel_Info = 2,
-  LogLevel_Warn = 3,
-  LogLevel_Error = 4,
-  LogLevel_Fatal = 5,
-  LogLevel_MIN = LogLevel_Trace,
-  LogLevel_MAX = LogLevel_Fatal
+struct StringListT : public ::flatbuffers::NativeTable {
+  typedef StringList TableType;
+  std::vector<std::string> items{};
 };
-
-inline const LogLevel (&EnumValuesLogLevel())[6] {
-  static const LogLevel values[] = {
-    LogLevel_Trace,
-    LogLevel_Debug,
-    LogLevel_Info,
-    LogLevel_Warn,
-    LogLevel_Error,
-    LogLevel_Fatal
-  };
-  return values;
-}
-
-inline const char * const *EnumNamesLogLevel() {
-  static const char * const names[7] = {
-    "Trace",
-    "Debug",
-    "Info",
-    "Warn",
-    "Error",
-    "Fatal",
-    nullptr
-  };
-  return names;
-}
-
-inline const char *EnumNameLogLevel(LogLevel e) {
-  if (::flatbuffers::IsOutRange(e, LogLevel_Trace, LogLevel_Fatal)) return "";
-  const size_t index = static_cast<size_t>(e);
-  return EnumNamesLogLevel()[index];
-}
-
-struct LogMessage FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef LogMessageBuilder Builder;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_LEVEL = 4,
-    VT_MESSAGE = 6,
-    VT_SOURCE_FILE = 8,
-    VT_SOURCE_LINE = 10,
-    VT_THROW_ON_ERROR = 12
-  };
-  sandbox::schemas::LogLevel level() const {
-    return static_cast<sandbox::schemas::LogLevel>(GetField<int32_t>(VT_LEVEL, 0));
-  }
-  const ::flatbuffers::String *message() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
-  }
-  const ::flatbuffers::String *source_file() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_SOURCE_FILE);
-  }
-  int32_t source_line() const {
-    return GetField<int32_t>(VT_SOURCE_LINE, 0);
-  }
-  bool throw_on_error() const {
-    return GetField<uint8_t>(VT_THROW_ON_ERROR, 0) != 0;
-  }
-  bool Verify(::flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyField<int32_t>(verifier, VT_LEVEL, 4) &&
-           VerifyOffset(verifier, VT_MESSAGE) &&
-           verifier.VerifyString(message()) &&
-           VerifyOffset(verifier, VT_SOURCE_FILE) &&
-           verifier.VerifyString(source_file()) &&
-           VerifyField<int32_t>(verifier, VT_SOURCE_LINE, 4) &&
-           VerifyField<uint8_t>(verifier, VT_THROW_ON_ERROR, 1) &&
-           verifier.EndTable();
-  }
-};
-
-struct LogMessageBuilder {
-  typedef LogMessage Table;
-  ::flatbuffers::FlatBufferBuilder &fbb_;
-  ::flatbuffers::uoffset_t start_;
-  void add_level(sandbox::schemas::LogLevel level) {
-    fbb_.AddElement<int32_t>(LogMessage::VT_LEVEL, static_cast<int32_t>(level), 0);
-  }
-  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(LogMessage::VT_MESSAGE, message);
-  }
-  void add_source_file(::flatbuffers::Offset<::flatbuffers::String> source_file) {
-    fbb_.AddOffset(LogMessage::VT_SOURCE_FILE, source_file);
-  }
-  void add_source_line(int32_t source_line) {
-    fbb_.AddElement<int32_t>(LogMessage::VT_SOURCE_LINE, source_line, 0);
-  }
-  void add_throw_on_error(bool throw_on_error) {
-    fbb_.AddElement<uint8_t>(LogMessage::VT_THROW_ON_ERROR, static_cast<uint8_t>(throw_on_error), 0);
-  }
-  explicit LogMessageBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  ::flatbuffers::Offset<LogMessage> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<LogMessage>(end);
-    return o;
-  }
-};
-
-inline ::flatbuffers::Offset<LogMessage> CreateLogMessage(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    sandbox::schemas::LogLevel level = sandbox::schemas::LogLevel_Trace,
-    ::flatbuffers::Offset<::flatbuffers::String> message = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> source_file = 0,
-    int32_t source_line = 0,
-    bool throw_on_error = false) {
-  LogMessageBuilder builder_(_fbb);
-  builder_.add_source_line(source_line);
-  builder_.add_source_file(source_file);
-  builder_.add_message(message);
-  builder_.add_level(level);
-  builder_.add_throw_on_error(throw_on_error);
-  return builder_.Finish();
-}
-
-inline ::flatbuffers::Offset<LogMessage> CreateLogMessageDirect(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    sandbox::schemas::LogLevel level = sandbox::schemas::LogLevel_Trace,
-    const char *message = nullptr,
-    const char *source_file = nullptr,
-    int32_t source_line = 0,
-    bool throw_on_error = false) {
-  auto message__ = message ? _fbb.CreateString(message) : 0;
-  auto source_file__ = source_file ? _fbb.CreateString(source_file) : 0;
-  return sandbox::schemas::CreateLogMessage(
-      _fbb,
-      level,
-      message__,
-      source_file__,
-      source_line,
-      throw_on_error);
-}
 
 struct StringList FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef StringListT NativeTableType;
   typedef StringListBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ITEMS = 4
@@ -180,6 +41,9 @@ struct StringList FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.VerifyVectorOfStrings(items()) &&
            verifier.EndTable();
   }
+  StringListT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(StringListT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<StringList> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const StringListT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct StringListBuilder {
@@ -215,6 +79,34 @@ inline ::flatbuffers::Offset<StringList> CreateStringListDirect(
   return sandbox::schemas::CreateStringList(
       _fbb,
       items__);
+}
+
+::flatbuffers::Offset<StringList> CreateStringList(::flatbuffers::FlatBufferBuilder &_fbb, const StringListT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+inline StringListT *StringList::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<StringListT>(new StringListT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void StringList::UnPackTo(StringListT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = items(); if (_e) { _o->items.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->items[_i] = _e->Get(_i)->str(); } } else { _o->items.resize(0); } }
+}
+
+inline ::flatbuffers::Offset<StringList> StringList::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const StringListT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateStringList(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<StringList> CreateStringList(::flatbuffers::FlatBufferBuilder &_fbb, const StringListT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const StringListT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _items = _o->items.size() ? _fbb.CreateVectorOfStrings(_o->items) : 0;
+  return sandbox::schemas::CreateStringList(
+      _fbb,
+      _items);
 }
 
 }  // namespace schemas

@@ -1,6 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include "subsystems/logger/logger.h"
-#include "sandbox/event_bus/logger_events.h"
+#include "sandbox/subsystems/logger/ilogger.h"
 #include <glaze/glaze.hpp>
 
 using namespace sandbox;
@@ -22,8 +22,8 @@ TEST_CASE("Logger Subsystem operations", "[subsystems][logger]") {
         flatbuffers::FlatBufferBuilder builder;
         auto msg = builder.CreateString("forced error");
         auto file = builder.CreateString("file");
-        sandbox::schemas::LogMessageBuilder lmb(builder);
-        lmb.add_level(sandbox::schemas::LogLevel_Error);
+        sandbox::schemas::logger::LogMessageBuilder lmb(builder);
+        lmb.add_level(sandbox::schemas::logger::LogLevel_Error);
         lmb.add_message(msg);
         lmb.add_source_file(file);
         lmb.add_source_line(1);

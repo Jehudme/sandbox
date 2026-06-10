@@ -20,9 +20,11 @@ namespace schemas {
 
 struct FileMetadata;
 struct FileMetadataBuilder;
+struct FileMetadataT;
 
 struct FileMetadataList;
 struct FileMetadataListBuilder;
+struct FileMetadataListT;
 
 enum FileType : int32_t {
   FileType_Unknown = 0,
@@ -60,7 +62,19 @@ inline const char *EnumNameFileType(FileType e) {
   return EnumNamesFileType()[index];
 }
 
+struct FileMetadataT : public ::flatbuffers::NativeTable {
+  typedef FileMetadata TableType;
+  std::string virtual_path{};
+  uint64_t size = 0;
+  uint64_t creation_time = 0;
+  uint64_t modification_time = 0;
+  uint64_t access_time = 0;
+  sandbox::schemas::FileType type = sandbox::schemas::FileType_Unknown;
+  bool read_only = false;
+};
+
 struct FileMetadata FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef FileMetadataT NativeTableType;
   typedef FileMetadataBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_VIRTUAL_PATH = 4,
@@ -104,6 +118,9 @@ struct FileMetadata FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            VerifyField<uint8_t>(verifier, VT_READ_ONLY, 1) &&
            verifier.EndTable();
   }
+  FileMetadataT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(FileMetadataT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<FileMetadata> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const FileMetadataT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct FileMetadataBuilder {
@@ -183,7 +200,19 @@ inline ::flatbuffers::Offset<FileMetadata> CreateFileMetadataDirect(
       read_only);
 }
 
+::flatbuffers::Offset<FileMetadata> CreateFileMetadata(::flatbuffers::FlatBufferBuilder &_fbb, const FileMetadataT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+struct FileMetadataListT : public ::flatbuffers::NativeTable {
+  typedef FileMetadataList TableType;
+  std::vector<std::unique_ptr<sandbox::schemas::FileMetadataT>> files{};
+  FileMetadataListT() = default;
+  FileMetadataListT(const FileMetadataListT &o);
+  FileMetadataListT(FileMetadataListT&&) FLATBUFFERS_NOEXCEPT = default;
+  FileMetadataListT &operator=(FileMetadataListT o) FLATBUFFERS_NOEXCEPT;
+};
+
 struct FileMetadataList FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef FileMetadataListT NativeTableType;
   typedef FileMetadataListBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_FILES = 4
@@ -198,6 +227,9 @@ struct FileMetadataList FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.VerifyVectorOfTables(files()) &&
            verifier.EndTable();
   }
+  FileMetadataListT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(FileMetadataListT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<FileMetadataList> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const FileMetadataListT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct FileMetadataListBuilder {
@@ -233,6 +265,88 @@ inline ::flatbuffers::Offset<FileMetadataList> CreateFileMetadataListDirect(
   return sandbox::schemas::CreateFileMetadataList(
       _fbb,
       files__);
+}
+
+::flatbuffers::Offset<FileMetadataList> CreateFileMetadataList(::flatbuffers::FlatBufferBuilder &_fbb, const FileMetadataListT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+inline FileMetadataT *FileMetadata::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<FileMetadataT>(new FileMetadataT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void FileMetadata::UnPackTo(FileMetadataT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = virtual_path(); if (_e) _o->virtual_path = _e->str(); }
+  { auto _e = size(); _o->size = _e; }
+  { auto _e = creation_time(); _o->creation_time = _e; }
+  { auto _e = modification_time(); _o->modification_time = _e; }
+  { auto _e = access_time(); _o->access_time = _e; }
+  { auto _e = type(); _o->type = _e; }
+  { auto _e = read_only(); _o->read_only = _e; }
+}
+
+inline ::flatbuffers::Offset<FileMetadata> FileMetadata::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const FileMetadataT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateFileMetadata(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<FileMetadata> CreateFileMetadata(::flatbuffers::FlatBufferBuilder &_fbb, const FileMetadataT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const FileMetadataT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _virtual_path = _o->virtual_path.empty() ? 0 : _fbb.CreateString(_o->virtual_path);
+  auto _size = _o->size;
+  auto _creation_time = _o->creation_time;
+  auto _modification_time = _o->modification_time;
+  auto _access_time = _o->access_time;
+  auto _type = _o->type;
+  auto _read_only = _o->read_only;
+  return sandbox::schemas::CreateFileMetadata(
+      _fbb,
+      _virtual_path,
+      _size,
+      _creation_time,
+      _modification_time,
+      _access_time,
+      _type,
+      _read_only);
+}
+
+inline FileMetadataListT::FileMetadataListT(const FileMetadataListT &o) {
+  files.reserve(o.files.size());
+  for (const auto &files_ : o.files) { files.emplace_back((files_) ? new sandbox::schemas::FileMetadataT(*files_) : nullptr); }
+}
+
+inline FileMetadataListT &FileMetadataListT::operator=(FileMetadataListT o) FLATBUFFERS_NOEXCEPT {
+  std::swap(files, o.files);
+  return *this;
+}
+
+inline FileMetadataListT *FileMetadataList::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<FileMetadataListT>(new FileMetadataListT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void FileMetadataList::UnPackTo(FileMetadataListT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = files(); if (_e) { _o->files.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->files[_i]) { _e->Get(_i)->UnPackTo(_o->files[_i].get(), _resolver); } else { _o->files[_i] = std::unique_ptr<sandbox::schemas::FileMetadataT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->files.resize(0); } }
+}
+
+inline ::flatbuffers::Offset<FileMetadataList> FileMetadataList::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const FileMetadataListT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateFileMetadataList(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<FileMetadataList> CreateFileMetadataList(::flatbuffers::FlatBufferBuilder &_fbb, const FileMetadataListT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const FileMetadataListT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _files = _o->files.size() ? _fbb.CreateVector<::flatbuffers::Offset<sandbox::schemas::FileMetadata>> (_o->files.size(), [](size_t i, _VectorArgs *__va) { return CreateFileMetadata(*__va->__fbb, __va->__o->files[i].get(), __va->__rehasher); }, &_va ) : 0;
+  return sandbox::schemas::CreateFileMetadataList(
+      _fbb,
+      _files);
 }
 
 }  // namespace schemas

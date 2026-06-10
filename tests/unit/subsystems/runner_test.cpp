@@ -1,6 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include "subsystems/runner/runner.h"
-#include "sandbox/event_bus/runner_events.h"
+
 #include "sandbox/event_bus/event_bus.h"
 #include <thread>
 #include <chrono>

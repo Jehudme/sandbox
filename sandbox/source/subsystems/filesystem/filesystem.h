@@ -1,7 +1,7 @@
 #pragma once
 
 #include "sandbox/core/ecs.h"
-#include "sandbox/event_bus/filesystem_events.h"
+#include "sandbox/generated/schemas/filesystem_generated.h"
 #include "sandbox/subsystems/filesystem/ifilesystem.h"
 #include <expected>
 #include <string>
@@ -39,7 +39,7 @@ namespace sandbox::modules {
         std::expected<void, std::string> rename_impl(std::string_view old_virtual_path, std::string_view new_virtual_path);
         std::expected<void, std::string> copy_impl(std::string_view source_virtual_path, std::string_view destination_virtual_path);
         std::expected<void, std::string> move_impl(std::string_view source_virtual_path, std::string_view destination_virtual_path);
-        [[nodiscard]] std::expected<events::filesystem::file_metadata, std::string> state_impl(std::string_view virtual_path) const;
+        [[nodiscard]] std::expected<sandbox::schemas::FileMetadataT, std::string> state_impl(std::string_view virtual_path) const;
         [[nodiscard]] std::expected<std::filesystem::path, std::string> absolute_impl(std::string_view virtual_path) const;
 
         void set_property(const char* key, const char* json_value) override;
