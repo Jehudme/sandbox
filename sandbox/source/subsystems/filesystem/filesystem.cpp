@@ -459,12 +459,9 @@ namespace sandbox::modules {
         std::filesystem::path jailed_target = raw_target.lexically_normal();
         std::filesystem::path jailed_root = root_physical.lexically_normal();
 
-        auto root_str = jailed_root.string();
-        auto target_str = jailed_target.string();
-
-        if (target_str.find(root_str) != 0) {
-            return std::unexpected(std::string("Filesystem Error: ") + std::string(virtual_path) + " " + std::string("Path traversal attack detected! Attempted to break out of VFS sandbox."
-            ));
+        auto [root_it, target_it] = std::mismatch(jailed_root.begin(), jailed_root.end(), jailed_target.begin(), jailed_target.end());
+        if (root_it != jailed_root.end()) {
+            return std::unexpected(std::string("Filesystem Error: ") + std::string(virtual_path) + " " + std::string("Path traversal attack detected! Attempted to break out of VFS sandbox."));
         }
 
         return jailed_target;

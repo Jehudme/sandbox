@@ -92,6 +92,13 @@ namespace sandbox
     {
         if (source_path == destination_path || source_path.empty()) return {};
 
+        if (destination_path.size() >= source_path.size()) {
+            auto [src_it, dest_it] = std::mismatch(source_path.begin(), source_path.end(), destination_path.begin());
+            if (src_it == source_path.end()) {
+                return std::unexpected("Cannot move a node into its own child");
+            }
+        }
+
         glz::json_t* source_parent_node_ptr = &m_root_node;
         for (size_t i = 0; i < source_path.size() - 1; ++i) {
             if (!source_parent_node_ptr->is_object()) return std::unexpected("Source path not found");

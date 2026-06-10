@@ -27,7 +27,9 @@
             std::optional<bool> override_val = throw_override_val; \
             lmb.add_throw_on_error(override_val.value_or(false)); \
             builder.Finish(lmb.Finish()); \
-            (world_context).get<sandbox::logger_service>().api->log(builder.GetBufferPointer(), builder.GetSize()); \
+            if ((world_context).get<sandbox::logger_service>().api->log(builder.GetBufferPointer(), builder.GetSize()) == -1) { \
+                throw std::runtime_error(format_literal); \
+            } \
         } \
     } while(0)
 

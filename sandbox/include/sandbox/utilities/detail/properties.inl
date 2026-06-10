@@ -21,7 +21,9 @@ namespace sandbox
         if (!error_context) {
             return deserialized_value;
         }
-        return std::unexpected("Key not found or invalid format");
+        std::string buffer;
+        (void)glz::write_json(*current_node_ptr, buffer);
+        return std::unexpected(glz::format_error(error_context, buffer));
     }
 
     template<typename target_type>

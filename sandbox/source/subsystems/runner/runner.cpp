@@ -91,21 +91,26 @@ namespace sandbox::modules {
     void runner::internal_tick_loop(world& ecs) {
         ecs.set_target_fps(m_fps_limit);
 
-        while (true) {
-            {
-                std::unique_lock<std::mutex> lock(m_state_mutex);
-                m_state_cv.wait(lock, [this]() {
-                    return m_state == execution_state::Running || m_state == execution_state::Quitting;
-                });
+        try {
+            while (true) {
+                {
+                    std::unique_lock<std::mutex> lock(m_state_mutex);
+                    m_state_cv.wait(lock, [this]() {
+                        return m_state == execution_state::Running || m_state == execution_state::Quitting;
+                    });
 
-                if (m_state == execution_state::Quitting) {
-                    break;
+                    if (m_state == execution_state::Quitting) {
+                        break;
+                    }
+                }
+
+                if (!ecs.progress()) {
+                    quit();
                 }
             }
-
-            if (!ecs.progress()) {
-                quit();
-            }
+        } catch (const std::exception& e) {
+            SANDBOX_FATAL(ecs, "[Runner] Fatal exception in tick loop: {}", e.what());
+            quit();
         }
     }
 

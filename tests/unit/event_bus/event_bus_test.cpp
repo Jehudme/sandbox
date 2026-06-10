@@ -76,14 +76,13 @@ TEST_CASE("ECS Request/Response loop", "[event_bus][request_response]") {
                     std::memcpy(&a, req.req_payload.bytes, sizeof(int));
                     std::memcpy(&b, req.req_payload.bytes + sizeof(int), sizeof(int));
                 }
-                int sum = a + b;
-                uint8_t* out_bytes = new uint8_t[sizeof(int)];
-                std::memcpy(out_bytes, &sum, sizeof(int));
+                static int sum;
+                sum = a + b;
                 
                 sandbox::abi::flatbuffer_payload res{
-                    out_bytes,
+                    reinterpret_cast<uint8_t*>(&sum),
                     sizeof(int),
-                    [](void* p) { delete[] static_cast<uint8_t*>(p); }
+                    nullptr
                 };
                 e.set<test_response>({res});
             });
