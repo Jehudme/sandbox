@@ -26,7 +26,7 @@ namespace sandbox {
         };
 
         os_api.dlopen_ = [](const char* lib) -> uintptr_t {
-            void* handle = dlopen(lib, RTLD_LAZY | RTLD_GLOBAL);
+            void* handle = dlopen(lib, RTLD_NOW | RTLD_GLOBAL);
             if (!handle) {
                 const char* err = dlerror();
                 const std::string msg = std::string("[Loader] dlopen failed for '") + lib

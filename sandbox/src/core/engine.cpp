@@ -21,11 +21,26 @@ namespace sandbox {
 
     namespace {
 
-        /// Registers fundamental core modules with the ECS world.
         void import_core_infrastructure(flecs::world& ecs) {
             ecs.import<modules::logger>();
             ecs.import<modules::filesystem_module>();
             ecs.import<modules::runner>();
+
+            // Stage native engine modules into the Bootstrapper so plugins can depend on them
+            library_registry native_registry;
+            native_registry.services.push_back(create_service_info("logger_service", 1, 0));
+            native_registry.modules.push_back(create_module_info<modules::logger>("core_logger", 1, 0, 0, {}, "logger_service"));
+            native_registry.services.push_back(create_service_info("filesystem_service", 1, 0));
+            native_registry.modules.push_back(create_module_info<modules::filesystem_module>("core_vfs", 1, 0, 0, {}, "filesystem_service"));
+            native_registry.services.push_back(create_service_info("runner_service", 1, 0));
+            native_registry.modules.push_back(create_module_info<modules::runner>("core_runner", 1, 0, 0, {}, "runner_service"));
+
+            ecs.import<sandbox::bootstrapper>();
+            sandbox::bootstrapper& boot = ecs.get_mut<sandbox::bootstrapper>();
+            boot.stage(native_registry);
+            boot.activate("core_logger");
+            boot.activate("core_vfs");
+            boot.activate("core_runner");
         }
 
         /// Mounts the essential virtual file systems required by the engine.

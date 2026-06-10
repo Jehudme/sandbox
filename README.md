@@ -1,158 +1,48 @@
-<div align="center">
+# Sandbox Meta-Engine
 
-# 🧱 Sandbox Meta-Engine
+Welcome to the **Sandbox Meta-Engine**, a cutting-edge C++23 Dynamic Meta-Engine Framework built from the ground up for absolute ABI safety across dynamic module boundaries. By enforcing a rigid architectural divide, the engine achieves robust modularity, allowing developers to hot-swap plugins without fear of ABI breakages, memory boundary crashes, or compiler fragmentation.
 
-**Sandbox is an experimental, C++23 plugin-oriented multipurpose engine infrastructure currently in development.**
+## Core Features
 
-[![Build](https://img.shields.io/badge/build-passing-brightgreen)]()
-[![C++23](https://img.shields.io/badge/C%2B%2B-23-blue)]()
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.txt)
+- **Strict C-ABI Boundary**: Using the Hourglass Pattern, plugins never see the engine's internal STL states (`std::vector`, `std::string`, `std::expected`). Instead, all data across the DLL boundary is safely packed into raw memory blocks and FlatBuffers, ensuring memory safety and binary compatibility across compiler versions.
+- **Topological Module Loader**: Powered by Kahn's Algorithm, the `bootstrapper` natively resolves complex dependency graphs for plugins and services at runtime. Ensure your modules boot safely exactly when their dependencies are ready!
+- **Flecs Integration**: Utilizing [Flecs](https://github.com/SanderMertens/flecs), the engine natively drives entity-component-system (ECS) logic. The ECS world is safely shared with plugins to serve as the unified registry and dependency injector.
+- **Virtual Filesystem (VFS)**: Mount diverse physical directories or archives into a unified, secure virtual tree natively powered by PhysFS, all accessible seamlessly via the SDK wrappers.
+- **Modern C++23 SDK Wrappers**: Plugin developers write beautiful, idiomatic C++23. The SDK wrappers instantly convert your modern vectors and expected results into FlatBuffer payloads for safe ABI transit!
 
-</div>
+## Directory Structure Overview
 
----
+The engine enforces an uncompromising physical boundary between internal implementations and public-facing interfaces:
 
-## Why Sandbox?
+- **`include/` (Public API)**: Contains ONLY the SDK and safe Engine headers. Plugin developers build exclusively against this folder (`api/` wrappers and `core/` orchestration headers). The hidden internal interfaces are strictly invisible.
+- **`src/` (Private Engine)**: The core implementations, private subsystem interfaces (`ifilesystem.h`, `ilogger.h`), FlatBuffers schemas, and generated headers live exclusively here. When the engine builds, it merges `src` and `include`, but plugins are never granted access to `src`.
 
-Most engines bake their subsystems in at compile time, tightly coupling logic to a specific use case. Sandbox takes a different approach. It provides a generic, highly moddable infrastructure where every feature is a **Plugin** loaded at runtime from a shared library (`.dll` / `.so` / `.dylib`). 
-
-Think of it like building with LEGO bricks. Sandbox manages the boring, complex parts of engine development (like dependency resolution, event routing, and virtual filesystems), letting you focus purely on the fun part: creating features. 
-
-We hope to foster a community-driven ecosystem. Developers can create complex, specialized plugins and share them with everyone. Because Sandbox enforces strict, decoupled guidelines and includes a built-in versioning system, plugins are highly compatible. For example, you could mix Person A's advanced Unreal 5-grade Path-Traced Renderer with Person B's highly deterministic Rollback Netcode, and Person C's ML-driven NPC logic. Just drop all three DLLs into the same folder. Sandbox will automatically resolve their dependencies, seamlessly wire their event streams together across the ECS, and orchestrate the entire boot sequence without you having to write a single line of C++ integration glue.
-
----
-
-## Key Features
-
-- **Automatic Dependency & Version Resolution** - Plugins declare what they need and what version they are, and the engine handles the loading order automatically to ensure compatibility.
-- **Virtual Filesystem (VFS)** - Built on [PhysFS](https://icculus.org/physfs/), every file access goes through a unified `mount://` protocol. Archives (`.zip`), directories, and writable cache paths are all first-class mounts.
-- **ECS-native Architecture** - Powered by [Flecs](https://www.flecs.dev/), subsystem Services are singleton ECS components. Any module anywhere in the engine can query `ecs.get<renderer_service>()` without including a single engine header.
-- **Decoupled Event Bus** - Modules communicate via typed events (`events::filesystem::read_request`, `events::log`, `events::runner::state_change`) published through the ECS.
-- **Environment-driven Configuration** - The engine is initialized with a `std::unordered_map<std::string, std::any>` config map. No hard-coded flags, no config structs per subsystem.
-
----
-
-## Quick Start
-
-> **Note:** This Quick Start is intended strictly for testing the current engine build.
+## Building the Engine
 
 ### Prerequisites
+- CMake 3.20+
+- A C++23 compliant compiler (GCC 13+, Clang 16+, MSVC 19.38+)
 
-- CMake ≥ 3.20
-- A C++23-capable compiler (MSVC, GCC 13+, Clang 16+)
-- Git
-
-### 1. Clone & Configure
-
+### Build Instructions
 ```bash
-git clone https://github.com/jehud/sandbox.git
-cd sandbox
-cmake -B cmake-build-debug -DCMAKE_BUILD_TYPE=Debug
+# Clone the repository
+git clone https://github.com/your-org/sandbox-engine.git
+cd sandbox-engine
+
+# Generate the CMake build system
+cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
+
+# Build the engine, launcher, and tests
+cmake --build build
+
+# Run the integration tests
+./build/bin/sandbox_tests
+
+# Run the launcher
+./build/bin/launcher -m /path/to/mount
 ```
 
-### 2. Build
+## Creating Plugins
+Want to create a plugin? The engine makes it effortless! By using `SANDBOX_DECLARE_MODULE` and the engine's Flecs integration, you can build dynamic shared libraries that hook safely into the meta-engine.
 
-**Windows (MSVC)**
-```cmd
-cmake --build cmake-build-debug --target launcher --config Debug
-```
-
-**Linux / macOS**
-```bash
-cmake --build cmake-build-debug --target launcher -j$(nproc)
-```
-
-This produces three outputs in the `bin` directory:
-| Output | Description |
-|---|---|
-| `sandbox` (`.exe` on Windows) | The runtime launcher |
-| `libsandbox` (`.dll` / `.so` / `.dylib`) | The engine shared library |
-| `modules/libtest_lib` (`.dll` / `.so` / `.dylib`) | An example plugin |
-
-### 3. Run
-
-> Replace `your_app.zip` or `your_app/` with the path to your own mounted application or folder containing a `manifest.json`.
-
-**Windows**
-```cmd
-cd cmake-build-debug\bin
-sandbox.exe --mount path\to\your_app.zip --dev
-```
-
-**Linux / macOS**
-```bash
-cd cmake-build-debug/bin
-./sandbox --mount path/to/your_app/ --dev
-```
-
-The `--dev` flag sets the logger to `trace` level. The `--mount` flag specifies the application archive or directory you want to run. Use `--run` to enter the main loop immediately after boot.
-
----
-
-## Architectural Overview
-
-```mermaid
-graph TD
-    subgraph "Host Process"
-    LAUNCHER["Launcher Executable"]
-    end
-
-    subgraph "Engine Core (Shared Library)"
-        ENGINE["Engine Sandbox"]
-        SUBSYSTEMS["Core Subsystems (Logger, VFS, Runner)"]
-        BOOTSTRAPPER["Dependency Resolver"]
-        
-        ENGINE --> SUBSYSTEMS
-        ENGINE --> BOOTSTRAPPER
-    end
-
-    subgraph "Plugins (Shared Libraries)"
-        PLUGIN_A["Renderer Plugin (Example: Game Engine)"]
-        PLUGIN_B["Data Processing Plugin (Example: ML Engine)"]
-        PLUGIN_C["Web Server Plugin (Example: Backend Engine)"]
-    end
-
-    LAUNCHER -->|Initializes| ENGINE
-    BOOTSTRAPPER -->|Loads & Resolves| PLUGIN_A
-    BOOTSTRAPPER -->|Loads & Resolves| PLUGIN_B
-    BOOTSTRAPPER -->|Loads & Resolves| PLUGIN_C
-```
-
-### Moddability Examples
-
-Sandbox is an extremely customizable infrastructure. To build a specific type of engine, you only need to provide the right plugins:
-- **Game Engine**: Combine a Vulkan Graphics plugin, a Jolt Physics plugin, and a FMOD Audio plugin. 
-- **Data Processing Engine**: Combine a Big Data Loader plugin, a Parallel Processing plugin, and a Visualization plugin.
-- **Backend Web Engine**: Combine an HTTP Server plugin, a Database connector plugin, and an Auth module plugin.
-
-The core infrastructure handles the plumbing, meaning you can swap out the Path-Traced Graphics plugin for a lightweight mobile DirectX one without rewriting your logic, as long as both follow the shared interface guidelines.
-
-## Repository Structure
-
-```
-sandbox/
-├── sandbox/                 # Engine library
-│   ├── include/sandbox/     # Public API headers
-│   │   ├── core/            # Bootstrapper, Engine, Plugin macro definitions
-│   │   ├── event_bus/       # Typed event structures and routing
-│   │   ├── subsystems/      # Logger, VFS, Runner interfaces
-│   │   └── utilities/       # Properties, config helper, and loader
-│   └── source/              # Engine implementation
-│       ├── core/            # Core system logic
-│       ├── subsystems/      # Core subsystems implementations
-│       └── utilities/       # Utility implementations
-├── launcher/                # Host executable
-│   └── source/main.cpp      # Bootstraps the engine
-├── tests/                   # Professional Catch2 (v3) test suite
-│   ├── suite/               # Catch2 integration & unit tests
-│   └── libtest/             # Mock plugin used for loader testing
-│       ├── source/library.cpp   # Demo plugin implementation
-│       └── assets/manifest.json # Application manifest
-└── docs/                    # Extended documentation
-```
-
----
-
-## License
-
-Copyright © 2026 Jehud. Released under the [MIT License](LICENSE.txt).
+See the [WIKI.md](WIKI.md) for the complete Plugin Developer Guide.

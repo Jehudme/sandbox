@@ -65,6 +65,6 @@ TEST_CASE("Plugin Loading (Integration)", "[integration][plugin]") {
         
         // Since load worked, SandboxLibraryMain invoked boot.stage() successfully.
         // We can verify this by activating a known module from libtest.
-        REQUIRE_NOTHROW(boot.activate("test_master"));
+        REQUIRE_NOTHROW(boot.activate("showcase_plugin"));
     }
 }

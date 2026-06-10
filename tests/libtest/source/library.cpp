@@ -1,116 +1,85 @@
 #include <iostream>
 #include <flecs.h>
-#include "sandbox/core/plugin.h"
+#include <sandbox/core/plugin.h>
+#include <sandbox/api/logger_api.h>
+#include <sandbox/api/filesystem_api.h>
+#include <sandbox/api/runner_api.h>
+#include <sandbox/utilities/events.h>
 
+// 1. Define a dummy event for the Event Bus
+struct my_dummy_event {
+    int secret_value;
+};
 
-// ============================================================================
-// 0. DECLARE THE SERVICES (Bridges the string requirements with C++ structs)
-// ============================================================================
+// 2. Define a custom component for ECS
+struct rotation_component {
+    float angle;
+};
 
-struct i_logger {};
-struct i_window {};
-struct i_filesystem {};
+// 3. Define the Plugin Module (The Core Logic)
+struct showcase_plugin_module {
+    showcase_plugin_module(flecs::world& ecs) {
+        
+        // --- API RETRIEVAL ---
+        // Safely retrieve the subsystem wrappers from the ECS
+        sandbox::sdk::logger logger(ecs);
+        sandbox::sdk::filesystem vfs(ecs);
+        sandbox::sdk::runner runner(ecs);
 
-struct logger_service { i_logger* api{nullptr}; };
-struct window_service { i_window* api{nullptr}; };
-struct filesystem_service { i_filesystem* api{nullptr}; };
+        // --- LOGGING ---
+        logger.log(2, "[Showcase Plugin] Successfully booted and retrieved all APIs!");
 
-SANDBOX_DECLARE_SERVICE(logger_service, 1, 0);
-SANDBOX_DECLARE_SERVICE(window_service, 1, 0);
-SANDBOX_DECLARE_SERVICE(filesystem_service, 1, 0);
+        // --- FILESYSTEM / CONFIG ---
+        // Read a dummy manifest or config file using the VFS
+        auto manifest_res = vfs.read_text("mount://app/manifest.json");
+        if (manifest_res) {
+            logger.log(2, "[Showcase Plugin] Manifest loaded successfully! Length: " + std::to_string(manifest_res->size()));
+        } else {
+            logger.log(3, "[Showcase Plugin] Could not find manifest.json, but VFS is working!");
+        }
 
+        // --- EVENT BUS ---
+        // Register an event listener for our custom event
+        sandbox::events::subscribe<my_dummy_event>(ecs, [](const my_dummy_event& ev) {
+            std::cout << "  [Event Bus] Received my_dummy_event with value: " << ev.secret_value << "\n";
+        });
 
-// ============================================================================
-// 1. MODULE DEFINITIONS (The C++ Logic)
-// ============================================================================
+        // Publish the dummy event
+        sandbox::events::publish(ecs, my_dummy_event{42});
 
-struct test_math_module {
-    test_math_module(flecs::world& ecs) {
-        std::cout << "  -> [Math] Booted! (0 Dependencies)\n";
+        // --- ECS INTEGRATION ---
+        // Register the custom component
+        ecs.component<rotation_component>();
+
+        // Create a dummy entity
+        auto e = ecs.entity("ShowcaseEntity").set<rotation_component>({0.0f});
+
+        // Register a Flecs system that executes a tick
+        ecs.system<rotation_component>("ShowcaseSystem")
+            .each([](flecs::entity e, rotation_component& rot) {
+                rot.angle += 0.016f;
+                if (rot.angle < 0.032f) {
+                    std::cout << "  [ECS System] Ticking ShowcaseEntity, angle is now " << rot.angle << "\n";
+                }
+            });
+            
+        logger.log(2, "[Showcase Plugin] Initialization complete!");
     }
 };
 
-struct test_logger_module {
-    test_logger_module(flecs::world& ecs) {
-        // Register the actual service data into Flecs
-        ecs.set<logger_service>({nullptr});
-        std::cout << "  -> [Logger] Booted! Provides 'logger_service' (0 Dependencies)\n";
-    }
-};
-
-struct test_window_module {
-    test_window_module(flecs::world& ecs) {
-        // Verify we can retrieve the logger service
-        logger_service logger = ecs.get_mut<logger_service>();
-        std::cout << "     (Window successfully retrieved logger_service)\n";
-
-
-        // Register the window service
-        ecs.set<window_service>({nullptr});
-        std::cout << "  -> [Window] Booted! Provides 'window_service'\n";
-    }
-};
-
-struct test_filesystem_module {
-    test_filesystem_module(flecs::world& ecs) {
-        ecs.set<filesystem_service>({nullptr});
-        std::cout << "  -> [Filesystem] Booted! Provides 'filesystem_service'\n";
-    }
-};
-
-struct test_renderer_module {
-    test_renderer_module(flecs::world& ecs) {
-        std::cout << "  -> [Renderer] Booted! Found Window Service and Math Module!\n";
-    }
-};
-
-struct test_master_app {
-    test_master_app(flecs::world& ecs) {
-        std::cout << "\n[Master App] ALL SYSTEMS GO! Engine initialized successfully!\n\n";
-    }
-};
-
-
 // ============================================================================
-// 2. OUT-OF-ORDER REGISTRATION (To torture-test the Bootstrapper!)
+// MODULE REGISTRATION
 // ============================================================================
 
-// 1. Register Master (Requires Renderer + Filesystem) - SHOULD BOOT LAST!
-SANDBOX_DECLARE_MODULE(
-    test_master_app, test_master, 1, 0, 0, "",
-    {sandbox::requirement::kind::module, sandbox::requirement::strictness::require, "test_renderer", 1, 0},
-    {sandbox::requirement::kind::service, sandbox::requirement::strictness::require, "filesystem_service", 1, 0}
+// Register the module with the bootstrapper, declaring its dependencies.
+// The engine will guarantee that core_logger, core_vfs, and core_runner are ready.
+SANDBOX_DECLARE_MODULE(showcase_plugin_module, showcase_plugin, 1, 0, 0, "",
+    {sandbox::requirement::kind::service, sandbox::requirement::strictness::require, "logger_service", 1, 0},
+    {sandbox::requirement::kind::service, sandbox::requirement::strictness::require, "filesystem_service", 1, 0},
+    {sandbox::requirement::kind::service, sandbox::requirement::strictness::require, "runner_service", 1, 0}
 );
 
-// 2. Register Renderer (Requires Window + Math)
-SANDBOX_DECLARE_MODULE(
-    test_renderer_module, test_renderer, 1, 0, 0, "",
-    {sandbox::requirement::kind::service, sandbox::requirement::strictness::require, "window_service", 1, 0},
-    {sandbox::requirement::kind::module, sandbox::requirement::strictness::require, "test_math", 1, 0}
-);
-
-// 3. Register Window (Requires Logger)
-SANDBOX_DECLARE_MODULE(
-    test_window_module, test_window, 1, 0, 0, "window_service",
-    {sandbox::requirement::kind::service, sandbox::requirement::strictness::require, "logger_service", 1, 0}
-);
-
-// 4. Register Filesystem (Requires Logger)
-SANDBOX_DECLARE_MODULE(
-    test_filesystem_module, test_filesystem, 1, 0, 0, "filesystem_service",
-    {sandbox::requirement::kind::service, sandbox::requirement::strictness::require, "logger_service", 1, 0}
-);
-
-// 5. Register Math (0 Dependencies) - SHOULD BOOT FIRST (Pass 1)
-SANDBOX_DECLARE_MODULE(test_math_module, test_math, 1, 0, 0, "");
-
-// 6. Register Logger (0 Dependencies) - SHOULD BOOT FIRST (Pass 1)
-SANDBOX_DECLARE_MODULE(test_logger_module, test_logger, 1, 0, 0, "logger_service");
-
-
 // ============================================================================
-// 3. EXPORT THE DLL
+// DLL ENTRY POINT
 // ============================================================================
-
-// Exposes the module array and the Flecs import dummy to the engine
 SANDBOX_DECLARE_LIBRARY()

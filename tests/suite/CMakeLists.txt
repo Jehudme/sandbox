@@ -9,6 +9,7 @@ add_executable(sandbox_tests
     integration_test.cpp
     plugin_loader_test.cpp
     graph_safety_test.cpp
+    launcher_test.cpp
 )
 
 target_link_libraries(sandbox_tests PRIVATE 
@@ -29,6 +30,7 @@ add_custom_command(TARGET sandbox_tests POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_MOUNT_DIR}/modules
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:test_lib_mock> ${TEST_MOUNT_DIR}/modules/
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/tests/libtest/assets/manifest.json ${TEST_MOUNT_DIR}/manifest.json
+    COMMAND ${CMAKE_COMMAND} -E chdir ${TEST_MOUNT_DIR} ${CMAKE_COMMAND} -E tar "cf" "test-app.zip" "--format=zip" "manifest.json" "modules"
 )
 
 target_compile_definitions(sandbox_tests PRIVATE TEST_MOUNT_DIR="${TEST_MOUNT_DIR}")
