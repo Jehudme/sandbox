@@ -1,8 +1,8 @@
 #include <catch2/catch_test_macros.hpp>
 #include "sandbox/core/bootstrapper.h"
-#include "sandbox/subsystems/logger/ilogger.h"
+#include "subsystems/logger/ilogger.h"
 #include "sandbox/event_bus/event_bus.h"
-#include "sandbox/subsystems/logger/ilogger.h"
+#include "subsystems/logger/ilogger.h"
 #include <flecs.h>
 
 using namespace sandbox;

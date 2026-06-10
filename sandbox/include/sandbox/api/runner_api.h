@@ -1,6 +1,6 @@
 #pragma once
-#include "sandbox/subsystems/runner/irunner.h"
-#include "sandbox/sdk/payload.h"
+#include "subsystems/runner/irunner.h"
+#include <sandbox/api/payload.h>
 #include <glaze/glaze.hpp>
 #include <string>
 #include <expected>

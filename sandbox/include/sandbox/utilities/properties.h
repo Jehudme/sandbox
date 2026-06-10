@@ -61,4 +61,4 @@ namespace sandbox
     };
 }
 
-#include "detail/properties.inl"
+#include "../../../src/utilities/detail/properties.inl"

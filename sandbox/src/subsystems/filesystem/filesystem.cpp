@@ -1,7 +1,7 @@
 #include "subsystems/filesystem/filesystem.h"
 
-#include "sandbox/subsystems/logger/ilogger.h"
-#include "sandbox/generated/schemas/filesystem_generated.h"
+#include "subsystems/logger/ilogger.h"
+#include "generated/schemas/filesystem_generated.h"
 #include <physfs.h>
 #include <fstream>
 

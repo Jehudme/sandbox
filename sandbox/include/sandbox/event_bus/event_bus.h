@@ -2,7 +2,7 @@
 
 #include <flecs.h>
 #include "sandbox/core/ecs.h"
-#include "sandbox/core/abi_types.h"
+#include <sandbox/api/abi_types.h>
 #include <cstdint>
 
 namespace sandbox::events {
@@ -19,4 +19,4 @@ namespace sandbox::events {
 
 }
 
-#include "detail/event_bus.inl"
+#include "../../../src/event_bus/detail/event_bus.inl"

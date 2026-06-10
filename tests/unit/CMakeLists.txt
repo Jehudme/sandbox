@@ -16,7 +16,7 @@ target_link_libraries(sandbox_unit_tests PRIVATE
 )
 
 target_include_directories(sandbox_unit_tests PRIVATE 
-    ${CMAKE_SOURCE_DIR}/sandbox/source
+    ${CMAKE_SOURCE_DIR}/sandbox/src
 )
 
 include(CTest)

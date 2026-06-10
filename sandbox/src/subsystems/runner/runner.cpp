@@ -2,7 +2,7 @@
 #include "sandbox/core/environment.h"
 
 #include "sandbox/event_bus/event_bus.h"
-#include "sandbox/subsystems/logger/ilogger.h"
+#include "subsystems/logger/ilogger.h"
 #include "sandbox/utilities/properties.h"
 #include "sandbox/core/engine.h"
 #include "sandbox/utilities/config_helper.h"

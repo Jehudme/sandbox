@@ -1,8 +1,8 @@
 #pragma once
 
 #include "sandbox/core/ecs.h"
-#include "sandbox/generated/schemas/filesystem_generated.h"
-#include "sandbox/subsystems/filesystem/ifilesystem.h"
+#include "generated/schemas/filesystem_generated.h"
+#include "subsystems/filesystem/ifilesystem.h"
 #include <expected>
 #include <string>
 #include <string_view>

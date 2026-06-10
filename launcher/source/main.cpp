@@ -9,7 +9,6 @@
 #include "sandbox/core/ecs.h"
 #include "sandbox/core/plugin.h"
 
-#include "sandbox/subsystems/runner/irunner.h"
 
 int main(int argc, char* argv[]) {
     CLI::App app{"Sandbox Meta-Engine Runtime Launcher"};

@@ -1,6 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include "subsystems/logger/logger.h"
-#include "sandbox/subsystems/logger/ilogger.h"
+#include "subsystems/logger/ilogger.h"
 #include <glaze/glaze.hpp>
 
 using namespace sandbox;

@@ -1,5 +1,5 @@
 #pragma once
-#include "sandbox/core/abi_types.h"
+#include <sandbox/api/abi_types.h>
 #include <string>
 #include <stdexcept>
 

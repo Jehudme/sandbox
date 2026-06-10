@@ -2,7 +2,7 @@
 
 // No STL includes allowed in the virtual C-ABI interface
 
-#include "sandbox/core/abi_types.h"
+#include <sandbox/api/abi_types.h>
 
 namespace sandbox {
 

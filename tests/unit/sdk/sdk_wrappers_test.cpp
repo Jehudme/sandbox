@@ -1,8 +1,8 @@
 #include <catch2/catch_test_macros.hpp>
-#include "sandbox/sdk/payload.h"
-#include "sandbox/sdk/filesystem_api.h"
-#include "sandbox/sdk/logger_api.h"
-#include "sandbox/sdk/runner_api.h"
+#include <sandbox/api/payload.h>
+#include <sandbox/api/filesystem_api.h>
+#include <sandbox/api/logger_api.h>
+#include <sandbox/api/runner_api.h>
 #include <string>
 #include <cstdlib>
 #include <cstring>
@@ -28,7 +28,7 @@ TEST_CASE("SDK Payload Wrapper", "[sdk][payload]") {
     }
 }
 
-#include "sandbox/generated/schemas/filesystem_generated.h"
+#include "generated/schemas/filesystem_generated.h"
 
 TEST_CASE("SDK Filesystem Wrapper", "[sdk][filesystem]") {
     struct mock_fs : public ifilesystem {

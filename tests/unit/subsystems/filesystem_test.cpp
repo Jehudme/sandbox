@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include "subsystems/filesystem/filesystem.h"
 
-#include "sandbox/generated/schemas/filesystem_generated.h"
+#include "generated/schemas/filesystem_generated.h"
 #include <filesystem>
 #include <fstream>
 #include <cstring>

@@ -1,8 +1,8 @@
 #include "loader.h"
-#include "sandbox/subsystems/filesystem/ifilesystem.h"
+#include "subsystems/filesystem/ifilesystem.h"
 #include "sandbox/event_bus/event_bus.h"
 
-#include "sandbox/subsystems/logger/ilogger.h"
+#include "subsystems/logger/ilogger.h"
 #include "sandbox/utilities/filesystem.h"
 #include "sandbox/core/plugin.h"
 

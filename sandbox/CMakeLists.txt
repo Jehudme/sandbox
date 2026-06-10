@@ -35,12 +35,12 @@ FetchContent_MakeAvailable(spdlog glaze flecs physfs flatbuffers)
 
 # MARK: - FlatBuffers Code Generation
 set(FBS_SCHEMAS
-        ${CMAKE_CURRENT_SOURCE_DIR}/schemas/common.fbs
-        ${CMAKE_CURRENT_SOURCE_DIR}/schemas/filesystem.fbs
-        ${CMAKE_CURRENT_SOURCE_DIR}/schemas/logger.fbs
-        ${CMAKE_CURRENT_SOURCE_DIR}/schemas/runner.fbs
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/schemas/common.fbs
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/schemas/filesystem.fbs
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/schemas/logger.fbs
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/schemas/runner.fbs
 )
-set(FBS_GENERATED_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/generated/schemas)
+set(FBS_GENERATED_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/generated/schemas)
 file(MAKE_DIRECTORY ${FBS_GENERATED_DIR})
 
 set(FBS_GENERATED_HEADERS
@@ -60,15 +60,15 @@ add_custom_command(
 # Building the engine as a SHARED library (or change to STATIC if desired)
 add_library(sandbox SHARED
         ${FBS_GENERATED_HEADERS}
-        source/core/bootstrapper.cpp
-        source/core/properties.cpp
-        source/core/engine.cpp
-        source/core/plugin.cpp
-        source/utilities/filesystem.cpp
-        source/utilities/loader.cpp
-        source/subsystems/logger/logger.cpp
-        source/subsystems/runner/runner.cpp
-        source/subsystems/filesystem/filesystem.cpp
+        src/core/bootstrapper.cpp
+        src/core/properties.cpp
+        src/core/engine.cpp
+        src/core/plugin.cpp
+        src/utilities/filesystem.cpp
+        src/utilities/loader.cpp
+        src/subsystems/logger/logger.cpp
+        src/subsystems/runner/runner.cpp
+        src/subsystems/filesystem/filesystem.cpp
 )
 add_library(sandbox::library ALIAS sandbox)
 
@@ -77,7 +77,7 @@ target_compile_features(sandbox PUBLIC cxx_std_23)
 
 target_include_directories(sandbox
         PUBLIC  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/source
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 # Link Flecs as a shared target again

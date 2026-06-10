@@ -3,8 +3,8 @@
 #include <string>
 #include <format>
 #include <optional>
-#include "sandbox/core/abi_types.h"
-#include "sandbox/generated/schemas/logger_generated.h"
+#include <sandbox/api/abi_types.h>
+#include "generated/schemas/logger_generated.h"
 #include <flatbuffers/flatbuffers.h>
 
 namespace sandbox {

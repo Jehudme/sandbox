@@ -3,7 +3,7 @@
 #include "sandbox/core/bootstrapper.h"
 #include "sandbox/core/platform.h"
 #include "utilities/loader.h"
-#include "sandbox/subsystems/filesystem/ifilesystem.h"
+#include "subsystems/filesystem/ifilesystem.h"
 #include <string>
 
 #ifdef _WIN32

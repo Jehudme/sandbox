@@ -1,13 +1,13 @@
 #pragma once
-#include "sandbox/subsystems/filesystem/ifilesystem.h"
-#include "sandbox/sdk/payload.h"
+#include "subsystems/filesystem/ifilesystem.h"
+#include <sandbox/api/payload.h>
 #include <glaze/glaze.hpp>
 #include <string>
 #include <expected>
 #include <vector>
 #include <stdexcept>
 #include "sandbox/core/ecs.h"
-#include "sandbox/generated/schemas/filesystem_generated.h"
+#include "generated/schemas/filesystem_generated.h"
 
 namespace sandbox::sdk {
 

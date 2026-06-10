@@ -1,12 +1,12 @@
 #pragma once
-#include "sandbox/subsystems/logger/ilogger.h"
-#include "sandbox/sdk/payload.h"
+#include "subsystems/logger/ilogger.h"
+#include <sandbox/api/payload.h>
 #include <glaze/glaze.hpp>
 #include <string>
 #include <expected>
 #include <stdexcept>
 #include "sandbox/core/ecs.h"
-#include "sandbox/generated/schemas/common_generated.h"
+#include "generated/schemas/common_generated.h"
 
 namespace sandbox::sdk {
 
