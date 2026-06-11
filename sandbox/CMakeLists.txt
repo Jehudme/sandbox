@@ -40,7 +40,7 @@ set(FBS_SCHEMAS
         ${CMAKE_CURRENT_SOURCE_DIR}/src/schemas/logger.fbs
         ${CMAKE_CURRENT_SOURCE_DIR}/src/schemas/runner.fbs
 )
-set(FBS_GENERATED_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/generated/schemas)
+set(FBS_GENERATED_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/generated/schemas)
 file(MAKE_DIRECTORY ${FBS_GENERATED_DIR})
 
 set(FBS_GENERATED_HEADERS
@@ -63,6 +63,7 @@ add_library(sandbox SHARED
         src/core/bootstrapper.cpp
         src/core/properties.cpp
         src/core/engine.cpp
+        src/core/engine_library.cpp
         src/core/plugin.cpp
         src/utilities/filesystem.cpp
         src/utilities/loader.cpp

@@ -17,7 +17,12 @@ namespace sandbox::modules {
 
     logger::logger(flecs::world& ecs) {
         ecs.module<logger>("::Modules::Logger");
-        ecs.set<sandbox::logger_service>({this});
+        sandbox::logger_service svc;
+        svc.instance = this;
+        svc.log = [](void* inst, const uint8_t* log_msg_fb, size_t size) { return static_cast<logger*>(inst)->log(log_msg_fb, size); };
+        svc.set_property = [](void* inst, const char* key, const char* json_value) { static_cast<logger*>(inst)->set_property(key, json_value); };
+        svc.get_property = [](const void* inst, const char* key, sandbox_payload* out_payload) { return static_cast<const logger*>(inst)->get_property(key, out_payload); };
+        ecs.set<sandbox::logger_service>(svc);
 
         sandbox::properties config;
         auto env_entity = ecs.entity("::Sandbox::Environment");

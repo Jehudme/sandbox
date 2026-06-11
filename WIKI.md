@@ -1,99 +1,70 @@
-# Sandbox Meta-Engine: Plugin Developer Guide
+# Sandbox Wiki
 
-Welcome to the definitive guide for writing plugins for the Sandbox Meta-Engine! The engine's uncompromising C-ABI boundary means you never have to worry about mismatched STL implementations, compiler flag collisions, or memory corruption when your plugin crosses the dynamic library barrier.
+## Writing a Module
+Creating a module for Sandbox Engine uses standard `Flecs` ECS logic wrapped in our `SANDBOX_DECLARE_MODULE` macro to ensure ABI safety.
 
-## Architecture Deep Dive: The ABI Wall & The SDK Illusion
-
-### Why the ABI Wall Exists
-When dynamic plugins (`.dll` or `.so`) pass C++ Standard Library objects (like `std::string` or `std::vector`) to an engine, mismatched compiler versions or standard library implementations can lead to catastrophic memory boundary crashes.
-
-The Sandbox Engine solves this by using the **Hourglass Pattern**. At the boundary bottleneck (the ABI Wall), everything is reduced to pure C-ABI primitives: raw byte arrays (`uint8_t*`), simple structs, and function pointers. 
-
-### The SDK Illusion
-You, as the plugin developer, don't need to manually serialize data into byte streams! The engine provides a robust **SDK Wrapper** layer. Under the hood, these wrappers (e.g., `sandbox::sdk::filesystem`) use **FlatBuffers** to safely serialize your data into the ABI format, beam it across the DLL boundary to the engine, retrieve the payload, and effortlessly unpack it back into beautiful `std::expected<std::vector<std::byte>, std::string>` objects. You get the safety of C-ABI and the elegance of modern C++23.
-
----
-
-## How to Write a Plugin
-
-### 1. The Entry Point
-Every plugin must export a single entry point using the `SANDBOX_DECLARE_LIBRARY()` macro. The engine's Bootstrapper intercepts this and prepares the plugin to declare its modules inside the shared `flecs::world`.
-
-### 2. Defining a Module
-Use `SANDBOX_DECLARE_MODULE` to register your plugin's functionality into the Topological Bootstrapper. You must specify your module's name, version, and any service/module dependencies. The Bootstrapper guarantees your plugin won't boot until its required dependencies are fully instantiated!
+### 1. Simplified API Namespace
+Instead of interacting with internal engine components and headers, use the zero-cost `sandbox::api` functions, which safely route data through C-ABI barriers using FlatBuffers.
 
 ```cpp
-#include "sandbox/core/plugin.h"
+#include <sandbox/core/plugin.h>
+#include <sandbox/api/logger_api.h>
+#include <sandbox/api/filesystem_api.h>
+#include <sandbox/api/runner_api.h>
 
-struct my_plugin_module {
-    my_plugin_module(flecs::world& ecs) {
-        // Initialization logic here
-    }
-};
-
-// SANDBOX_DECLARE_MODULE(Class, Name, Major, Minor, Patch, Service, Requirements...)
-SANDBOX_DECLARE_MODULE(my_plugin_module, my_plugin, 1, 0, 0, "",
-    {sandbox::requirement::kind::service, sandbox::requirement::strictness::require, "core_logger", 1, 0}
-);
-
-SANDBOX_DECLARE_LIBRARY()
-```
-
----
-
-## Using the APIs
-
-Because the engine utilizes **Flecs** as the central dependency injector, you can retrieve the underlying subsystem API wrappers by querying the `flecs::world`.
-
-```cpp
-#include "sandbox/api/logger_api.h"
-#include "sandbox/api/filesystem_api.h"
-#include "sandbox/api/runner_api.h"
-
-struct my_plugin_module {
-    my_plugin_module(flecs::world& ecs) {
-        // Safely retrieve the SDK wrappers!
-        sandbox::sdk::logger logger(ecs);
-        sandbox::sdk::filesystem vfs(ecs);
-        sandbox::sdk::runner runner(ecs);
-
-        // Log a beautiful message safely across the ABI
-        logger.log(2, "My plugin has successfully booted!");
-
-        // Read a file natively returning C++23 std::expected!
-        auto text_result = vfs.read_text("mount://config.json");
-        if (text_result) {
-            logger.log(2, "Config Loaded: " + *text_result);
+struct my_module {
+    my_module(flecs::world& ecs) {
+        
+        // Log a message safely using the engine's standardized macro
+        SANDBOX_INFO(ecs, "My Module has started!");
+        
+        // Use the C++ SDK wrappers for easy, safe API interactions
+        if (auto* fs_api = ecs.try_get<sandbox::filesystem_service>()) {
+            sandbox::sdk::filesystem fs(fs_api);
+            auto file = fs.read_text("mount://app/config.json");
+            if (file) {
+                SANDBOX_INFO(ecs, "Read config size: {}", file->size());
+            } else {
+                SANDBOX_WARN(ecs, "Failed to read config.json");
+            }
         }
     }
 };
 ```
 
----
-
-## The Event Bus
-
-The Sandbox Meta-Engine leverages the Flecs Event pipeline to dispatch completely decoupled messages across the entire engine architecture.
+### 2. Declaring and Registering
+Use the `SANDBOX_DECLARE_MODULE` macro at the bottom of your file. This registers the module with Kahn's topological sort bootstrapper, allowing you to define precise version constraints.
 
 ```cpp
-#include "sandbox/event_bus/event_bus.h"
+// Register my_module, named "cool_feature", version 1.0.0
+// Declare dependencies on the engine's core services:
+SANDBOX_DECLARE_MODULE(my_module, cool_feature, 1, 0, 0, "",
+    {sandbox::requirement::kind::service, sandbox::requirement::strictness::require, "logger_service", 1, 0},
+    {sandbox::requirement::kind::service, sandbox::requirement::strictness::require, "filesystem_service", 1, 0}
+);
 
-// Define a simple event payload
-struct my_custom_event {
-    int secret_code;
-};
-
-struct my_plugin_module {
-    my_plugin_module(flecs::world& ecs) {
-        // Subscribe to an event
-        sandbox::events::subscribe<my_custom_event>(ecs, [](const my_custom_event& ev) {
-            // Handle the event securely!
-        });
-
-        // Publish an event to the rest of the engine synchronously
-        sandbox::events::publish(ecs, my_custom_event{42});
-    }
-};
+// Define the DLL Entry Point
+SANDBOX_DECLARE_LIBRARY()
 ```
 
-By adhering to these principles, your plugins will be safe, decoupled, and highly performant!
+## The Engine as a Library (Static Linking)
+You can optionally link your plugins *statically* directly into the Sandbox engine for easier debugging.
+Because the engine uses the exact same `SANDBOX_DECLARE_MODULE` macros for its own internal systems (`core_logger`, `core_vfs`), your plugin will cleanly integrate into the same global registry and execute properly without requiring a dynamic DLL load step!
+
+## Exception Safety & ABI Stability
+We strictly enforce a "No C++ Exceptions Across the DLL Boundary" rule.
+- The Engine boundaries use pure C-ABI structures with function pointers (e.g. `logger_service`, `filesystem_service`) to guarantee 100% stable compatibility across different compilers.
+- If your module's `import_fn` constructor throws an exception, the engine catches it and correctly aborts the boot process without corrupting memory.
+- C++ SDK wrappers (like `sandbox::sdk::filesystem`) map raw integer error codes to modern `std::expected` (C++23) rather than throwing an exception across ABI boundaries.
+
+### Version Mapping in the Manifest
+To load your module dynamically, ensure it exists in `manifest.json`:
+
+```json
+{
+  "modules": {
+    "cool_feature": "1.0",
+    "another_plugin": "2.1"
+  }
+}
+```

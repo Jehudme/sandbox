@@ -11,15 +11,15 @@ using namespace sandbox;
 TEST_CASE("Runner Subsystem operations", "[subsystems][runner]") {
     flecs::world ecs;
     ecs.import<modules::runner>();
-    auto runner_api = ecs.get<runner_service>().api;
+    auto* runner_api = ecs.try_get<runner_service>();
 
     SECTION("State transitions correctly move from Idle -> Running -> Paused -> Running -> Quitting") {
-        runner_api->start_async(ecs);
+        runner_api->start_async(runner_api->instance, ecs);
         // We can't strictly inspect internal private enums without a mock, 
         // but we verify no deadlocks or exceptions occur during these transitions.
-        runner_api->pause();
-        runner_api->resume();
-        runner_api->quit();
+        runner_api->pause(runner_api->instance);
+        runner_api->resume(runner_api->instance);
+        runner_api->quit(runner_api->instance);
         SUCCEED("Runner transitioned through async states smoothly.");
     }
 
@@ -36,15 +36,15 @@ TEST_CASE("Runner Subsystem operations", "[subsystems][runner]") {
             sandbox::events::runner::state_change::action::Quit
         });
 
-        runner_api->run_sync(ecs);
+        runner_api->run_sync(runner_api->instance, ecs);
         SUCCEED("run_sync exited properly due to event bus quit request.");
 #endif
     }
 
     SECTION("set_property(\"fps_limit\", X) registers the new target FPS") {
-        runner_api->set_property("fps_limit", "144.0");
+        runner_api->set_property(runner_api->instance, "fps_limit", "144.0");
         sandbox_payload payload{};
-        REQUIRE(runner_api->get_property("fps_limit", &payload) == 0);
+        REQUIRE(runner_api->get_property(runner_api->instance, "fps_limit", &payload) == 0);
         REQUIRE(payload.bytes != nullptr);
         std::string json(reinterpret_cast<const char*>(payload.bytes), payload.size);
         float val = 0.0f;

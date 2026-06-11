@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <functional>
+#include <expected>
 #include "sandbox/core/ecs.h"
 
 namespace sandbox {
@@ -35,7 +36,7 @@ namespace sandbox {
 
         std::string provides_service{""};
 
-        std::function<void(flecs::world& ecs)> import_fn;
+        std::function<std::expected<void, std::string>(flecs::world& ecs)> import_fn;
 
         std::vector<requirement> requirements;
     };
@@ -68,8 +69,15 @@ namespace sandbox {
         info.provides_service = std::move(provides_service);
         info.requirements = std::move(reqs);
 
-        info.import_fn = [](flecs::world& ecs) {
-            ecs.import<TModule>();
+        info.import_fn = [](flecs::world& ecs) -> std::expected<void, std::string> {
+            try {
+                ecs.import<TModule>();
+                return {};
+            } catch (const std::exception& e) {
+                return std::unexpected(e.what());
+            } catch (...) {
+                return std::unexpected("Unknown exception occurred during module import.");
+            }
         };
 
         return info;

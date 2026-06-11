@@ -1,6 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include "subsystems/logger/logger.h"
-#include "subsystems/logger/ilogger.h"
+#include <sandbox/api/logger_api.h>
 #include <glaze/glaze.hpp>
 
 using namespace sandbox;
@@ -8,10 +8,10 @@ using namespace sandbox;
 TEST_CASE("Logger Subsystem operations", "[subsystems][logger]") {
     flecs::world ecs;
     ecs.import<modules::logger>();
-    auto logger_api = ecs.get<logger_service>().api;
+    auto* logger_api = ecs.try_get<logger_service>();
 
     SECTION("Trace/Debug logs are ignored if dev_mode is false and level is Info") {
-        logger_api->set_property("logger_level", "2"); // spdlog::level::info is 2
+        logger_api->set_property(logger_api->instance, "logger_level", "2"); // spdlog::level::info is 2
         // By default spdlog will just drop it without error.
         // We assert that the macro executes cleanly without crashing or throwing.
         SANDBOX_TRACE(ecs, "Trace test {}", 42);
@@ -30,14 +30,14 @@ TEST_CASE("Logger Subsystem operations", "[subsystems][logger]") {
         lmb.add_throw_on_error(true);
         builder.Finish(lmb.Finish());
 
-        auto res = logger_api->log(builder.GetBufferPointer(), builder.GetSize());
+        auto res = logger_api->log(logger_api->instance, builder.GetBufferPointer(), builder.GetSize());
         REQUIRE(res == -1);
     }
 
     SECTION("Setting dynamic properties updates internal filtering immediately") {
-        logger_api->set_property("logger_level", "1"); // spdlog::level::debug is 1
+        logger_api->set_property(logger_api->instance, "logger_level", "1"); // spdlog::level::debug is 1
         sandbox_payload payload{};
-        REQUIRE(logger_api->get_property("logger_level", &payload) == 0);
+        REQUIRE(logger_api->get_property(logger_api->instance, "logger_level", &payload) == 0);
         std::string json(reinterpret_cast<const char*>(payload.bytes), payload.size);
         int val = 0;
         REQUIRE(glz::read_json(val, json) == glz::error_code::none);

@@ -20,8 +20,4 @@ namespace sandbox {
         virtual int32_t get_property(const char* key, sandbox_payload* out_payload) const = 0;
     };
 
-    struct runner_service {
-        irunner* api{nullptr};
-    };
-
 } // namespace sandbox

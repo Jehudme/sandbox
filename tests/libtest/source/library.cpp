@@ -20,22 +20,16 @@ struct rotation_component {
 struct showcase_plugin_module {
     showcase_plugin_module(flecs::world& ecs) {
         
-        // --- API RETRIEVAL ---
-        // Safely retrieve the subsystem wrappers from the ECS
-        sandbox::sdk::logger logger(ecs);
-        sandbox::sdk::filesystem vfs(ecs);
-        sandbox::sdk::runner runner(ecs);
-
         // --- LOGGING ---
-        logger.log(2, "[Showcase Plugin] Successfully booted and retrieved all APIs!");
+        auto _ = sandbox::api::log(ecs, 2, "[Showcase Plugin] Successfully booted and retrieved all APIs!");
 
         // --- FILESYSTEM / CONFIG ---
         // Read a dummy manifest or config file using the VFS
-        auto manifest_res = vfs.read_text("mount://app/manifest.json");
+        auto manifest_res = sandbox::api::read_text(ecs, "mount://app/manifest.json");
         if (manifest_res) {
-            logger.log(2, "[Showcase Plugin] Manifest loaded successfully! Length: " + std::to_string(manifest_res->size()));
+            _ = sandbox::api::log(ecs, 2, "[Showcase Plugin] Manifest loaded successfully! Length: " + std::to_string(manifest_res->size()));
         } else {
-            logger.log(3, "[Showcase Plugin] Could not find manifest.json, but VFS is working!");
+            _ = sandbox::api::log(ecs, 3, "[Showcase Plugin] Could not find manifest.json, but VFS is working!");
         }
 
         // --- EVENT BUS ---
@@ -63,7 +57,7 @@ struct showcase_plugin_module {
                 }
             });
             
-        logger.log(2, "[Showcase Plugin] Initialization complete!");
+        _ = sandbox::api::log(ecs, 2, "[Showcase Plugin] Initialization complete!");
     }
 };
 

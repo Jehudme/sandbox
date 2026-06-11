@@ -3,7 +3,8 @@
 #include "sandbox/core/bootstrapper.h"
 #include "sandbox/core/platform.h"
 #include "utilities/loader.h"
-#include "subsystems/filesystem/ifilesystem.h"
+#include <sandbox/api/filesystem_api.h>
+#include <filesystem>
 #include <string>
 
 #ifdef _WIN32
@@ -19,37 +20,40 @@ TEST_CASE("Plugin Loading (Integration)", "[integration][plugin]") {
     ecs.import<sandbox::bootstrapper>();
     auto& boot = ecs.get_mut<sandbox::bootstrapper>();
 
-    struct mock_fs : public sandbox::ifilesystem {
-        int32_t mount(const char* physical_path, const char* virtual_prefix, bool read_only) override { return 0; }
-        int32_t unmount(const char* virtual_prefix) override { return 0; }
-        int32_t read(const char* virtual_path, sandbox_payload* out_payload) const override { return -1; }
-        int32_t write(const char* virtual_path, const uint8_t* data, size_t size, bool append) override { return 0; }
-        int32_t list(const char* virtual_path, bool recursive, sandbox_payload* out_payload) const override { return 0; }
-        int32_t remove(const char* virtual_path) override { return 0; }
-        int32_t mkdir(const char* virtual_path) override { return 0; }
-        int32_t rename(const char* old_virtual_path, const char* new_virtual_path) override { return 0; }
-        int32_t copy(const char* source_virtual_path, const char* destination_virtual_path) override { return 0; }
-        int32_t move(const char* source_virtual_path, const char* destination_virtual_path) override { return 0; }
-        int32_t state(const char* virtual_path, sandbox_payload* out_payload) const override { return 0; }
-        int32_t absolute(const char* virtual_path, sandbox_payload* out_payload) const override {
+    struct mock_fs {
+        static int32_t absolute(const void*, const char* virtual_path, sandbox_payload* out_payload) {
             if (!out_payload) return -1;
             
             std::string path_str(virtual_path);
             if (path_str.find("test_lib_mock") != std::string::npos) {
-                path_str = std::string("./test_lib_mock") + LIB_EXT;
+                std::vector<std::string> paths = {
+                    "./test_lib_mock" + std::string(LIB_EXT),
+                    "./bin/test_lib_mock" + std::string(LIB_EXT),
+                    "../bin/test_lib_mock" + std::string(LIB_EXT),
+                    (std::filesystem::current_path() / "cmake-build-debug" / "bin" / "test_lib_mock").string() + LIB_EXT,
+                    (std::filesystem::current_path() / "cmake-build-debug-event-trace" / "bin" / "test_lib_mock").string() + LIB_EXT
+                };
+                for (const auto& p : paths) {
+                    if (std::filesystem::exists(p)) {
+                        path_str = p;
+                        break;
+                    }
+                }
             }
             
             uint8_t* ptr = static_cast<uint8_t*>(std::malloc(path_str.size() + 1));
             std::memcpy(ptr, path_str.c_str(), path_str.size() + 1);
             out_payload->bytes = ptr;
             out_payload->size = path_str.size();
-            out_payload->free_func = [](void* p) { std::free(p); };
+            out_payload->free_func = +[](void* p) { std::free(p); };
             return 0;
         }
-        void set_property(const char* key, const char* json_value) override {}
-        int32_t get_property(const char* key, sandbox_payload* out_payload) const override { return -1; }
     } mock;
-    ecs.set<sandbox::filesystem_service>({&mock});
+    
+    sandbox::filesystem_service fs_svc{};
+    fs_svc.instance = &mock;
+    fs_svc.absolute = mock_fs::absolute;
+    ecs.set<sandbox::filesystem_service>(fs_svc);
 
     std::string lib_path = std::string("modules/test_lib_mock") + LIB_EXT;
 

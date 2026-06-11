@@ -27,8 +27,4 @@ namespace sandbox {
         virtual int32_t get_property(const char* key, sandbox_payload* out_payload) const = 0;
     };
 
-    struct filesystem_service {
-        ifilesystem* api{nullptr};
-    };
-
 } // namespace sandbox

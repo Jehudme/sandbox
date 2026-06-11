@@ -1,6 +1,7 @@
 #include "sandbox/core/bootstrapper.h"
-#include "subsystems/logger/ilogger.h"
+#include <sandbox/api/logger_api.h>
 
+#include "sandbox/core/exceptions.h"
 #include <algorithm>
 #include <format>
 #include <stdexcept>
@@ -10,7 +11,7 @@
     do { \
         std::string _boot_msg = std::format(fmt_str, ##__VA_ARGS__); \
         SANDBOX_ERROR(world, "{}", _boot_msg); \
-        throw std::runtime_error(_boot_msg); \
+        throw sandbox::boot_error(_boot_msg); \
     } while(0)
 
 namespace sandbox {
@@ -24,14 +25,14 @@ namespace sandbox {
         m_services.insert(m_services.end(), registry.services.begin(), registry.services.end());
     }
 
-    void bootstrapper::activate(const std::string& module_name) {
+    void bootstrapper::activate(const std::string& module_name, uint8_t min_major, uint8_t min_minor) {
         for (const auto& mod : m_modules) {
             if (mod.name == module_name) {
-                m_explicit_activations.push_back(module_name);
+                m_explicit_activations.push_back({module_name, min_major, min_minor});
                 return;
             }
         }
-        throw std::runtime_error(
+        throw sandbox::boot_error(
             "[Bootstrapper] activate() failed: module '" + module_name +
             "' was not found in any staged library. "
             "Ensure the library is loaded before calling execute().");
@@ -97,7 +98,12 @@ namespace sandbox {
             queue.pop();
 
             module_info& mod = m_modules[m_active_modules[current]];
-            if (mod.import_fn) mod.import_fn(ecs);
+            if (mod.import_fn) {
+                auto result = mod.import_fn(ecs);
+                if (!result) {
+                    BOOT_FATAL(ecs, "Fatal: Module '{}' failed to initialize: {}", mod.name, result.error());
+                }
+            }
             mod.is_loaded = true;
             processed_count++;
             
@@ -127,16 +133,18 @@ namespace sandbox {
         // Major Version Collision Prevention
         std::unordered_map<std::string, uint8_t> locked_service_majors;
 
-        for (const auto& name : m_explicit_activations) {
-            if (m_active_modules.count(name)) continue;
+        for (const auto& activation : m_explicit_activations) {
+            if (m_active_modules.count(activation.module_name)) continue;
 
-            std::size_t best = find_best_module_version(name, 0, 0);
+            std::size_t best = find_best_module_version(activation.module_name, activation.min_major, activation.min_minor);
             if (best == m_modules.size()) {
                 BOOT_FATAL(ecs,
-                    "[Bootstrapper] Explicit activation '{}' has no staged variant "
-                    "(internal inconsistency — was stage() called before execute()?).", name);
+                    "[Bootstrapper] Explicit activation '{}(v{}.{}+)' has no staged variant "
+                    "(internal inconsistency — was stage() called before execute()?).", 
+                    activation.module_name, activation.min_major, activation.min_minor);
             }
-            m_active_modules[name] = best;
+            m_active_modules[activation.module_name] = best;
+            m_version_constraints[activation.module_name] = {activation.min_major, activation.min_minor, "Manifest"};
         }
 
         auto resolve_pass = [&](requirement::strictness filter_policy) -> bool {

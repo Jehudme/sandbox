@@ -23,7 +23,7 @@ namespace sandbox {
 
         void stage(const library_registry& registry);
 
-        void activate(const std::string& module_name);
+        void activate(const std::string& module_name, uint8_t min_major = 0, uint8_t min_minor = 0);
 
         void execute(flecs::world& ecs);
 
@@ -31,7 +31,12 @@ namespace sandbox {
         std::vector<module_info> m_modules;
         std::vector<service_info> m_services;
 
-        std::vector<std::string> m_explicit_activations;
+        struct explicit_activation {
+            std::string module_name;
+            uint8_t min_major;
+            uint8_t min_minor;
+        };
+        std::vector<explicit_activation> m_explicit_activations;
 
         // name -> index in m_modules
         std::unordered_map<std::string, std::size_t> m_active_modules;

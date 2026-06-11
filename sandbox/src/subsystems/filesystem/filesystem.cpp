@@ -1,7 +1,8 @@
+#include <sandbox/api/logger_api.h>
 #include "subsystems/filesystem/filesystem.h"
 
 #include "subsystems/logger/ilogger.h"
-#include "generated/schemas/filesystem_generated.h"
+#include <sandbox/generated/schemas/filesystem_generated.h>
 #include <physfs.h>
 #include <fstream>
 
@@ -28,10 +29,26 @@ namespace sandbox::modules {
 
     filesystem_module::filesystem_module(world& ecs) {
         ecs.module<filesystem_module>("::Modules::Filesystem");
-        ecs.set<sandbox::filesystem_service>({this});
+        sandbox::filesystem_service svc;
+        svc.instance = this;
+        svc.mount = [](void* inst, const char* path, const char* prefix, bool ro) { return static_cast<filesystem_module*>(inst)->mount(path, prefix, ro); };
+        svc.unmount = [](void* inst, const char* prefix) { return static_cast<filesystem_module*>(inst)->unmount(prefix); };
+        svc.read = [](const void* inst, const char* path, sandbox_payload* out) { return static_cast<const filesystem_module*>(inst)->read(path, out); };
+        svc.write = [](void* inst, const char* path, const uint8_t* data, size_t size, bool append) { return static_cast<filesystem_module*>(inst)->write(path, data, size, append); };
+        svc.list = [](const void* inst, const char* path, bool rec, sandbox_payload* out) { return static_cast<const filesystem_module*>(inst)->list(path, rec, out); };
+        svc.remove = [](void* inst, const char* path) { return static_cast<filesystem_module*>(inst)->remove(path); };
+        svc.mkdir = [](void* inst, const char* path) { return static_cast<filesystem_module*>(inst)->mkdir(path); };
+        svc.rename = [](void* inst, const char* old_path, const char* new_path) { return static_cast<filesystem_module*>(inst)->rename(old_path, new_path); };
+        svc.copy = [](void* inst, const char* src, const char* dest) { return static_cast<filesystem_module*>(inst)->copy(src, dest); };
+        svc.move = [](void* inst, const char* src, const char* dest) { return static_cast<filesystem_module*>(inst)->move(src, dest); };
+        svc.state = [](const void* inst, const char* path, sandbox_payload* out) { return static_cast<const filesystem_module*>(inst)->state(path, out); };
+        svc.absolute = [](const void* inst, const char* path, sandbox_payload* out) { return static_cast<const filesystem_module*>(inst)->absolute(path, out); };
+        svc.set_property = [](void* inst, const char* key, const char* json_value) { static_cast<filesystem_module*>(inst)->set_property(key, json_value); };
+        svc.get_property = [](const void* inst, const char* key, sandbox_payload* out) { return static_cast<const filesystem_module*>(inst)->get_property(key, out); };
+        ecs.set<sandbox::filesystem_service>(svc);
 
         if (!PHYSFS_init(nullptr)) {
-            SANDBOX_FATAL_THROW(ecs, "Failed to initialize PhysFS context layer.");
+            SANDBOX_FATAL_THROW(ecs, "[Filesystem] Failed to initialize PhysFS context layer.");
         }
 
         PHYSFS_permitSymbolicLinks(1);
@@ -52,11 +69,11 @@ namespace sandbox::modules {
 
         std::string prefix = this->get_mount_prefix(v_str);
         if (prefix.empty()) {
-            return std::unexpected(std::string("Filesystem Error: ") + std::string(virtual_prefix) + " " + std::string("Mount name cannot be empty."));
+            return std::unexpected(std::string("[Filesystem] Mount name cannot be empty: ") + std::string(virtual_prefix));
         }
 
         if (!get_sub_path(v_str).empty()) {
-            return std::unexpected(std::string("Filesystem Error: ") + std::string(virtual_prefix) + " " + std::string("Mount target cannot contain sub-directories."));
+            return std::unexpected(std::string("[Filesystem] Mount target cannot contain sub-directories: ") + std::string(virtual_prefix));
         }
 
         std::error_code ec;
@@ -115,7 +132,7 @@ namespace sandbox::modules {
 
         std::ofstream file(physical_target, mode);
         if (!file.is_open()) {
-            return std::unexpected(std::string("Filesystem Error: ") + std::string(virtual_path) + " " + std::string("Native file stream failed to open."));
+            return std::unexpected(std::string("[Filesystem] Native file stream failed to open: ") + std::string(virtual_path));
         }
 
         file.write(reinterpret_cast<const char*>(data.data()), data.size());
@@ -163,7 +180,7 @@ namespace sandbox::modules {
         std::filesystem::path physical_target = *physical_target_res;
         std::error_code ec;
         if (!std::filesystem::remove_all(physical_target, ec) && ec) {
-            return std::unexpected(std::string("FS Error: ") + "Delete File/Folder " + ec.message());
+            return std::unexpected(std::string("[Filesystem] Delete File/Folder failed: ") + ec.message());
         }
         return {};
     }
@@ -174,7 +191,7 @@ namespace sandbox::modules {
         std::filesystem::path physical_target = *physical_target_res;
         std::error_code ec;
         if (!std::filesystem::create_directories(physical_target, ec) && ec) {
-            return std::unexpected(std::string("FS Error: ") + "Create Directory " + ec.message());
+            return std::unexpected(std::string("[Filesystem] Create Directory failed: ") + ec.message());
         }
         return {};
     }
@@ -189,7 +206,7 @@ namespace sandbox::modules {
 
         std::error_code ec;
         std::filesystem::rename(physical_old, physical_new, ec);
-        if (ec) return std::unexpected("FS rename failed: " + ec.message());
+        if (ec) return std::unexpected(std::string("[Filesystem] Rename failed: ") + ec.message());
         return {};
     }
 
@@ -431,7 +448,7 @@ namespace sandbox::modules {
 
         auto it = m_writable_mounts.find(prefix);
         if (it == m_writable_mounts.end()) {
-            return std::unexpected(std::string("FS Error: ") + "Write Security " + std::string(virtual_path));
+            return std::unexpected(std::string("[Filesystem] Write Security violation: ") + std::string(virtual_path));
         }
 
         std::filesystem::path root_physical = it->second;
@@ -444,7 +461,7 @@ namespace sandbox::modules {
 
         auto [root_it, target_it] = std::mismatch(jailed_root.begin(), jailed_root.end(), jailed_target.begin(), jailed_target.end());
         if (root_it != jailed_root.end()) {
-            return std::unexpected(std::string("Filesystem Error: ") + std::string(virtual_path) + " " + std::string("Path traversal attack detected! Attempted to break out of VFS sandbox."));
+            return std::unexpected(std::string("[Filesystem] Path traversal attack detected! Attempted to break out of VFS sandbox: ") + std::string(virtual_path));
         }
 
         return jailed_target;
@@ -493,12 +510,12 @@ namespace sandbox::modules {
 
         switch(err_code) {
             case PHYSFS_ERR_NOT_FOUND:
-                return std::string("Filesystem Error: ") + path.string();
+                return std::string("[Filesystem] Not found: ") + path.string();
             case PHYSFS_ERR_OUT_OF_MEMORY:
             case PHYSFS_ERR_NO_SPACE:
-                return std::string("FS Error: ") + context + " " + path.string();
+                return std::string("[Filesystem] No space/memory during ") + context + ": " + path.string();
             default:
-                return std::string("Filesystem Error: ") + path.string() + " " + std::string(err_desc);
+                return std::string("[Filesystem] ") + std::string(err_desc) + ": " + path.string();
         }
     }
 

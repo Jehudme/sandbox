@@ -1,5 +1,5 @@
 {
-    "modules": [
-        "showcase_plugin"
-    ]
+    "modules": {
+        "showcase_plugin": "1.0"
+    }
 }

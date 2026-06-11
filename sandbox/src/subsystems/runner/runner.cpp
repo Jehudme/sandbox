@@ -1,3 +1,4 @@
+#include <sandbox/api/logger_api.h>
 #include "subsystems/runner/runner.h"
 #include "sandbox/core/environment.h"
 
@@ -14,7 +15,16 @@ namespace sandbox::modules {
 
     runner::runner(world& ecs) {
         ecs.module<runner>("::Modules::Runner");
-        ecs.set<sandbox::runner_service>({this});
+        sandbox::runner_service svc;
+        svc.instance = this;
+        svc.start_async = [](void* inst, flecs::world& ecs_) { return static_cast<runner*>(inst)->start_async(ecs_); };
+        svc.run_sync = [](void* inst, flecs::world& ecs_) { return static_cast<runner*>(inst)->run_sync(ecs_); };
+        svc.quit = [](void* inst) { return static_cast<runner*>(inst)->quit(); };
+        svc.pause = [](void* inst) { return static_cast<runner*>(inst)->pause(); };
+        svc.resume = [](void* inst) { return static_cast<runner*>(inst)->resume(); };
+        svc.set_property = [](void* inst, const char* key, const char* json_value) { static_cast<runner*>(inst)->set_property(key, json_value); };
+        svc.get_property = [](const void* inst, const char* key, sandbox_payload* out_payload) { return static_cast<const runner*>(inst)->get_property(key, out_payload); };
+        ecs.set<sandbox::runner_service>(svc);
 
         sandbox::properties config;
         auto env_entity = ecs.entity("::Sandbox::Environment");

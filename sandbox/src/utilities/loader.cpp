@@ -1,8 +1,8 @@
 #include "loader.h"
-#include "subsystems/filesystem/ifilesystem.h"
+#include <sandbox/api/filesystem_api.h>
 #include "sandbox/event_bus/event_bus.h"
 
-#include "subsystems/logger/ilogger.h"
+#include <sandbox/api/logger_api.h>
 #include "sandbox/utilities/filesystem.h"
 #include "sandbox/core/plugin.h"
 
@@ -12,7 +12,8 @@ namespace sandbox::internal {
     /// Resolves and dynamically links a plugin library into the active ECS world.
     std::expected<void, std::string> load(world& ecs, std::string_view virtual_path) {
         sandbox_payload path_payload{};
-        int32_t res = ecs.get<sandbox::filesystem_service>().api->absolute(std::string(virtual_path).c_str(), &path_payload);
+        const auto* fs = ecs.try_get<sandbox::filesystem_service>();
+        int32_t res = fs ? fs->absolute(fs->instance, std::string(virtual_path).c_str(), &path_payload) : -1;
         if (res != 0) return std::unexpected("Absolute path resolution failed for: " + std::string(virtual_path));
 
         if (!path_payload.bytes) {

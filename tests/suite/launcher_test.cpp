@@ -8,22 +8,13 @@
 #error "TEST_MOUNT_DIR must be defined"
 #endif
 
+#ifndef LAUNCHER_EXEC_PATH
+#error "LAUNCHER_EXEC_PATH must be defined"
+#endif
+
 TEST_CASE("Launcher Integration Test", "[integration][launcher]") {
     std::filesystem::path app_zip = std::filesystem::path(TEST_MOUNT_DIR) / "test-app.zip";
-    
-    // We assume the launcher is built in the same directory structure as the tests
-    // Usually it's in build/bin/sandbox
-    // From tests/suite context, the current working directory during CTest might be the build dir or root
-    // To be robust, let's find the launcher relative to this test executable or use a known path.
-    // If the tests are run from build/bin, launcher is ./sandbox
-    
-    std::string launcher_path = "./sandbox";
-    if (!std::filesystem::exists(launcher_path)) {
-        launcher_path = "../bin/sandbox"; // If run from build/tests or somewhere
-    }
-    if (!std::filesystem::exists(launcher_path)) {
-        launcher_path = "bin/sandbox"; 
-    }
+    std::string launcher_path = LAUNCHER_EXEC_PATH;
 
     SECTION("Launcher boots with test-app.zip successfully") {
         std::string command = launcher_path + " --mount " + app_zip.string() + " --dev";

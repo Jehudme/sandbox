@@ -8,14 +8,14 @@ namespace sandbox::events {
     // Internal Routing Infrastructure
     // ============================================================================
 
-    // The component tag used to satisfy the observer's .with<ChannelTag>() filter
-    struct ChannelTag {};
+    // The component tag used to satisfy the observer's .with<channel_tag>() filter
+    struct channel_tag {};
 
     // Helper to lazily construct and retrieve the global default event bus
     inline flecs::entity default_channel(flecs::world world) {
         flecs::entity bus = world.entity("::sandbox::events::DefaultEventBus");
-        if (!bus.has<ChannelTag>()) {
-            bus.add<ChannelTag>();
+        if (!bus.has<channel_tag>()) {
+            bus.add<channel_tag>();
         }
         return bus;
     }
@@ -28,15 +28,15 @@ namespace sandbox::events {
         inline void publish(flecs::world world, const EventType& payload, flecs::entity channel) {
         flecs::entity channel_entity = channel.is_valid() ? channel : default_channel(world);
 
-        if (!channel_entity.has<ChannelTag>()) {
-            channel_entity.add<ChannelTag>();
+        if (!channel_entity.has<channel_tag>()) {
+            channel_entity.add<channel_tag>();
         }
 
-        // Emit the event ON the channel entity, cleanly linked to the ChannelTag filter.
+        // Emit the event ON the channel entity, cleanly linked to the channel_tag filter.
         // FIXED: Flecs Typed API expects a reference, not a pointer!
         world.event<EventType>()
             .entity(channel_entity)
-            .id(world.id<ChannelTag>())
+            .id(world.id<channel_tag>())
             .ctx(payload) // <-- Just pass the reference directly!
             .emit();
     }
@@ -59,8 +59,8 @@ namespace sandbox::events {
     inline flecs::entity subscribe(flecs::world world, Func&& callback, flecs::entity channel) {
         flecs::entity channel_entity = channel.is_valid() ? channel : default_channel(world);
 
-        if (!channel_entity.has<ChannelTag>()) {
-            channel_entity.add<ChannelTag>();
+        if (!channel_entity.has<channel_tag>()) {
+            channel_entity.add<channel_tag>();
         }
 
         // 1. Break out of any active Module Namespace trap so this observer listens globally
@@ -69,7 +69,7 @@ namespace sandbox::events {
         // 2. Build the exact query structure required to catch the routed event
         flecs::entity observer = world.observer()
             .template event<EventType>()
-            .template with<ChannelTag>()
+            .template with<channel_tag>()
             .run([callback_forward = std::forward<Func>(callback)](flecs::iter& iterator) {
 
                 // Extract the data pointer using param() which pairs with the publisher's ctx()

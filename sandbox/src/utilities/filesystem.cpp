@@ -1,5 +1,6 @@
 #include "sandbox/utilities/filesystem.h"
 #include "sandbox/core/platform.h"
+#include "sandbox/core/exceptions.h"
 
 namespace sandbox::filesystem
 {
@@ -57,7 +58,7 @@ namespace sandbox::filesystem
         #if defined(SANDBOX_WINDOWS_PLATFORM)
             const char* appdata = std::getenv("APPDATA");
             if (!appdata) {
-                throw std::runtime_error("[Filesystem] %APPDATA% environment variable is missing on Windows.");
+                throw sandbox::vfs_error("[Filesystem] %APPDATA% environment variable is missing on Windows.");
             }
             return std::filesystem::path(appdata) / "Sandbox";
 
@@ -69,14 +70,14 @@ namespace sandbox::filesystem
 
             const char* home = std::getenv("HOME");
             if (!home) {
-                throw std::runtime_error("[Filesystem] $HOME environment variable is missing on Linux.");
+                throw sandbox::vfs_error("[Filesystem] $HOME environment variable is missing on Linux.");
             }
             return std::filesystem::path(home) / ".local" / "share" / "sandbox";
 
         #elif defined(SANDBOX_APPLE_PLATFORM)
             const char* home = std::getenv("HOME");
             if (!home) {
-                throw std::runtime_error("[Filesystem] $HOME environment variable is missing on macOS.");
+                throw sandbox::vfs_error("[Filesystem] $HOME environment variable is missing on macOS.");
             }
             return std::filesystem::path(home) / "Library" / "Application Support" / "Sandbox";
 
@@ -87,7 +88,7 @@ namespace sandbox::filesystem
         #if defined(SANDBOX_WINDOWS_PLATFORM)
             const char* localappdata = std::getenv("LOCALAPPDATA");
             if (!localappdata) {
-                throw std::runtime_error("[Filesystem] %LOCALAPPDATA% environment variable is missing on Windows.");
+                throw sandbox::vfs_error("[Filesystem] %LOCALAPPDATA% environment variable is missing on Windows.");
             }
             return std::filesystem::path(localappdata) / "Sandbox" / "Cache";
 
@@ -99,14 +100,14 @@ namespace sandbox::filesystem
 
             const char* home = std::getenv("HOME");
             if (!home) {
-                throw std::runtime_error("[Filesystem] $HOME environment variable is missing on Linux.");
+                throw sandbox::vfs_error("[Filesystem] $HOME environment variable is missing on Linux.");
             }
             return std::filesystem::path(home) / ".cache" / "sandbox";
 
         #elif defined(SANDBOX_APPLE_PLATFORM)
             const char* home = std::getenv("HOME");
             if (!home) {
-                throw std::runtime_error("[Filesystem] $HOME environment variable is missing on macOS.");
+                throw sandbox::vfs_error("[Filesystem] $HOME environment variable is missing on macOS.");
             }
             return std::filesystem::path(home) / "Library" / "Caches" / "Sandbox";
 

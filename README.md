@@ -1,48 +1,39 @@
-# Sandbox Meta-Engine
+# Sandbox Engine
 
-Welcome to the **Sandbox Meta-Engine**, a cutting-edge C++23 Dynamic Meta-Engine Framework built from the ground up for absolute ABI safety across dynamic module boundaries. By enforcing a rigid architectural divide, the engine achieves robust modularity, allowing developers to hot-swap plugins without fear of ABI breakages, memory boundary crashes, or compiler fragmentation.
+A modern, highly modular, C-ABI safe dynamic meta-engine built in C++23.
 
-## Core Features
+## Overview
+The Sandbox Engine acts as a minimal `Launcher` and `Bootstrapper` that delegates all actual logic (including core systems like logging, rendering, and gameplay) to dynamic plugins via a strict topological load graph and C-ABI boundary. The core utilizes `Flecs` for its ECS (Entity Component System), `glaze` for JSON processing, and `FlatBuffers` for zero-copy ABI-safe message passing.
 
-- **Strict C-ABI Boundary**: Using the Hourglass Pattern, plugins never see the engine's internal STL states (`std::vector`, `std::string`, `std::expected`). Instead, all data across the DLL boundary is safely packed into raw memory blocks and FlatBuffers, ensuring memory safety and binary compatibility across compiler versions.
-- **Topological Module Loader**: Powered by Kahn's Algorithm, the `bootstrapper` natively resolves complex dependency graphs for plugins and services at runtime. Ensure your modules boot safely exactly when their dependencies are ready!
-- **Flecs Integration**: Utilizing [Flecs](https://github.com/SanderMertens/flecs), the engine natively drives entity-component-system (ECS) logic. The ECS world is safely shared with plugins to serve as the unified registry and dependency injector.
-- **Virtual Filesystem (VFS)**: Mount diverse physical directories or archives into a unified, secure virtual tree natively powered by PhysFS, all accessible seamlessly via the SDK wrappers.
-- **Modern C++23 SDK Wrappers**: Plugin developers write beautiful, idiomatic C++23. The SDK wrappers instantly convert your modern vectors and expected results into FlatBuffer payloads for safe ABI transit!
+## Key Architectural Principles
 
-## Directory Structure Overview
+1. **The C-ABI Boundary Rule**
+   Plugins ONLY interact with the engine and each other via stable C-ABI safe interfaces (`sandbox::api::*`). This means no C++ exceptions can propagate across DLL boundaries, and `std::` types (like vectors or strings) are never passed between the engine and plugins directly. All complex data uses FlatBuffers or lightweight C wrappers.
 
-The engine enforces an uncompromising physical boundary between internal implementations and public-facing interfaces:
+2. **Strict Encapsulation**
+   The internal implementations (`src/subsystems`) are completely hidden. Plugins only include `sandbox/api/*` wrappers, isolating the compilation and preventing STL/ABI mismatches.
 
-- **`include/` (Public API)**: Contains ONLY the SDK and safe Engine headers. Plugin developers build exclusively against this folder (`api/` wrappers and `core/` orchestration headers). The hidden internal interfaces are strictly invisible.
-- **`src/` (Private Engine)**: The core implementations, private subsystem interfaces (`ifilesystem.h`, `ilogger.h`), FlatBuffers schemas, and generated headers live exclusively here. When the engine builds, it merges `src` and `include`, but plugins are never granted access to `src`.
+3. **Treat the Engine as a Library**
+   The Sandbox core engine is statically available and treated as just another module. Core subsystems (`core_logger`, `core_vfs`, `core_runner`) are injected into the library registry exactly like plugins. This allows you to easily statically link your own plugins into the engine during debugging!
 
-## Building the Engine
+## Quick Start
+Build the engine using CMake:
 
-### Prerequisites
-- CMake 3.20+
-- A C++23 compliant compiler (GCC 13+, Clang 16+, MSVC 19.38+)
-
-### Build Instructions
 ```bash
-# Clone the repository
-git clone https://github.com/your-org/sandbox-engine.git
-cd sandbox-engine
-
-# Generate the CMake build system
-cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
-
-# Build the engine, launcher, and tests
-cmake --build build
-
-# Run the integration tests
-./build/bin/sandbox_tests
-
-# Run the launcher
-./build/bin/launcher -m /path/to/mount
+mkdir build && cd build
+cmake ..
+cmake --build .
 ```
 
-## Creating Plugins
-Want to create a plugin? The engine makes it effortless! By using `SANDBOX_DECLARE_MODULE` and the engine's Flecs integration, you can build dynamic shared libraries that hook safely into the meta-engine.
+To run the engine:
+```bash
+./bin/sandbox --mount path/to/your/app.zip
+```
 
-See the [WIKI.md](WIKI.md) for the complete Plugin Developer Guide.
+If you are a developer, run the integration test suite:
+```bash
+./bin/sandbox_tests
+```
+
+## Plugin Development
+See the [WIKI](WIKI.md) for instructions on creating plugins and writing modules using the new simplified SDK wrappers!

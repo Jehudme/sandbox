@@ -1,31 +1,36 @@
 #include <catch2/catch_test_macros.hpp>
 #include "sandbox/core/bootstrapper.h"
-#include "subsystems/logger/ilogger.h"
+#include <sandbox/api/logger_api.h>
 #include "sandbox/event_bus/event_bus.h"
-#include "subsystems/logger/ilogger.h"
 #include <flecs.h>
 
 using namespace sandbox;
 
-class MockLogger : public ilogger {
+class MockLogger {
 public:
     int log_count = 0;
     std::string last_msg;
 
-    int32_t log(const uint8_t* log_msg_fb, size_t size) override {
-        log_count++;
-        last_msg = "test"; // Simplified for raw ABI test
+    static int32_t log_cb(void* instance, const uint8_t* log_msg_fb, size_t size) {
+        auto* self = static_cast<MockLogger*>(instance);
+        self->log_count++;
+        self->last_msg = "test"; // Simplified for raw ABI test
         return 0;
     }
     
-    void set_property(const char* key, const char* json_value) override {}
-    int32_t get_property(const char* key, sandbox_payload* out_payload) const override { return -1; }
+    static void set_property_cb(void* instance, const char* key, const char* json_value) {}
+    static int32_t get_property_cb(const void* instance, const char* key, sandbox_payload* out_payload) { return -1; }
 };
 
 struct mock_logger_module {
     mock_logger_module(flecs::world& ecs) {
         static MockLogger logger_instance;
-        ecs.set<logger_service>({&logger_instance});
+        sandbox::logger_service svc;
+        svc.instance = &logger_instance;
+        svc.log = &MockLogger::log_cb;
+        svc.set_property = &MockLogger::set_property_cb;
+        svc.get_property = &MockLogger::get_property_cb;
+        ecs.set<logger_service>(svc);
     }
 };
 
@@ -53,8 +58,9 @@ TEST_CASE("Event & Interface Mocking", "[integration]") {
         REQUIRE_NOTHROW(boot.execute(ecs));
 
         // Verify that the mock logger is accessible
-        const auto& logger_svc = ecs.get<logger_service>();
-        REQUIRE(logger_svc.api != nullptr);
+        const auto* logger_svc = ecs.try_get<logger_service>();
+        REQUIRE(logger_svc != nullptr);
+        REQUIRE(logger_svc->instance != nullptr);
     }
 
     SECTION("Event Synchronous Reception") {
@@ -65,14 +71,14 @@ TEST_CASE("Event & Interface Mocking", "[integration]") {
         boot.activate("mock_logger");
         boot.execute(ecs);
 
-        auto& svc = ecs.get_mut<logger_service>();
-        MockLogger* mock_api = static_cast<MockLogger*>(svc.api);
+        auto* svc = ecs.try_get_mut<logger_service>();
+        MockLogger* mock_api = static_cast<MockLogger*>(svc->instance);
         
         mock_api->log_count = 0;
 
         // Fire event directly using the mock
         std::vector<uint8_t> dummy_fb(10, 0); // Fake flatbuffer data
-        mock_api->log(dummy_fb.data(), dummy_fb.size());
+        svc->log(svc->instance, dummy_fb.data(), dummy_fb.size());
 
         REQUIRE(mock_api->log_count == 1);
         REQUIRE(mock_api->last_msg == "test");
