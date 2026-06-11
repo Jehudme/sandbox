@@ -94,7 +94,7 @@ target_link_libraries(sandbox PUBLIC
         spdlog::spdlog
         glaze::glaze
         physfs-static
-        flatbuffers::flatbuffers
+        flatbuffers
 )
 
 if(UNIX AND NOT APPLE)
