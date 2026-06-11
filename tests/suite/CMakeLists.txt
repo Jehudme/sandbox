@@ -31,6 +31,7 @@ add_custom_command(TARGET sandbox_tests POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:test_lib_mock> ${TEST_MOUNT_DIR}/modules/
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/tests/libtest/assets/manifest.json ${TEST_MOUNT_DIR}/manifest.json
     COMMAND ${CMAKE_COMMAND} -E chdir ${TEST_MOUNT_DIR} ${CMAKE_COMMAND} -E tar "cf" "test-app.zip" "--format=zip" "manifest.json" "modules"
+    COMMAND ${CMAKE_COMMAND} -E copy ${TEST_MOUNT_DIR}/test-app.zip ${CMAKE_BINARY_DIR}/bin/test-app.zip
 )
 
 target_compile_definitions(sandbox_tests PRIVATE 

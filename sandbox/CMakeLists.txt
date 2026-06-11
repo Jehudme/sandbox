@@ -35,33 +35,36 @@ set(FBS_COMMON_OUT ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/core/common_schem
 
 add_custom_command(
         OUTPUT ${FBS_LOGGER_OUT}
-        COMMAND mkdir -p ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/modules/logger
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/modules/logger
         COMMAND flatc --cpp --gen-object-api -o ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/modules/logger ${FBS_LOGGER}
-        COMMAND mv ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/modules/logger/logger_generated.h ${FBS_LOGGER_OUT}
+        COMMAND ${CMAKE_COMMAND} -E rename ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/modules/logger/logger_generated.h ${FBS_LOGGER_OUT}
         DEPENDS ${FBS_LOGGER} flatc
 )
 add_custom_command(
         OUTPUT ${FBS_RUNNER_OUT}
-        COMMAND mkdir -p ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/modules/runner
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/modules/runner
         COMMAND flatc --cpp --gen-object-api -o ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/modules/runner ${FBS_RUNNER}
-        COMMAND mv ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/modules/runner/runner_generated.h ${FBS_RUNNER_OUT}
+        COMMAND ${CMAKE_COMMAND} -E rename ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/modules/runner/runner_generated.h ${FBS_RUNNER_OUT}
         DEPENDS ${FBS_RUNNER} flatc
 )
 add_custom_command(
         OUTPUT ${FBS_FILESYSTEM_OUT}
-        COMMAND mkdir -p ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/modules/filesystem
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/modules/filesystem
         COMMAND flatc --cpp --gen-object-api -o ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/modules/filesystem ${FBS_FILESYSTEM}
-        COMMAND mv ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/modules/filesystem/filesystem_generated.h ${FBS_FILESYSTEM_OUT}
+        COMMAND ${CMAKE_COMMAND} -E rename ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/modules/filesystem/filesystem_generated.h ${FBS_FILESYSTEM_OUT}
         DEPENDS ${FBS_FILESYSTEM} flatc
 )
 add_custom_command(
         OUTPUT ${FBS_COMMON_OUT}
-        COMMAND mkdir -p ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/core
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/core
         COMMAND flatc --cpp --gen-object-api -o ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/core ${FBS_COMMON}
-        COMMAND mv ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/core/common_generated.h ${FBS_COMMON_OUT}
+        COMMAND ${CMAKE_COMMAND} -E rename ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/core/common_generated.h ${FBS_COMMON_OUT}
         DEPENDS ${FBS_COMMON} flatc
 )
 
+# -----------------------------------------------------------------------------
+# THE UNIFIED HOST ENGINE TARGET
+# -----------------------------------------------------------------------------
 add_library(sandbox SHARED
         ${FBS_LOGGER_OUT} ${FBS_RUNNER_OUT} ${FBS_FILESYSTEM_OUT} ${FBS_COMMON_OUT}
         source/core/bootstrapper.cpp
@@ -82,10 +85,22 @@ target_compile_features(sandbox PUBLIC cxx_std_23)
 
 target_include_directories(sandbox
         PUBLIC  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+                $<INSTALL_INTERFACE:include>
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/source
 )
 
-target_link_libraries(sandbox PUBLIC flecs spdlog::spdlog glaze::glaze physfs-static flatbuffers)
+target_link_libraries(sandbox PUBLIC
+        flecs
+        spdlog::spdlog
+        glaze::glaze
+        physfs-static
+        flatbuffers::flatbuffers
+)
+
+if(UNIX AND NOT APPLE)
+    target_link_libraries(sandbox PUBLIC ${CMAKE_DL_LIBS})
+endif()
+
 target_precompile_headers(sandbox PRIVATE include/sandbox/pch.h)
 
 set_target_properties(sandbox PROPERTIES

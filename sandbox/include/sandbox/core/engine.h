@@ -19,6 +19,8 @@ namespace sandbox {
 
         void run();
 
+        void register_static_library(void (*library_entry_point)(ecs_world_t*));
+
         flecs::world& get_ecs();
 
     private:

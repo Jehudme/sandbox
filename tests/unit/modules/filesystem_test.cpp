@@ -14,7 +14,7 @@ TEST_CASE("Filesystem Subsystem operations", "[subsystems][filesystem]") {
     ecs.import<sandbox::modules::filesystem_module>();
     auto fs_api = sandbox::sdk::filesystem(ecs);
 
-    std::filesystem::path test_dir = std::filesystem::current_path() / "test_mount";
+    std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "sandbox_test_mount";
     std::filesystem::create_directories(test_dir);
 
     SECTION("Mounting a valid OS path succeeds") {

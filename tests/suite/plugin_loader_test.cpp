@@ -79,4 +79,14 @@ TEST_CASE("Plugin Loading (Integration)", "[integration][plugin]") {
         // We can verify this by activating a known module from libtest.
         REQUIRE_NOTHROW(boot.activate("showcase_plugin"));
     }
+
+    SECTION("Loading a non-existent or broken library safely returns an error instead of crashing") {
+        // Attempt to load a library that does not exist
+        auto res = sandbox::internal::load(ecs, "modules/this_library_does_not_exist" + std::string(LIB_EXT));
+        REQUIRE_FALSE(res.has_value());
+        
+        // Ensure the error contains the underlying loader failure message
+        std::string error_msg = res.error();
+        REQUIRE_FALSE(error_msg.empty());
+    }
 }

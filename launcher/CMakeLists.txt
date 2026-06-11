@@ -34,3 +34,4 @@ set_target_properties(launcher PROPERTIES
         BUILD_WITH_INSTALL_RPATH TRUE
         INSTALL_RPATH "\$ORIGIN"
 )
+

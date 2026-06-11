@@ -7,6 +7,7 @@
 
 #include "sandbox/event_bus/event_bus.h"
 #include <stdexcept>
+#include <fstream>
 
 #include "physfs.h"
 #include "modules/logger/logger.h"
@@ -66,9 +67,19 @@ namespace sandbox {
             SANDBOX_INFO(ecs, "[Engine] VFS mounts ready (cache, bin, app).");
         }
 
-        /// Scans app and bin mounts for modules and copies them into the writable cache.
+        /// Scans app and bin mounts for modules and copies them into the writable OS cache.
         void build_local_modules_cache(flecs::world& ecs) {
             auto fs = sandbox::sdk::filesystem(ecs);
+
+            std::filesystem::path os_cache_dir = std::filesystem::temp_directory_path() / "sandbox_engine_cache" / "modules";
+            std::error_code ec;
+            std::filesystem::remove_all(os_cache_dir, ec);
+            std::filesystem::create_directories(os_cache_dir, ec);
+            if (ec) {
+                SANDBOX_ERROR(ecs, "[Engine] OS Cache mkdir failed: {}", ec.message());
+                return;
+            }
+
             std::vector<std::filesystem::path> all_module_paths;
 
             if (auto res = fs.list("mount://app/modules", false); res) {
@@ -92,20 +103,24 @@ namespace sandbox {
                 return;
             }
 
-            if (auto res = fs.mkdir(vfs_paths::modules_cache_dir); !res) {
-                SANDBOX_ERROR(ecs, "[Engine] Cache mkdir failed.");
-            }
 
             for (const auto& mod_path : all_module_paths) {
                 if (mod_path.extension() == SANDBOX_COMPATIBLE_MODULE_EXTENSION) {
-                    auto dest = std::filesystem::path(vfs_paths::modules_cache_dir) / mod_path.filename();
-                    if (auto res = fs.copy(mod_path.generic_string(), dest.generic_string()); !res) {
-                        SANDBOX_WARN(ecs, "[Engine] Failed to cache '{}'", mod_path.filename().string());
+                    auto dest = os_cache_dir / mod_path.filename();
+                    if (auto res = fs.read_binary(mod_path.generic_string()); res) {
+                        std::ofstream out(dest, std::ios::binary);
+                        if (out) {
+                            out.write(reinterpret_cast<const char*>(res->data()), res->size());
+                        } else {
+                            SANDBOX_WARN(ecs, "[Engine] Failed to write to OS cache: {}", dest.string());
+                        }
+                    } else {
+                        SANDBOX_WARN(ecs, "[Engine] Failed to read module from VFS: {}", mod_path.generic_string());
                     }
                 }
             }
 
-            SANDBOX_INFO(ecs, "[Engine] Module cache built.");
+            SANDBOX_INFO(ecs, "[Engine] OS Module cache built.");
         }
 
         /// Reads the application manifest and registers it as a global ECS entity.
@@ -129,28 +144,26 @@ namespace sandbox {
             SANDBOX_INFO(ecs, "[Engine] Manifest loaded.");
         }
 
-        /// Stages all cached libraries, activates manifest-requested modules,
+        /// Stages all OS cached libraries, activates manifest-requested modules,
         /// and executes the bootstrapper dependency resolver.
         void load_manifest_requested_plugins(flecs::world& ecs) {
             ecs.import<sandbox::bootstrapper>();
             sandbox::bootstrapper& boot = ecs.get_mut<sandbox::bootstrapper>();
 
-            const std::string cache_modules_dir = "mount://cache/modules";
-            auto fs = sandbox::sdk::filesystem(ecs);
+            std::filesystem::path os_cache_dir = std::filesystem::temp_directory_path() / "sandbox_engine_cache" / "modules";
 
-            // Stage every compatible library found in the module cache.
-            if (auto list_res = fs.list(cache_modules_dir, false); list_res) {
-                for (const auto& item : *list_res) {
-                    std::filesystem::path file(item);
-                    if (file.extension() == SANDBOX_COMPATIBLE_MODULE_EXTENSION) {
-                        auto vpath = std::filesystem::path(cache_modules_dir) / file.filename();
-                        if (auto load_res = sandbox::internal::load(ecs, vpath.generic_string()); !load_res) {
-                            SANDBOX_WARN(ecs, "[Engine] Failed to stage '{}': {}", file.filename().string(), load_res.error());
+            // Stage every compatible library found in the OS module cache.
+            std::error_code ec;
+            if (std::filesystem::exists(os_cache_dir, ec)) {
+                for (const auto& entry : std::filesystem::directory_iterator(os_cache_dir, ec)) {
+                    if (entry.path().extension() == SANDBOX_COMPATIBLE_MODULE_EXTENSION) {
+                        if (auto load_res = sandbox::internal::load(ecs, entry.path().string()); !load_res) {
+                            SANDBOX_WARN(ecs, "[Engine] Failed to stage '{}': {}", entry.path().filename().string(), load_res.error());
                         }
                     }
                 }
             } else {
-                SANDBOX_WARN(ecs, "[Engine] Could not list cached modules.");
+                SANDBOX_WARN(ecs, "[Engine] Could not find OS cached modules directory.");
             }
 
             // Activate modules listed in the manifest.
@@ -190,7 +203,7 @@ namespace sandbox {
                         try {
                             boot.activate(module_name, min_major, min_minor);
                         } catch (const std::exception& e) {
-                            SANDBOX_WARN(ecs, "[Engine] Manifest requested '{}' but no staged library provides it: {}", module_name, e.what());
+                            throw sandbox::boot_error("[Engine] Manifest requested '" + module_name + "' but no staged library provides it: " + e.what());
                         }
                     }
                 }
@@ -273,6 +286,12 @@ namespace sandbox {
 
     flecs::world& engine::get_ecs() {
         return m_impl->ecs;
+    }
+
+    void engine::register_static_library(void (*library_entry_point)(ecs_world_t*)) {
+        if (m_impl && library_entry_point) {
+            library_entry_point(m_impl->ecs.c_ptr());
+        }
     }
 
 } // namespace sandbox
