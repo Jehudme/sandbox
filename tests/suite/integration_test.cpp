@@ -1,6 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include "sandbox/core/bootstrapper.h"
-#include <sandbox/api/logger_api.h>
+#include <sandbox/modules/logger/logger_api.h>
 #include "sandbox/event_bus/event_bus.h"
 #include <flecs.h>
 
@@ -11,15 +11,18 @@ public:
     int log_count = 0;
     std::string last_msg;
 
-    static int32_t log_cb(void* instance, const uint8_t* log_msg_fb, size_t size) {
+    static void execute_command_cb(void* instance, uint32_t command_id, const uint8_t* payload, size_t size) {
         auto* self = static_cast<MockLogger*>(instance);
-        self->log_count++;
-        self->last_msg = "test"; // Simplified for raw ABI test
-        return 0;
+        using namespace sandbox::schemas::logger;
+        switch(static_cast<LoggerCommand>(command_id)) {
+            case LoggerCommand_Log:
+                self->log_count++;
+                self->last_msg = "test"; // Simplified for raw ABI test
+                break;
+            default:
+                break;
+        }
     }
-    
-    static void set_property_cb(void* instance, const char* key, const char* json_value) {}
-    static int32_t get_property_cb(const void* instance, const char* key, sandbox_payload* out_payload) { return -1; }
 };
 
 struct mock_logger_module {
@@ -27,9 +30,7 @@ struct mock_logger_module {
         static MockLogger logger_instance;
         sandbox::logger_service svc;
         svc.instance = &logger_instance;
-        svc.log = &MockLogger::log_cb;
-        svc.set_property = &MockLogger::set_property_cb;
-        svc.get_property = &MockLogger::get_property_cb;
+        svc.execute_command = &MockLogger::execute_command_cb;
         ecs.set<logger_service>(svc);
     }
 };
@@ -78,9 +79,10 @@ TEST_CASE("Event & Interface Mocking", "[integration]") {
 
         // Fire event directly using the mock
         std::vector<uint8_t> dummy_fb(10, 0); // Fake flatbuffer data
-        svc->log(svc->instance, dummy_fb.data(), dummy_fb.size());
+        svc->execute_command(svc->instance, static_cast<uint32_t>(sandbox::schemas::logger::LoggerCommand_Log), dummy_fb.data(), dummy_fb.size());
 
         REQUIRE(mock_api->log_count == 1);
         REQUIRE(mock_api->last_msg == "test");
     }
 }
+

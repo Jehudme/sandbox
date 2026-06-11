@@ -18,7 +18,7 @@ target_link_libraries(sandbox_tests PRIVATE
 )
 
 target_include_directories(sandbox_tests PRIVATE 
-    ${CMAKE_SOURCE_DIR}/sandbox/src
+    ${CMAKE_SOURCE_DIR}/sandbox/source
 )
 
 add_dependencies(sandbox_tests test_lib_mock launcher)

@@ -1,9 +1,9 @@
 #include <iostream>
 #include <flecs.h>
 #include <sandbox/core/plugin.h>
-#include <sandbox/api/logger_api.h>
-#include <sandbox/api/filesystem_api.h>
-#include <sandbox/api/runner_api.h>
+#include <sandbox/modules/logger/logger_api.h>
+#include <sandbox/modules/filesystem/filesystem_api.h>
+#include <sandbox/modules/runner/runner_api.h>
 #include <sandbox/utilities/events.h>
 
 // 1. Define a dummy event for the Event Bus

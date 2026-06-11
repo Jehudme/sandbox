@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.20)
 project(sandbox LANGUAGES CXX)
 
 set(CMAKE_POLICY_VERSION_MINIMUM "3.5")
-# Crucial for static libraries being linked into a shared library
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 include(FetchContent)
@@ -13,63 +12,68 @@ FetchContent_Declare(flecs GIT_REPOSITORY https://github.com/SanderMertens/flecs
 FetchContent_Declare(physfs GIT_REPOSITORY https://github.com/icculus/physfs.git GIT_TAG release-3.2.0 GIT_SHALLOW TRUE)
 FetchContent_Declare(flatbuffers GIT_REPOSITORY https://github.com/google/flatbuffers.git GIT_TAG v23.5.26 GIT_SHALLOW TRUE)
 
-# MARK: - Dependencies
-
-# Flecs MUST be shared for dynamic plugins to share the ECS world state
 set(FLECS_SHARED ON CACHE BOOL "" FORCE)
 set(FLECS_STATIC OFF CACHE BOOL "" FORCE)
-
-# Spdlog should be shared so plugins write to the same registry/thread pool
 set(SPDLOG_BUILD_SHARED ON CACHE BOOL "" FORCE)
-
-# PhysFS can safely remain static as it is usually heavily wrapped by your VFS
 set(PHYSFS_BUILD_SHARED OFF CACHE BOOL "" FORCE)
 set(PHYSFS_BUILD_STATIC ON CACHE BOOL "" FORCE)
-
 set(FLATBUFFERS_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(FLATBUFFERS_BUILD_FLATC ON CACHE BOOL "" FORCE)
 set(glaze_ENABLE_AVX2 OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(spdlog glaze flecs physfs flatbuffers)
 
-# MARK: - Engine Configuration
-
 # MARK: - FlatBuffers Code Generation
-set(FBS_SCHEMAS
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/schemas/common.fbs
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/schemas/filesystem.fbs
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/schemas/logger.fbs
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/schemas/runner.fbs
-)
-set(FBS_GENERATED_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/generated/schemas)
-file(MAKE_DIRECTORY ${FBS_GENERATED_DIR})
+set(FBS_LOGGER ${CMAKE_CURRENT_SOURCE_DIR}/schemas/logger.fbs)
+set(FBS_RUNNER ${CMAKE_CURRENT_SOURCE_DIR}/schemas/runner.fbs)
+set(FBS_FILESYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/schemas/filesystem.fbs)
+set(FBS_COMMON ${CMAKE_CURRENT_SOURCE_DIR}/schemas/common.fbs)
 
-set(FBS_GENERATED_HEADERS
-        ${FBS_GENERATED_DIR}/common_generated.h
-        ${FBS_GENERATED_DIR}/filesystem_generated.h
-        ${FBS_GENERATED_DIR}/logger_generated.h
-        ${FBS_GENERATED_DIR}/runner_generated.h
-)
+set(FBS_LOGGER_OUT ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/modules/logger/logger_schema.h)
+set(FBS_RUNNER_OUT ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/modules/runner/runner_schema.h)
+set(FBS_FILESYSTEM_OUT ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/modules/filesystem/filesystem_schema.h)
+set(FBS_COMMON_OUT ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/core/common_schema.h)
 
 add_custom_command(
-        OUTPUT ${FBS_GENERATED_HEADERS}
-        COMMAND flatc --cpp --gen-object-api -o ${FBS_GENERATED_DIR} ${FBS_SCHEMAS}
-        DEPENDS ${FBS_SCHEMAS} flatc
-        COMMENT "Generating FlatBuffers headers"
+        OUTPUT ${FBS_LOGGER_OUT}
+        COMMAND mkdir -p ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/modules/logger
+        COMMAND flatc --cpp --gen-object-api -o ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/modules/logger ${FBS_LOGGER}
+        COMMAND mv ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/modules/logger/logger_generated.h ${FBS_LOGGER_OUT}
+        DEPENDS ${FBS_LOGGER} flatc
+)
+add_custom_command(
+        OUTPUT ${FBS_RUNNER_OUT}
+        COMMAND mkdir -p ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/modules/runner
+        COMMAND flatc --cpp --gen-object-api -o ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/modules/runner ${FBS_RUNNER}
+        COMMAND mv ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/modules/runner/runner_generated.h ${FBS_RUNNER_OUT}
+        DEPENDS ${FBS_RUNNER} flatc
+)
+add_custom_command(
+        OUTPUT ${FBS_FILESYSTEM_OUT}
+        COMMAND mkdir -p ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/modules/filesystem
+        COMMAND flatc --cpp --gen-object-api -o ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/modules/filesystem ${FBS_FILESYSTEM}
+        COMMAND mv ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/modules/filesystem/filesystem_generated.h ${FBS_FILESYSTEM_OUT}
+        DEPENDS ${FBS_FILESYSTEM} flatc
+)
+add_custom_command(
+        OUTPUT ${FBS_COMMON_OUT}
+        COMMAND mkdir -p ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/core
+        COMMAND flatc --cpp --gen-object-api -o ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/core ${FBS_COMMON}
+        COMMAND mv ${CMAKE_CURRENT_SOURCE_DIR}/include/sandbox/core/common_generated.h ${FBS_COMMON_OUT}
+        DEPENDS ${FBS_COMMON} flatc
 )
 
-# Building the engine as a SHARED library (or change to STATIC if desired)
 add_library(sandbox SHARED
-        ${FBS_GENERATED_HEADERS}
-        src/core/bootstrapper.cpp
-        src/core/properties.cpp
-        src/core/engine.cpp
-        src/core/engine_library.cpp
-        src/core/plugin.cpp
-        src/utilities/filesystem.cpp
-        src/utilities/loader.cpp
-        src/subsystems/logger/logger.cpp
-        src/subsystems/runner/runner.cpp
-        src/subsystems/filesystem/filesystem.cpp
+        ${FBS_LOGGER_OUT} ${FBS_RUNNER_OUT} ${FBS_FILESYSTEM_OUT} ${FBS_COMMON_OUT}
+        source/core/bootstrapper.cpp
+        source/core/properties.cpp
+        source/core/engine.cpp
+        source/core/engine_library.cpp
+        source/core/plugin.cpp
+        source/utilities/filesystem.cpp
+        source/utilities/loader.cpp
+        source/modules/logger/logger.cpp
+        source/modules/runner/runner.cpp
+        source/modules/filesystem/filesystem.cpp
 )
 add_library(sandbox::library ALIAS sandbox)
 
@@ -78,12 +82,10 @@ target_compile_features(sandbox PUBLIC cxx_std_23)
 
 target_include_directories(sandbox
         PUBLIC  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/source
 )
 
-# Link Flecs as a shared target again
 target_link_libraries(sandbox PUBLIC flecs spdlog::spdlog glaze::glaze physfs-static flatbuffers)
-
 target_precompile_headers(sandbox PRIVATE include/sandbox/pch.h)
 
 set_target_properties(sandbox PROPERTIES

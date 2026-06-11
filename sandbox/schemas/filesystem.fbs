@@ -1,0 +1,117 @@
+namespace sandbox.schemas.filesystem;
+
+enum FilesystemCommand : uint {
+    Mount = 1,
+    Unmount = 2,
+    Read = 3,
+    Write = 4,
+    List = 5,
+    Remove = 6,
+    Mkdir = 7,
+    Rename = 8,
+    Copy = 9,
+    Move = 10,
+    State = 11,
+    Absolute = 12,
+    SetProperty = 13,
+    GetProperty = 14
+}
+
+enum FileType : byte { File = 0, Directory, Symlink, Other }
+
+table StringList {
+  items: [string];
+}
+
+table FileMetadata {
+  virtual_path: string;
+  size: uint64;
+  type: FileType;
+  creation_time: uint64;
+  modification_time: uint64;
+  access_time: uint64;
+  read_only: bool;
+}
+
+table MountArgs {
+    physical_path: string;
+    virtual_prefix: string;
+    read_only: bool;
+    out_result_ptr: uint64; // cast to int32_t*
+}
+
+table UnmountArgs {
+    virtual_prefix: string;
+    out_result_ptr: uint64; // cast to int32_t*
+}
+
+table ReadArgs {
+    virtual_path: string;
+    out_payload_ptr: uint64; // cast to sandbox_payload*
+    out_result_ptr: uint64; // cast to int32_t*
+}
+
+table WriteArgs {
+    virtual_path: string;
+    data: [uint8];
+    append: bool;
+    out_result_ptr: uint64; // cast to int32_t*
+}
+
+table ListArgs {
+    virtual_path: string;
+    recursive: bool;
+    out_payload_ptr: uint64; // cast to sandbox_payload*
+    out_result_ptr: uint64; // cast to int32_t*
+}
+
+table RemoveArgs {
+    virtual_path: string;
+    out_result_ptr: uint64; // cast to int32_t*
+}
+
+table MkdirArgs {
+    virtual_path: string;
+    out_result_ptr: uint64; // cast to int32_t*
+}
+
+table RenameArgs {
+    old_virtual_path: string;
+    new_virtual_path: string;
+    out_result_ptr: uint64; // cast to int32_t*
+}
+
+table CopyArgs {
+    source_virtual_path: string;
+    destination_virtual_path: string;
+    out_result_ptr: uint64; // cast to int32_t*
+}
+
+table MoveArgs {
+    source_virtual_path: string;
+    destination_virtual_path: string;
+    out_result_ptr: uint64; // cast to int32_t*
+}
+
+table StateArgs {
+    virtual_path: string;
+    out_payload_ptr: uint64; // cast to sandbox_payload*
+    out_result_ptr: uint64; // cast to int32_t*
+}
+
+table AbsoluteArgs {
+    virtual_path: string;
+    out_payload_ptr: uint64; // cast to sandbox_payload*
+    out_result_ptr: uint64; // cast to int32_t*
+}
+
+table SetPropertyArgs {
+    key: string;
+    json_value: string;
+}
+
+table GetPropertyArgs {
+    key: string;
+    out_payload_ptr: uint64; // cast to sandbox_payload*
+    out_result_ptr: uint64; // cast to int32_t*
+}

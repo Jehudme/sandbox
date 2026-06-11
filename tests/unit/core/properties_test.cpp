@@ -53,7 +53,7 @@ TEST_CASE("Properties Utility parsing and basic access", "[core][properties]") {
     }
 }
 
-#include "subsystems/logger/ilogger.h"
+#include <sandbox/modules/logger/ilogger.h>
 #include <cstdlib>
 
 TEST_CASE("Properties serialization across C-ABI boundary", "[core][properties][abi]") {

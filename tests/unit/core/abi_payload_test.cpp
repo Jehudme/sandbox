@@ -1,5 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
-#include <sandbox/api/abi_types.h>
+#include <sandbox/core/service_macro.h>
 #include <vector>
 #include <cstring>
 #include <memory>

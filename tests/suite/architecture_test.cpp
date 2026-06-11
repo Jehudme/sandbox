@@ -2,7 +2,7 @@
 
 // Simulate a plugin build by only including SDK headers
 #include "sandbox/core/plugin.h"
-#include "subsystems/logger/ilogger.h"
+#include <sandbox/modules/logger/ilogger.h>
 #include "sandbox/core/module_info.h"
 
 // Instantiate mock module

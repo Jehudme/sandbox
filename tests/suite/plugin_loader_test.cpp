@@ -3,7 +3,7 @@
 #include "sandbox/core/bootstrapper.h"
 #include "sandbox/core/platform.h"
 #include "utilities/loader.h"
-#include <sandbox/api/filesystem_api.h>
+#include <sandbox/modules/filesystem/filesystem_api.h>
 #include <filesystem>
 #include <string>
 
@@ -21,10 +21,13 @@ TEST_CASE("Plugin Loading (Integration)", "[integration][plugin]") {
     auto& boot = ecs.get_mut<sandbox::bootstrapper>();
 
     struct mock_fs {
-        static int32_t absolute(const void*, const char* virtual_path, sandbox_payload* out_payload) {
-            if (!out_payload) return -1;
+        static void execute_command_cb(void* instance, uint32_t command_id, const uint8_t* payload_data, size_t size) {
+            using namespace sandbox::schemas::filesystem;
+            if (static_cast<FilesystemCommand>(command_id) != FilesystemCommand_Absolute) return;
             
-            std::string path_str(virtual_path);
+            auto args = flatbuffers::GetRoot<AbsoluteArgs>(payload_data);
+            std::string path_str = args->virtual_path()->str();
+            
             if (path_str.find("test_lib_mock") != std::string::npos) {
                 std::vector<std::string> paths = {
                     "./test_lib_mock" + std::string(LIB_EXT),
@@ -41,18 +44,23 @@ TEST_CASE("Plugin Loading (Integration)", "[integration][plugin]") {
                 }
             }
             
-            uint8_t* ptr = static_cast<uint8_t*>(std::malloc(path_str.size() + 1));
-            std::memcpy(ptr, path_str.c_str(), path_str.size() + 1);
-            out_payload->bytes = ptr;
-            out_payload->size = path_str.size();
-            out_payload->free_func = +[](void* p) { std::free(p); };
-            return 0;
+            auto* out_payload = reinterpret_cast<sandbox_payload*>(args->out_payload_ptr());
+            if (out_payload) {
+                uint8_t* ptr = static_cast<uint8_t*>(std::malloc(path_str.size() + 1));
+                std::memcpy(ptr, path_str.c_str(), path_str.size() + 1);
+                out_payload->bytes = ptr;
+                out_payload->size = path_str.size();
+                out_payload->free_func = +[](void* p) { std::free(p); };
+            }
+            
+            int32_t* res_ptr = reinterpret_cast<int32_t*>(args->out_result_ptr());
+            if (res_ptr) *res_ptr = 0;
         }
     } mock;
     
     sandbox::filesystem_service fs_svc{};
     fs_svc.instance = &mock;
-    fs_svc.absolute = mock_fs::absolute;
+    fs_svc.execute_command = mock_fs::execute_command_cb;
     ecs.set<sandbox::filesystem_service>(fs_svc);
 
     std::string lib_path = std::string("modules/test_lib_mock") + LIB_EXT;
