@@ -21,8 +21,36 @@ namespace sandbox {
     }
 
     void bootstrapper::stage(const library_registry& registry) {
-        m_modules.insert(m_modules.end(), registry.modules.begin(), registry.modules.end());
-        m_services.insert(m_services.end(), registry.services.begin(), registry.services.end());
+        for (const auto& mod : registry.modules) {
+            bool found = false;
+            for (const auto& existing : m_modules) {
+                if (existing.name == mod.name && 
+                    existing.version_major == mod.version_major && 
+                    existing.version_minor == mod.version_minor && 
+                    existing.version_patch == mod.version_patch) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                m_modules.push_back(mod);
+            }
+        }
+        
+        for (const auto& svc : registry.services) {
+            bool found = false;
+            for (const auto& existing : m_services) {
+                if (existing.name == svc.name && 
+                    existing.version_major == svc.version_major && 
+                    existing.version_minor == svc.version_minor) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                m_services.push_back(svc);
+            }
+        }
     }
 
     void bootstrapper::activate(const std::string& module_name, uint8_t min_major, uint8_t min_minor) {

@@ -89,7 +89,7 @@ namespace sandbox::api {
 
 #define INTERNAL_SANDBOX_LOG_PUBLISH(world_context, severity_enum, throw_override_val, format_literal, ...) \
     do { \
-        if ((world_context).template has<sandbox::logger_service>()) { \
+        if ((world_context).template has<::sandbox::logger_service>()) { \
             std::string msg; \
             try { \
                 msg = std::format(format_literal, ##__VA_ARGS__); \
@@ -100,8 +100,8 @@ namespace sandbox::api {
             flatbuffers::FlatBufferBuilder builder; \
             auto fmsg = builder.CreateString(msg); \
             auto ffile = builder.CreateString(__FILE__); \
-            sandbox::schemas::logger::LogArgsBuilder lmb(builder); \
-            lmb.add_level(sandbox::schemas::logger::LogLevel_##severity_enum); \
+            ::sandbox::schemas::logger::LogArgsBuilder lmb(builder); \
+            lmb.add_level(::sandbox::schemas::logger::LogLevel_##severity_enum); \
             lmb.add_message(fmsg); \
             lmb.add_source_file(ffile); \
             lmb.add_source_line(__LINE__); \
@@ -109,10 +109,10 @@ namespace sandbox::api {
             lmb.add_throw_on_error(override_val.value_or(false)); \
             lmb.add_out_result_ptr(reinterpret_cast<uint64_t>(&result)); \
             builder.Finish(lmb.Finish()); \
-            const sandbox::logger_service* srv = (world_context).template try_get<sandbox::logger_service>(); \
-            srv->execute_command(srv->instance, static_cast<uint32_t>(sandbox::schemas::logger::LoggerCommand_Log), builder.GetBufferPointer(), builder.GetSize()); \
+            const ::sandbox::logger_service* srv = (world_context).template try_get<::sandbox::logger_service>(); \
+            srv->execute_command(srv->instance, static_cast<uint32_t>(::sandbox::schemas::logger::LoggerCommand_Log), builder.GetBufferPointer(), builder.GetSize()); \
             if (result == -1) { \
-                throw sandbox::boot_error(format_literal); \
+                throw ::sandbox::boot_error(format_literal); \
             } \
         } \
     } while(0)

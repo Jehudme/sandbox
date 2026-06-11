@@ -8,7 +8,7 @@
 #include "sandbox/core/service_macro.h"
 
 namespace sandbox {
-    DECLARE_SANDBOX_SERVICE(logger_service)
+    DECLARE_SANDBOX_SERVICE(logger_service, "logger_service", 1, 0)
 
     class ilogger {
     public:

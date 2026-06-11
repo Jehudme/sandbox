@@ -3,6 +3,7 @@
 #include "sandbox/core/platform.h"
 #include "sandbox/core/bootstrapper.h"
 #include "sandbox/core/module_info.h"
+#include "sandbox/core/service_macro.h"
 #include <flecs.h>
 
 namespace sandbox::detail {
@@ -34,13 +35,13 @@ namespace sandbox::detail {
         return true; \
     }()
 
-#define SANDBOX_DECLARE_SERVICE(Name, Major, Minor) \
-    static inline bool Name##_contract_registered = []() { \
+#define SANDBOX_DECLARE_SERVICE(ServiceStruct) \
+    static inline bool ServiceStruct##_contract_registered = []() { \
         sandbox::get_local_registry().services.push_back( \
             sandbox::create_service_info( \
-                #Name, \
-                Major, \
-                Minor \
+                ServiceStruct::service_name, \
+                ServiceStruct::service_major, \
+                ServiceStruct::service_minor \
             ) \
         ); \
         return true; \

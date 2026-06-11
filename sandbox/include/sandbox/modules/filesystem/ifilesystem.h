@@ -3,7 +3,7 @@
 #include "sandbox/core/service_macro.h"
 
 namespace sandbox {
-    DECLARE_SANDBOX_SERVICE(filesystem_service)
+    DECLARE_SANDBOX_SERVICE(filesystem_service, "filesystem_service", 1, 0)
 
     class ifilesystem {
     public:

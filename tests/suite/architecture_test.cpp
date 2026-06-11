@@ -12,7 +12,8 @@ public:
 };
 
 // Register service
-SANDBOX_DECLARE_SERVICE(mock_service, 1, 0);
+DECLARE_SANDBOX_SERVICE(mock_service, "mock_service", 1, 0);
+SANDBOX_DECLARE_SERVICE(mock_service);
 
 // Register module
 SANDBOX_DECLARE_MODULE(mock_plugin, mock_plugin_impl, 1, 0, 0, "mock_service");
@@ -39,4 +40,21 @@ TEST_CASE("Contract Separation Validation", "[architecture]") {
         }
         REQUIRE(found_module);
     }
+}
+
+TEST_CASE("Staging Deduplication Logic", "[architecture]") {
+    flecs::world ecs;
+    sandbox::bootstrapper boot(ecs);
+    sandbox::library_registry registry;
+
+    registry.services.push_back(sandbox::create_service_info("duplicate_service", 2, 0));
+    registry.services.push_back(sandbox::create_service_info("duplicate_service", 2, 0));
+
+    registry.modules.push_back(sandbox::create_module_info<mock_plugin>("dup_module", 2, 0, 0, {}, "duplicate_service"));
+    registry.modules.push_back(sandbox::create_module_info<mock_plugin>("dup_module", 2, 0, 0, {}, "duplicate_service"));
+
+    REQUIRE_NOTHROW(boot.stage(registry));
+    
+    boot.activate("dup_module");
+    REQUIRE_NOTHROW(boot.execute(ecs));
 }
