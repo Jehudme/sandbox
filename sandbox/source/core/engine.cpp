@@ -71,7 +71,7 @@ namespace sandbox {
         void build_local_modules_cache(flecs::world& ecs) {
             auto fs = sandbox::sdk::filesystem(ecs);
 
-            std::filesystem::path os_cache_dir = std::filesystem::temp_directory_path() / "sandbox_engine_cache" / "modules";
+            std::filesystem::path os_cache_dir = std::filesystem::temp_directory_path() / "sandbox" / "modules";
             std::error_code ec;
             std::filesystem::remove_all(os_cache_dir, ec);
             std::filesystem::create_directories(os_cache_dir, ec);
