@@ -12,14 +12,14 @@ FetchContent_Declare(flecs GIT_REPOSITORY https://github.com/SanderMertens/flecs
 FetchContent_Declare(physfs GIT_REPOSITORY https://github.com/icculus/physfs.git GIT_TAG release-3.2.0 GIT_SHALLOW TRUE)
 FetchContent_Declare(flatbuffers GIT_REPOSITORY https://github.com/google/flatbuffers.git GIT_TAG v23.5.26 GIT_SHALLOW TRUE)
 
-set(FLECS_SHARED ON CACHE BOOL "" FORCE)
-set(FLECS_STATIC OFF CACHE BOOL "" FORCE)
-set(SPDLOG_BUILD_SHARED ON CACHE BOOL "" FORCE)
-set(PHYSFS_BUILD_SHARED OFF CACHE BOOL "" FORCE)
-set(PHYSFS_BUILD_STATIC ON CACHE BOOL "" FORCE)
-set(FLATBUFFERS_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(FLATBUFFERS_BUILD_FLATC ON CACHE BOOL "" FORCE)
-set(glaze_ENABLE_AVX2 OFF CACHE BOOL "" FORCE)
+set(FLECS_SHARED ON)
+set(FLECS_STATIC OFF)
+set(SPDLOG_BUILD_SHARED ON)
+set(PHYSFS_BUILD_SHARED OFF)
+set(PHYSFS_BUILD_STATIC ON)
+set(FLATBUFFERS_BUILD_TESTS OFF)
+set(FLATBUFFERS_BUILD_FLATC ON)
+set(glaze_ENABLE_AVX2 OFF)
 FetchContent_MakeAvailable(spdlog glaze flecs physfs flatbuffers)
 
 # MARK: - FlatBuffers Code Generation
