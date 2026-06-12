@@ -150,7 +150,7 @@ namespace sandbox {
             ecs.import<sandbox::bootstrapper>();
             sandbox::bootstrapper& boot = ecs.get_mut<sandbox::bootstrapper>();
 
-            std::filesystem::path os_cache_dir = std::filesystem::temp_directory_path() / "sandbox_engine_cache" / "modules";
+            std::filesystem::path os_cache_dir = std::filesystem::temp_directory_path() / "sandbox" / "modules";
 
             // Stage every compatible library found in the OS module cache.
             std::error_code ec;
