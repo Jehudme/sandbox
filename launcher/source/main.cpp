@@ -2,13 +2,16 @@
 #include <filesystem>
 #include <exception>
 #include <string>
+#include <string_view>
+#include <vector>
+#include <stdexcept>
 
 #include <CLI/CLI.hpp>
 #include "sandbox/core/engine.h"
 #include "sandbox/utilities/properties.h"
 #include "sandbox/core/ecs.h"
 #include "sandbox/core/plugin.h"
-
+#include "sandbox/utilities/cli_parser.h"
 
 int main(int argc, char* argv[]) {
     CLI::App app{"Sandbox Meta-Engine Runtime Launcher"};
@@ -17,6 +20,7 @@ int main(int argc, char* argv[]) {
     bool dev_mode = false;
     std::unordered_map<std::string, std::string> module_args;
     bool run = false;
+    std::vector<std::string> raw_activations;
 
     app.add_option("--mount,-m", app_mount, "Path to the application archive or directory")
        ->required()
@@ -24,12 +28,27 @@ int main(int argc, char* argv[]) {
 
     app.add_flag("--dev,-d", dev_mode, "Enable developer mode (verbose logging)");
     app.add_flag("--run,-r", run, "Run the engine main loop immediately after boot");
-
-    // Allows passing arbitrary module properties without modifying the launcher.
-    // Example: -p Renderer=Vulkan -p Physics.TickRate=120
+    
     app.add_option("--prop,-p", module_args, "Custom module properties (Key=Value)");
 
-    CLI11_PARSE(app, argc, argv);
+    app.add_option("--activate,-a", raw_activations, "Explicitly activate specific modules (e.g. renderer:1.0.0)")
+       ->expected(1, -1);
+
+    try {
+        CLI11_PARSE(app, argc, argv);
+    } catch (const CLI::ParseError& e) {
+        return app.exit(e);
+    }
+
+    std::vector<sandbox::activation_request> explicit_activations;
+    try {
+        for (const auto& raw : raw_activations) {
+            explicit_activations.push_back(sandbox::utilities::parse_activation_argument(raw));
+        }
+    } catch (const std::invalid_argument& e) {
+        std::cerr << "[Launcher] Parse error: " << e.what() << '\n';
+        return -1;
+    }
 
     auto config = sandbox::properties::parse("{}").value();
     config.set<std::string>({"app_mount"}, app_mount.string());
@@ -48,7 +67,7 @@ int main(int argc, char* argv[]) {
 
     try {
         std::string config_json = config.save_to_string();
-        sandbox::engine engine_instance(config_json.c_str());
+        sandbox::engine engine_instance(config_json.c_str(), explicit_activations);
 
         if (run) {
             engine_instance.run();

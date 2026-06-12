@@ -3,6 +3,7 @@ project(sandbox_unit_tests CXX)
 
 add_executable(sandbox_unit_tests
     core/abi_payload_test.cpp
+    core/cli_parser_test.cpp
     core/properties_test.cpp
     modules/filesystem_test.cpp
     modules/logger_test.cpp

@@ -25,4 +25,22 @@ TEST_CASE("Launcher Integration Test", "[integration][launcher]") {
         // Return code should be 0 for success
         REQUIRE(result == 0);
     }
+
+    SECTION("Launcher accepts explicit module activation") {
+        std::string command = launcher_path + " --mount " + app_zip.string() + " --activate showcase_plugin:1.0.0";
+        std::cout << "Executing explicit activation: " << command << "\n";
+        
+        int result = std::system(command.c_str());
+        
+        REQUIRE(result == 0);
+    }
+
+    SECTION("Launcher fails on missing explicit module activation") {
+        std::string command = launcher_path + " --mount " + app_zip.string() + " --activate missing_plugin:1.0.0";
+        std::cout << "Executing missing explicit activation: " << command << "\n";
+        
+        int result = std::system(command.c_str());
+        
+        REQUIRE(result != 0);
+    }
 }

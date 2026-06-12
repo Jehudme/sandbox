@@ -146,7 +146,7 @@ namespace sandbox {
 
         /// Stages all OS cached libraries, activates manifest-requested modules,
         /// and executes the bootstrapper dependency resolver.
-        void load_manifest_requested_plugins(flecs::world& ecs) {
+        void load_manifest_requested_plugins(flecs::world& ecs, const std::vector<activation_request>& explicit_activations) {
             ecs.import<sandbox::bootstrapper>();
             sandbox::bootstrapper& boot = ecs.get_mut<sandbox::bootstrapper>();
 
@@ -200,14 +200,22 @@ namespace sandbox {
                 }
             }
 
-            if (modules_to_activate.empty()) {
-                SANDBOX_INFO(ecs, "[Engine] No modules requested in manifest.");
+            if (modules_to_activate.empty() && explicit_activations.empty()) {
+                SANDBOX_INFO(ecs, "[Engine] No modules requested in manifest or CLI.");
             } else {
                 for (const auto& [module_name, min_major, min_minor] : modules_to_activate) {
                     try {
                         boot.activate(module_name, min_major, min_minor);
                     } catch (const std::exception& e) {
                         throw sandbox::boot_error("[Engine] Manifest requested '" + module_name + "' but no staged library provides it: " + e.what());
+                    }
+                }
+                
+                for (const auto& req : explicit_activations) {
+                    try {
+                        boot.activate(req.module_name, req.major, req.minor);
+                    } catch (const std::exception& e) {
+                        throw sandbox::boot_error("[Engine] Explicitly requested '" + req.module_name + "' but no staged library provides it: " + e.what());
                     }
                 }
             }
@@ -223,7 +231,7 @@ namespace sandbox {
         bool initialized{false};
     };
 
-    engine::engine(const char* json_config) : m_impl(new impl()) {
+    engine::engine(const char* json_config, const std::vector<activation_request>& explicit_activations) : m_impl(new impl()) {
         sandbox::properties config(json_config ? json_config : "{}");
         
         m_impl->ecs.entity("::Sandbox::Environment").set<engine_environment>({config});
@@ -237,7 +245,7 @@ namespace sandbox {
         build_local_modules_cache(m_impl->ecs);
 
         parse_and_register_manifest(m_impl->ecs);
-        load_manifest_requested_plugins(m_impl->ecs);
+        load_manifest_requested_plugins(m_impl->ecs, explicit_activations);
 
         m_impl->initialized = true;
     }
