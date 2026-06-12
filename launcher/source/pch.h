@@ -11,8 +11,4 @@
 #include <vector>
 #include <memory>
 #include <filesystem>
-
-#include <flecs.h>
-
-#include <spdlog/spdlog.h>
-#include <glaze/glaze.hpp>
+#include <CLI/CLI.hpp>

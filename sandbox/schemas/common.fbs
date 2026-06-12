@@ -1,7 +1,0 @@
-namespace sandbox.schemas;
-
-
-
-table StringList {
-    items:[string];
-}
