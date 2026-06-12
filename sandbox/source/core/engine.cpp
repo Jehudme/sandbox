@@ -168,47 +168,48 @@ namespace sandbox {
 
             // Activate modules listed in the manifest.
             auto manifest_entity = ecs.entity("::Manifest");
-            if (manifest_entity.has<properties>()) {
-                const auto& manifest = manifest_entity.get<properties>();
-                
-                std::vector<std::tuple<std::string, uint8_t, uint8_t>> modules_to_activate;
+            if (!manifest_entity.has<properties>()) {
+                manifest_entity.add<properties>();
+                SANDBOX_WARN(ecs, "[Engine] No manifest found");
+            }
 
-                // Try parsing as an object (map) first for versioned dependencies
-                auto obj_req = manifest.get<std::map<std::string, std::string>>({"modules"});
-                if (obj_req.has_value()) {
-                    for (const auto& [name, version_str] : obj_req.value()) {
-                        uint8_t major = 0;
-                        uint8_t minor = 0;
-                        auto dot_pos = version_str.find('.');
-                        if (dot_pos != std::string::npos) {
-                            major = static_cast<uint8_t>(std::stoi(version_str.substr(0, dot_pos)));
-                            minor = static_cast<uint8_t>(std::stoi(version_str.substr(dot_pos + 1)));
-                        } else if (!version_str.empty()) {
-                            major = static_cast<uint8_t>(std::stoi(version_str));
-                        }
-                        modules_to_activate.push_back({name, major, minor});
-                    }
-                } else {
-                    // Fall back to array of strings (legacy behavior)
-                    auto arr_req = manifest.get<std::vector<std::string>>({"modules"}).value_or(std::vector<std::string>{});
-                    for (const auto& name : arr_req) {
-                        modules_to_activate.push_back({name, 0, 0});
-                    }
-                }
+            const auto& manifest = manifest_entity.get<properties>();
 
-                if (modules_to_activate.empty()) {
-                    SANDBOX_INFO(ecs, "[Engine] No modules requested in manifest.");
-                } else {
-                    for (const auto& [module_name, min_major, min_minor] : modules_to_activate) {
-                        try {
-                            boot.activate(module_name, min_major, min_minor);
-                        } catch (const std::exception& e) {
-                            throw sandbox::boot_error("[Engine] Manifest requested '" + module_name + "' but no staged library provides it: " + e.what());
-                        }
+            std::vector<std::tuple<std::string, uint8_t, uint8_t>> modules_to_activate;
+
+            // Try parsing as an object (map) first for versioned dependencies
+            auto obj_req = manifest.get<std::map<std::string, std::string>>({"modules"});
+            if (obj_req.has_value()) {
+                for (const auto& [name, version_str] : obj_req.value()) {
+                    uint8_t major = 0;
+                    uint8_t minor = 0;
+                    auto dot_pos = version_str.find('.');
+                    if (dot_pos != std::string::npos) {
+                        major = static_cast<uint8_t>(std::stoi(version_str.substr(0, dot_pos)));
+                        minor = static_cast<uint8_t>(std::stoi(version_str.substr(dot_pos + 1)));
+                    } else if (!version_str.empty()) {
+                        major = static_cast<uint8_t>(std::stoi(version_str));
                     }
+                    modules_to_activate.push_back({name, major, minor});
                 }
             } else {
-                SANDBOX_WARN(ecs, "[Engine] No manifest found — skipping plugin activation.");
+                // Fall back to array of strings (legacy behavior)
+                auto arr_req = manifest.get<std::vector<std::string>>({"modules"}).value_or(std::vector<std::string>{});
+                for (const auto& name : arr_req) {
+                    modules_to_activate.push_back({name, 0, 0});
+                }
+            }
+
+            if (modules_to_activate.empty()) {
+                SANDBOX_INFO(ecs, "[Engine] No modules requested in manifest.");
+            } else {
+                for (const auto& [module_name, min_major, min_minor] : modules_to_activate) {
+                    try {
+                        boot.activate(module_name, min_major, min_minor);
+                    } catch (const std::exception& e) {
+                        throw sandbox::boot_error("[Engine] Manifest requested '" + module_name + "' but no staged library provides it: " + e.what());
+                    }
+                }
             }
 
             // Resolve dependency graph and boot all activated modules.
