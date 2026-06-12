@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(sandbox LANGUAGES CXX)
+project(sandbox_library LANGUAGES CXX)
 
 set(CMAKE_POLICY_VERSION_MINIMUM "3.5")
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -65,7 +65,7 @@ add_custom_command(
 # -----------------------------------------------------------------------------
 # THE UNIFIED HOST ENGINE TARGET
 # -----------------------------------------------------------------------------
-add_library(sandbox SHARED
+add_library(sandbox_library SHARED
         ${FBS_LOGGER_OUT} ${FBS_RUNNER_OUT} ${FBS_FILESYSTEM_OUT} ${FBS_COMMON_OUT}
         source/core/bootstrapper.cpp
         source/core/properties.cpp
@@ -78,18 +78,18 @@ add_library(sandbox SHARED
         source/modules/runner/runner.cpp
         source/modules/filesystem/filesystem.cpp
 )
-add_library(sandbox::library ALIAS sandbox)
+add_library(sandbox::library ALIAS sandbox_library)
 
-target_compile_definitions(sandbox PRIVATE SANDBOX_BUILD_SHARED)
-target_compile_features(sandbox PUBLIC cxx_std_23)
+target_compile_definitions(sandbox_library PRIVATE SANDBOX_BUILD_SHARED)
+target_compile_features(sandbox_library PUBLIC cxx_std_23)
 
-target_include_directories(sandbox
+target_include_directories(sandbox_library
         PUBLIC  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
                 $<INSTALL_INTERFACE:include>
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/source
 )
 
-target_link_libraries(sandbox PUBLIC
+target_link_libraries(sandbox_library PUBLIC
         flecs
         spdlog::spdlog
         glaze::glaze
@@ -98,12 +98,12 @@ target_link_libraries(sandbox PUBLIC
 )
 
 if(UNIX AND NOT APPLE)
-    target_link_libraries(sandbox PUBLIC ${CMAKE_DL_LIBS})
+    target_link_libraries(sandbox_library PUBLIC ${CMAKE_DL_LIBS})
 endif()
 
-target_precompile_headers(sandbox PRIVATE include/sandbox/pch.h)
+target_precompile_headers(sandbox_library PRIVATE include/sandbox/pch.h)
 
-set_target_properties(sandbox PROPERTIES
+set_target_properties(sandbox_library PROPERTIES
         BUILD_RPATH "\$ORIGIN"
         BUILD_WITH_INSTALL_RPATH TRUE
         INSTALL_RPATH "\$ORIGIN"

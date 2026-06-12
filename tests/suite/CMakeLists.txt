@@ -21,7 +21,7 @@ target_include_directories(sandbox_tests PRIVATE
     ${CMAKE_SOURCE_DIR}/sandbox/source
 )
 
-add_dependencies(sandbox_tests test_lib_mock launcher)
+add_dependencies(sandbox_tests test_lib_mock sandbox_launcher)
 
 # Prevent Root Pollution: Copy mock plugin to a local test_mount directory
 set(TEST_MOUNT_DIR "${CMAKE_CURRENT_BINARY_DIR}/test_mount")
@@ -36,7 +36,7 @@ add_custom_command(TARGET sandbox_tests POST_BUILD
 
 target_compile_definitions(sandbox_tests PRIVATE 
     TEST_MOUNT_DIR="${TEST_MOUNT_DIR}"
-    LAUNCHER_EXEC_PATH="$<TARGET_FILE:launcher>"
+    LAUNCHER_EXEC_PATH="$<TARGET_FILE:sandbox_launcher>"
 )
 
 include(CTest)

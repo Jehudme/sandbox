@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(launcher LANGUAGES CXX)
+project(sandbox_launcher LANGUAGES CXX)
 
 # Include CLI11 locally since it is now launcher-exclusive
 include(FetchContent)
@@ -12,23 +12,21 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(cli11)
 
 # Define the launcher executable
-add_executable(launcher source/main.cpp)
-add_executable(sandbox::launcher ALIAS launcher)
+add_executable(sandbox_launcher source/main.cpp)
+add_executable(sandbox::launcher ALIAS sandbox_launcher)
 
 # Link the core engine AND the launcher-specific CLI11 library
-target_link_libraries(launcher PRIVATE
+target_link_libraries(sandbox_launcher PRIVATE
         sandbox::library
         CLI11::CLI11
 )
 
 # Apply the Launcher Precompiled Header
-target_precompile_headers(launcher
+target_precompile_headers(sandbox_launcher
         PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/include/launcher/pch.h>"
 )
 
-# Strict Linux Linker RPATH Configuration
-# Ensures the executable always looks in its local directory ($ORIGIN) for libsandbox.so
-set_target_properties(launcher PROPERTIES
+set_target_properties(sandbox_launcher PROPERTIES
         OUTPUT_NAME "sandbox"
         BUILD_RPATH "\$ORIGIN"
         BUILD_WITH_INSTALL_RPATH TRUE
