@@ -15,14 +15,25 @@ static const Properties* cast(const sandbox_properties_t* props) {
     return reinterpret_cast<const Properties*>(props);
 }
 
-// Helper to build the C++ Path vector from the flat C array
-static Properties::Path make_path(const char** path, size_t path_len) {
+#include <string_view>
+
+// Helper to build the C++ Path vector from a string format "a/b/c"
+static Properties::Path parse_path(const char* path_str) {
     Properties::Path cpp_path;
-    if (path && path_len > 0) {
-        cpp_path.reserve(path_len);
-        for (size_t i = 0; i < path_len; ++i) {
-            if (path[i]) cpp_path.emplace_back(path[i]);
+    if (!path_str) return cpp_path;
+    
+    std::string_view view(path_str);
+    if (view.empty()) return cpp_path;
+
+    size_t start = 0;
+    while (start < view.length()) {
+        size_t end = view.find('/', start);
+        if (end == std::string_view::npos) {
+            cpp_path.emplace_back(view.substr(start));
+            break;
         }
+        cpp_path.emplace_back(view.substr(start, end - start));
+        start = end + 1;
     }
     return cpp_path;
 }
@@ -76,19 +87,19 @@ extern "C" {
         if (str) free(str);
     }
 
-    void sandbox_properties_clear(sandbox_properties_t* props, const char** path, size_t path_len) {
-        if (props) cast(props)->clear(make_path(path, path_len));
+    void sandbox_properties_clear(sandbox_properties_t* props, const char* path_str) {
+        if (props) cast(props)->clear(parse_path(path_str));
     }
 
-    bool sandbox_properties_has(const sandbox_properties_t* props, const char** path, size_t path_len) {
+    bool sandbox_properties_has(const sandbox_properties_t* props, const char* path_str) {
         if (!props) return false;
-        return cast(props)->has(make_path(path, path_len));
+        return cast(props)->has(parse_path(path_str));
     }
 
-    char** sandbox_properties_keys(const sandbox_properties_t* props, const char** path, size_t path_len, size_t* out_count) {
+    char** sandbox_properties_keys(const sandbox_properties_t* props, const char* path_str, size_t* out_count) {
         if (!props || !out_count) return nullptr;
 
-        auto cpp_keys = cast(props)->keys(make_path(path, path_len));
+        auto cpp_keys = cast(props)->keys(parse_path(path_str));
         *out_count = cpp_keys.size();
 
         if (cpp_keys.empty()) return nullptr;
@@ -110,50 +121,50 @@ extern "C" {
         }
     }
 
-    void sandbox_properties_merge(sandbox_properties_t* props, const char** path, size_t path_len, const sandbox_properties_t* other) {
+    void sandbox_properties_merge(sandbox_properties_t* props, const char* path_str, const sandbox_properties_t* other) {
         if (props && other) {
-            cast(props)->merge(make_path(path, path_len), *cast(other));
+            cast(props)->merge(parse_path(path_str), *cast(other));
         }
     }
 
-    sandbox_properties_t* sandbox_properties_sub(const sandbox_properties_t* props, const char** path, size_t path_len) {
+    sandbox_properties_t* sandbox_properties_sub(const sandbox_properties_t* props, const char* path_str) {
         if (!props) return nullptr;
-        Properties sub_props = cast(props)->sub(make_path(path, path_len));
+        Properties sub_props = cast(props)->sub(parse_path(path_str));
         return reinterpret_cast<sandbox_properties_t*>(new Properties(std::move(sub_props)));
     }
 
     // --- GETTERS ---
 
-    bool sandbox_properties_get_int64(const sandbox_properties_t* props, const char** path, size_t path_len, int64_t* out_val) {
+    bool sandbox_properties_get_int64(const sandbox_properties_t* props, const char* path_str, int64_t* out_val) {
         if (!props || !out_val) return false;
-        if (auto val = cast(props)->get<int64_t>(make_path(path, path_len))) {
+        if (auto val = cast(props)->get<int64_t>(parse_path(path_str))) {
             *out_val = *val;
             return true;
         }
         return false;
     }
 
-    bool sandbox_properties_get_double(const sandbox_properties_t* props, const char** path, size_t path_len, double* out_val) {
+    bool sandbox_properties_get_double(const sandbox_properties_t* props, const char* path_str, double* out_val) {
         if (!props || !out_val) return false;
-        if (auto val = cast(props)->get<double>(make_path(path, path_len))) {
+        if (auto val = cast(props)->get<double>(parse_path(path_str))) {
             *out_val = *val;
             return true;
         }
         return false;
     }
 
-    bool sandbox_properties_get_bool(const sandbox_properties_t* props, const char** path, size_t path_len, bool* out_val) {
+    bool sandbox_properties_get_bool(const sandbox_properties_t* props, const char* path_str, bool* out_val) {
         if (!props || !out_val) return false;
-        if (auto val = cast(props)->get<bool>(make_path(path, path_len))) {
+        if (auto val = cast(props)->get<bool>(parse_path(path_str))) {
             *out_val = *val;
             return true;
         }
         return false;
     }
 
-    const char* sandbox_properties_get_string(const sandbox_properties_t* props, const char** path, size_t path_len) {
+    const char* sandbox_properties_get_string(const sandbox_properties_t* props, const char* path_str) {
         if (!props) return nullptr;
-        if (auto val = cast(props)->get<std::string>(make_path(path, path_len))) {
+        if (auto val = cast(props)->get<std::string>(parse_path(path_str))) {
             // Use thread_local to safely pass string pointer across ABI without requiring the caller to free it
             thread_local std::string scratchpad;
             scratchpad = std::move(*val);
@@ -165,22 +176,22 @@ extern "C" {
 
     // --- SETTERS ---
 
-    void sandbox_properties_set_int64(sandbox_properties_t* props, const char** path, size_t path_len, int64_t val) {
-        if (props) cast(props)->set<int64_t>(make_path(path, path_len), val);
+    void sandbox_properties_set_int64(sandbox_properties_t* props, const char* path_str, int64_t val) {
+        if (props) cast(props)->set<int64_t>(parse_path(path_str), val);
     }
 
-    void sandbox_properties_set_double(sandbox_properties_t* props, const char** path, size_t path_len, double val) {
-        if (props) cast(props)->set<double>(make_path(path, path_len), val);
+    void sandbox_properties_set_double(sandbox_properties_t* props, const char* path_str, double val) {
+        if (props) cast(props)->set<double>(parse_path(path_str), val);
     }
 
-    void sandbox_properties_set_bool(sandbox_properties_t* props, const char** path, size_t path_len, bool val) {
-        if (props) cast(props)->set<bool>(make_path(path, path_len), val);
+    void sandbox_properties_set_bool(sandbox_properties_t* props, const char* path_str, bool val) {
+        if (props) cast(props)->set<bool>(parse_path(path_str), val);
     }
 
-    void sandbox_properties_set_string(sandbox_properties_t* props, const char** path, size_t path_len, const char* val) {
+    void sandbox_properties_set_string(sandbox_properties_t* props, const char* path_str, const char* val) {
         if (props && val) {
             std::string cpp_val(val);
-            cast(props)->set<std::string>(make_path(path, path_len), cpp_val);
+            cast(props)->set<std::string>(parse_path(path_str), cpp_val);
         }
     }
 }

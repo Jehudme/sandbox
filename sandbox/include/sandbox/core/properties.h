@@ -37,37 +37,37 @@ void  sandbox_properties_free_string(char* str);
 /* TREE MANIPULATION                                                          */
 /* ========================================================================== */
 
-void sandbox_properties_clear(sandbox_properties_t* props, const char** path, size_t path_len);
-bool sandbox_properties_has(const sandbox_properties_t* props, const char** path, size_t path_len);
+void sandbox_properties_clear(sandbox_properties_t* props, const char* path_str);
+bool sandbox_properties_has(const sandbox_properties_t* props, const char* path_str);
 
 /* Returns an array of dynamically allocated strings. Must be freed with sandbox_properties_free_keys */
-char** sandbox_properties_keys(const sandbox_properties_t* props, const char** path, size_t path_len, size_t* out_count);
+char** sandbox_properties_keys(const sandbox_properties_t* props, const char* path_str, size_t* out_count);
 void   sandbox_properties_free_keys(char** keys, size_t count);
 
-void sandbox_properties_merge(sandbox_properties_t* props, const char** path, size_t path_len, const sandbox_properties_t* other);
+void sandbox_properties_merge(sandbox_properties_t* props, const char* path_str, const sandbox_properties_t* other);
 
 /* Returns a newly allocated properties object containing the sub-tree. Must be destroyed. */
-sandbox_properties_t* sandbox_properties_sub(const sandbox_properties_t* props, const char** path, size_t path_len);
+sandbox_properties_t* sandbox_properties_sub(const sandbox_properties_t* props, const char* path_str);
 
 /* ========================================================================== */
 /* GETTERS (Returns true if key exists and type matches)                      */
 /* ========================================================================== */
 
-bool sandbox_properties_get_int64(const sandbox_properties_t* props, const char** path, size_t path_len, int64_t* out_val);
-bool sandbox_properties_get_double(const sandbox_properties_t* props, const char** path, size_t path_len, double* out_val);
-bool sandbox_properties_get_bool(const sandbox_properties_t* props, const char** path, size_t path_len, bool* out_val);
+bool sandbox_properties_get_int64(const sandbox_properties_t* props, const char* path_str, int64_t* out_val);
+bool sandbox_properties_get_double(const sandbox_properties_t* props, const char* path_str, double* out_val);
+bool sandbox_properties_get_bool(const sandbox_properties_t* props, const char* path_str, bool* out_val);
 
 /* String pointer is guaranteed valid until the next get_string call on this thread (Thread-local scratchpad) */
-const char* sandbox_properties_get_string(const sandbox_properties_t* props, const char** path, size_t path_len);
+const char* sandbox_properties_get_string(const sandbox_properties_t* props, const char* path_str);
 
 /* ========================================================================== */
 /* SETTERS                                                                    */
 /* ========================================================================== */
 
-void sandbox_properties_set_int64(sandbox_properties_t* props, const char** path, size_t path_len, int64_t val);
-void sandbox_properties_set_double(sandbox_properties_t* props, const char** path, size_t path_len, double val);
-void sandbox_properties_set_bool(sandbox_properties_t* props, const char** path, size_t path_len, bool val);
-void sandbox_properties_set_string(sandbox_properties_t* props, const char** path, size_t path_len, const char* val);
+void sandbox_properties_set_int64(sandbox_properties_t* props, const char* path_str, int64_t val);
+void sandbox_properties_set_double(sandbox_properties_t* props, const char* path_str, double val);
+void sandbox_properties_set_bool(sandbox_properties_t* props, const char* path_str, bool val);
+void sandbox_properties_set_string(sandbox_properties_t* props, const char* path_str, const char* val);
 
 #ifdef __cplusplus
 }
