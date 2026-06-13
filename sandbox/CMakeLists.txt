@@ -8,23 +8,23 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 # =============================================================================
 include(FetchContent)
 
-FetchContent_Declare(glaze GIT_REPOSITORY https://github.com/stephenberry/glaze.git GIT_TAG v4.3.0 GIT_SHALLOW TRUE)
+FetchContent_Declare(glaze GIT_REPOSITORY https://github.com/stephenberry/glaze.git GIT_TAG v7.8.1 GIT_SHALLOW TRUE)
 FetchContent_Declare(flecs GIT_REPOSITORY https://github.com/SanderMertens/flecs.git GIT_TAG v4.1.4 GIT_SHALLOW TRUE)
-FetchContent_Declare(flatbuffers GIT_REPOSITORY https://github.com/google/flatbuffers.git GIT_TAG v23.5.26 GIT_SHALLOW TRUE)
 
 set(FLECS_SHARED ON CACHE INTERNAL "Build Flecs as a shared library")
 set(FLECS_STATIC OFF CACHE INTERNAL "Disable Flecs static library")
-set(FLATBUFFERS_BUILD_TESTS OFF CACHE INTERNAL "Disable Flatbuffers tests")
-set(FLATBUFFERS_BUILD_FLATC ON CACHE INTERNAL "Build flatc compiler")
 set(glaze_ENABLE_AVX2 OFF CACHE INTERNAL "Disable AVX2 for Glaze")
 
-FetchContent_MakeAvailable(glaze flecs flatbuffers)
+FetchContent_MakeAvailable(glaze flecs)
 
 # =============================================================================
 # 2. CORE LIBRARY TARGET
 # =============================================================================
 add_library(sandbox_library SHARED
-        source/core/engine.cpp
+        source/core/properties.h
+        source/core/properties.cpp
+        source/abi/core/properties.cpp
+        include/sandbox/core/properties.h
 )
 
 add_library(sandbox::library ALIAS sandbox_library)
@@ -41,10 +41,9 @@ target_include_directories(sandbox_library
 target_link_libraries(sandbox_library PUBLIC
         flecs
         glaze::glaze
-        flatbuffers
 )
 
 # Apply the Launcher Precompiled Header
 target_precompile_headers(sandbox_library
-        PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/source/core/pch.h>"
+        PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/source/pch.h>"
 )
