@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.20)
 project(sandbox_unit_tests CXX)
 
 add_executable(sandbox_unit_tests
-        main.cpp
+    main.cpp
+    core/properties_c_api_test.cpp
 )
 
 target_link_libraries(sandbox_unit_tests PRIVATE 

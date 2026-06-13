@@ -159,6 +159,7 @@ extern "C" {
             scratchpad = std::move(*val);
             return scratchpad.c_str();
         }
+
         return nullptr;
     }
 
