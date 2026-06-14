@@ -49,6 +49,9 @@ typedef struct {
     /* Linked service (Optional, NULL if no service provided) */
     const sandbox_service_info_t* service;
 
+    const sandbox_requirement_info_t* requirements;
+    size_t requirement_count;
+
     void (*init_fn)(ecs_world_t* ecs);
 } sandbox_module_info_t;
 
@@ -135,7 +138,7 @@ SANDBOX_API void sandbox_stage_module(const sandbox_module_info_t* info);
 
 #ifdef __cplusplus
     #define SANDBOX_GET_SERVICE(world_obj, ServiceClass) \
-        (world_obj).get<ServiceClass>()
+        (world_obj).try_get<ServiceClass>()
 #else
     #define SANDBOX_GET_SERVICE(ecs_ptr, ServiceClass) \
         ecs_singleton_get((ecs_ptr), ServiceClass)

@@ -28,7 +28,7 @@ namespace sandbox::core {
         template <typename Type>
         std::optional<Type> get(const Path& path = {}) const;
         template <typename Type>
-        void set(const Path& path, Type& value);
+        void set(const Path& path, Type value);
 
     private:
         glz::generic m_data;

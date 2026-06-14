@@ -80,7 +80,7 @@ namespace sandbox::core {
     }
 
     template <typename Type>
-    void Properties::set(const Path& path, Type& value) {
+    void Properties::set(const Path& path, Type value) {
         glz::generic* target_node = detail::RetrieveOrCreateNode(m_data, path);
 
         // Ensure values are cast correctly into Glaze's expected memory layout
