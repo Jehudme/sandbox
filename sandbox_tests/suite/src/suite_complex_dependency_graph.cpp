@@ -1,21 +1,5 @@
 // suite/src/suite_complex_dependency_graph.cpp
-//
-// Integration suite: Complex dependency graph
-//
-// Tests multi-level, transitive dependency chains and diamond-dependency
-// patterns (A→B, A→C, B→D, C→D — D should boot once and first).
-//
-// Layout:
-//   FoundationModule (no deps)
-//       └── MathModule (requires FoundationModule)
-//           ├── PhysicsModule (requires MathModule)
-//           └── AIModule      (requires MathModule)
-//               └── GameWorldModule (requires PhysicsModule + AIModule)
-//
-// This exercises:
-//   - 3-level transitive resolution
-//   - Diamond dependency (MathModule pulled once despite two consumers)
-//   - Correct topological init order
+// Integration: Complex module dependency graphs — diamond, transitive, and optional deps.
 
 #include <catch2/catch_all.hpp>
 #include "sandbox/core/bootstrapper.h"
@@ -29,281 +13,148 @@
 using sandbox::core::Bootstrapper;
 using sandbox::core::ModuleInfo;
 
-// ---------------------------------------------------------------------------
-// Global init-order tracker
-// ---------------------------------------------------------------------------
-static std::vector<std::string> g_complex_init_order;
+static std::vector<std::string> g_init_order;
 
-static void reset_complex_init_order() {
-    g_complex_init_order.clear();
-}
-
-// ---------------------------------------------------------------------------
-// Module definitions (built manually — not via macro — to control init_fn)
-// ---------------------------------------------------------------------------
-
-static ModuleInfo make_complex_module(
-    const char* name,
-    int major, int minor, int patch,
-    void (*init_fn)(ecs_world_t*),
-    const sandbox_requirement_info_t* requirements = nullptr,
-    size_t requirement_count = 0
-) {
-    ModuleInfo module_info{};
-    module_info.name              = name;
-    module_info.description       = "Complex dep graph module";
-    module_info.architecture      = "sandbox::system";
-    module_info.version_major     = major;
-    module_info.version_minor     = minor;
-    module_info.version_patch     = patch;
-    module_info.service           = nullptr;
-    module_info.requirements      = requirements;
-    module_info.requirement_count = requirement_count;
-    module_info.init_fn           = init_fn;
-    return module_info;
+static ModuleInfo make_mod(const char* name, int major, int minor, int patch,
+                            void (*fn)(ecs_world_t*),
+                            const sandbox_requirement_info_t* reqs = nullptr,
+                            size_t req_count = 0) {
+    ModuleInfo m{};
+    m.name = name; m.description = "Complex dep"; m.architecture = "sandbox::system";
+    m.version_major = major; m.version_minor = minor; m.version_patch = patch;
+    m.service = nullptr; m.requirements = reqs; m.requirement_count = req_count;
+    m.init_fn = fn;
+    return m;
 }
 
 // ---------------------------------------------------------------------------
 // Suite: Diamond dependency graph
 // ---------------------------------------------------------------------------
-TEST_CASE("Suite: Complex dependency graph — diamond pattern re...",
-          "[suite][complex_dep][diamond]")
+TEST_CASE("Suite: Diamond dependency — correct order, no duplicates", "[suite][complex_dep]")
 {
     Bootstrapper::reset();
-    reset_complex_init_order();
+    g_init_order.clear();
 
-    // FoundationModule — no dependencies
-    ModuleInfo foundation_module = make_complex_module("FoundationModule", 1, 0, 0,
-        [](ecs_world_t*) { g_complex_init_order.push_back("FoundationModule"); });
+    // Foundation → Math → {Physics, AI} → GameWorld
+    auto foundation = make_mod("Foundation", 1, 0, 0,
+        [](ecs_world_t*) { g_init_order.push_back("Foundation"); });
 
-    // MathModule — requires FoundationModule
-    sandbox_requirement_info_t math_requires[] = {{
-        .kind          = SANDBOX_REQUIREMENT_KIND_MODULE,
-        .strictness    = SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED,
-        .name          = "FoundationModule",
-        .architecture  = "sandbox::system",
-        .version_major = 1,
-        .version_minor = 0,
-        .version_patch = -1,
+    sandbox_requirement_info_t req_foundation[] = {{
+        SANDBOX_REQUIREMENT_KIND_MODULE, SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED,
+        "Foundation", "sandbox::system", 1, 0, -1
     }};
+    auto math = make_mod("Math", 1, 0, 0,
+        [](ecs_world_t*) { g_init_order.push_back("Math"); },
+        req_foundation, 1);
 
-    ModuleInfo math_module = make_complex_module("MathModule", 1, 0, 0,
-        [](ecs_world_t*) { g_complex_init_order.push_back("MathModule"); },
-        math_requires, 1);
-
-    // PhysicsModule — requires MathModule
-    sandbox_requirement_info_t physics_requires[] = {{
-        .kind          = SANDBOX_REQUIREMENT_KIND_MODULE,
-        .strictness    = SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED,
-        .name          = "MathModule",
-        .architecture  = "sandbox::system",
-        .version_major = 1,
-        .version_minor = 0,
-        .version_patch = -1,
+    sandbox_requirement_info_t req_math[] = {{
+        SANDBOX_REQUIREMENT_KIND_MODULE, SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED,
+        "Math", "sandbox::system", 1, 0, -1
     }};
+    auto physics = make_mod("Physics", 1, 0, 0,
+        [](ecs_world_t*) { g_init_order.push_back("Physics"); },
+        req_math, 1);
+    auto ai = make_mod("AI", 1, 0, 0,
+        [](ecs_world_t*) { g_init_order.push_back("AI"); },
+        req_math, 1);
 
-    ModuleInfo physics_module = make_complex_module("PhysicsModule", 1, 0, 0,
-        [](ecs_world_t*) { g_complex_init_order.push_back("PhysicsModule"); },
-        physics_requires, 1);
-
-    // AIModule — requires MathModule (diamond: both Physics and AI need Math)
-    sandbox_requirement_info_t ai_requires[] = {{
-        .kind          = SANDBOX_REQUIREMENT_KIND_MODULE,
-        .strictness    = SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED,
-        .name          = "MathModule",
-        .architecture  = "sandbox::system",
-        .version_major = 1,
-        .version_minor = 0,
-        .version_patch = -1,
-    }};
-
-    ModuleInfo ai_module = make_complex_module("AIModule", 1, 0, 0,
-        [](ecs_world_t*) { g_complex_init_order.push_back("AIModule"); },
-        ai_requires, 1);
-
-    // GameWorldModule — requires PhysicsModule + AIModule
-    sandbox_requirement_info_t game_world_requires[] = {
-        {
-            .kind          = SANDBOX_REQUIREMENT_KIND_MODULE,
-            .strictness    = SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED,
-            .name          = "PhysicsModule",
-            .architecture  = "sandbox::system",
-            .version_major = 1,
-            .version_minor = 0,
-            .version_patch = -1,
-        },
-        {
-            .kind          = SANDBOX_REQUIREMENT_KIND_MODULE,
-            .strictness    = SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED,
-            .name          = "AIModule",
-            .architecture  = "sandbox::system",
-            .version_major = 1,
-            .version_minor = 0,
-            .version_patch = -1,
-        },
+    sandbox_requirement_info_t req_world[] = {
+        { SANDBOX_REQUIREMENT_KIND_MODULE, SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED,
+          "Physics", "sandbox::system", 1, 0, -1 },
+        { SANDBOX_REQUIREMENT_KIND_MODULE, SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED,
+          "AI", "sandbox::system", 1, 0, -1 },
     };
+    auto world = make_mod("GameWorld", 1, 0, 0,
+        [](ecs_world_t*) { g_init_order.push_back("GameWorld"); },
+        req_world, 2);
 
-    ModuleInfo game_world_module = make_complex_module("GameWorldModule", 1, 0, 0,
-        [](ecs_world_t*) { g_complex_init_order.push_back("GameWorldModule"); },
-        game_world_requires, 2);
+    Bootstrapper::stage_module(foundation);
+    Bootstrapper::stage_module(math);
+    Bootstrapper::stage_module(physics);
+    Bootstrapper::stage_module(ai);
+    Bootstrapper::stage_module(world);
 
-    // Stage all
-    Bootstrapper::stage_module(foundation_module);
-    Bootstrapper::stage_module(math_module);
-    Bootstrapper::stage_module(physics_module);
-    Bootstrapper::stage_module(ai_module);
-    Bootstrapper::stage_module(game_world_module);
+    Bootstrapper b;
+    b.activate("sandbox::system", "GameWorld", 1, 0, 0);
+    flecs::world w;
+    REQUIRE_NOTHROW(b.boot(w));
 
-    // Only activate the top-level module
-    Bootstrapper bootstrapper_instance;
-    bootstrapper_instance.activate("sandbox::system", "GameWorldModule", 1, 0, 0);
-
-    flecs::world test_world;
-    REQUIRE_NOTHROW(bootstrapper_instance.boot(test_world));
-
-    SECTION("FoundationModule was initialized") {
-        REQUIRE(std::find(g_complex_init_order.begin(), g_complex_init_order.end(),
-                          "FoundationModule") != g_complex_init_order.end());
+    SECTION("all 5 modules were initialized") {
+        REQUIRE(g_init_order.size() == 5);
     }
 
-    SECTION("MathModule was initialized exactly once (diamond dedup)") {
-        size_t math_count = std::count(g_complex_init_order.begin(), g_complex_init_order.end(), "MathModule");
-        REQUIRE(math_count == 1);
+    SECTION("Math initialized exactly once (diamond dedup)") {
+        REQUIRE(std::count(g_init_order.begin(), g_init_order.end(), "Math") == 1);
     }
 
-    SECTION("PhysicsModule was initialized") {
-        REQUIRE(std::find(g_complex_init_order.begin(), g_complex_init_order.end(),
-                          "PhysicsModule") != g_complex_init_order.end());
+    SECTION("Foundation boots before Math") {
+        auto f = std::find(g_init_order.begin(), g_init_order.end(), "Foundation");
+        auto m = std::find(g_init_order.begin(), g_init_order.end(), "Math");
+        REQUIRE(f < m);
     }
 
-    SECTION("AIModule was initialized") {
-        REQUIRE(std::find(g_complex_init_order.begin(), g_complex_init_order.end(),
-                          "AIModule") != g_complex_init_order.end());
+    SECTION("Math boots before Physics and AI") {
+        auto m  = std::find(g_init_order.begin(), g_init_order.end(), "Math");
+        auto ph = std::find(g_init_order.begin(), g_init_order.end(), "Physics");
+        auto ai = std::find(g_init_order.begin(), g_init_order.end(), "AI");
+        REQUIRE(m < ph);
+        REQUIRE(m < ai);
     }
 
-    SECTION("GameWorldModule was initialized last") {
-        REQUIRE(g_complex_init_order.back() == "GameWorldModule");
-    }
-
-    SECTION("FoundationModule boots before MathModule") {
-        auto foundation_pos = std::find(g_complex_init_order.begin(), g_complex_init_order.end(), "FoundationModule");
-        auto math_pos       = std::find(g_complex_init_order.begin(), g_complex_init_order.end(), "MathModule");
-        REQUIRE(foundation_pos < math_pos);
-    }
-
-    SECTION("MathModule boots before PhysicsModule") {
-        auto math_pos    = std::find(g_complex_init_order.begin(), g_complex_init_order.end(), "MathModule");
-        auto physics_pos = std::find(g_complex_init_order.begin(), g_complex_init_order.end(), "PhysicsModule");
-        REQUIRE(math_pos < physics_pos);
-    }
-
-    SECTION("MathModule boots before AIModule") {
-        auto math_pos = std::find(g_complex_init_order.begin(), g_complex_init_order.end(), "MathModule");
-        auto ai_pos   = std::find(g_complex_init_order.begin(), g_complex_init_order.end(), "AIModule");
-        REQUIRE(math_pos < ai_pos);
-    }
-
-    SECTION("PhysicsModule boots before GameWorldModule") {
-        auto physics_pos    = std::find(g_complex_init_order.begin(), g_complex_init_order.end(), "PhysicsModule");
-        auto game_world_pos = std::find(g_complex_init_order.begin(), g_complex_init_order.end(), "GameWorldModule");
-        REQUIRE(physics_pos < game_world_pos);
-    }
-
-    SECTION("AIModule boots before GameWorldModule") {
-        auto ai_pos         = std::find(g_complex_init_order.begin(), g_complex_init_order.end(), "AIModule");
-        auto game_world_pos = std::find(g_complex_init_order.begin(), g_complex_init_order.end(), "GameWorldModule");
-        REQUIRE(ai_pos < game_world_pos);
-    }
-
-    SECTION("total init count is exactly 5 (no duplicates)") {
-        REQUIRE(g_complex_init_order.size() == 5);
+    SECTION("GameWorld boots last") {
+        REQUIRE(g_init_order.back() == "GameWorld");
     }
 
     Bootstrapper::reset();
 }
 
 // ---------------------------------------------------------------------------
-// Suite: Mixed required + expected dependency chain
+// Suite: Optional (expected) dependency
 // ---------------------------------------------------------------------------
-TEST_CASE("Suite: Complex dependency — mixed required and expec...",
-          "[suite][complex_dep][mixed]")
+TEST_CASE("Suite: Optional dependency — present and absent", "[suite][complex_dep]")
 {
-    Bootstrapper::reset();
-    reset_complex_init_order();
+    auto core_mod = make_mod("CoreModule", 1, 0, 0,
+        [](ecs_world_t*) { g_init_order.push_back("CoreModule"); });
+    auto debug_mod = make_mod("DebugModule", 1, 0, 0,
+        [](ecs_world_t*) { g_init_order.push_back("DebugModule"); });
 
-    // CoreModule — no deps, always present
-    ModuleInfo core_module = make_complex_module("CoreModule", 1, 0, 0,
-        [](ecs_world_t*) { g_complex_init_order.push_back("CoreModule"); });
-
-    // DebugModule — optional (expected), enhances CoreModule
-    ModuleInfo debug_module = make_complex_module("DebugModule", 1, 0, 0,
-        [](ecs_world_t*) { g_complex_init_order.push_back("DebugModule"); });
-
-    // AppModule — requires CoreModule, expects DebugModule (optional)
-    sandbox_requirement_info_t app_requires[] = {
-        {
-            .kind          = SANDBOX_REQUIREMENT_KIND_MODULE,
-            .strictness    = SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED,
-            .name          = "CoreModule",
-            .architecture  = "sandbox::system",
-            .version_major = 1,
-            .version_minor = 0,
-            .version_patch = -1,
-        },
-        {
-            .kind          = SANDBOX_REQUIREMENT_KIND_MODULE,
-            .strictness    = SANDBOX_REQUIREMENT_STRICTNESS_EXPECTED,
-            .name          = "DebugModule",
-            .architecture  = "sandbox::system",
-            .version_major = 1,
-            .version_minor = 0,
-            .version_patch = -1,
-        },
+    sandbox_requirement_info_t app_reqs[] = {
+        { SANDBOX_REQUIREMENT_KIND_MODULE, SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED,
+          "CoreModule", "sandbox::system", 1, 0, -1 },
+        { SANDBOX_REQUIREMENT_KIND_MODULE, SANDBOX_REQUIREMENT_STRICTNESS_EXPECTED,
+          "DebugModule", "sandbox::system", 1, 0, -1 },
     };
+    auto app_mod = make_mod("AppModule", 1, 0, 0,
+        [](ecs_world_t*) { g_init_order.push_back("AppModule"); },
+        app_reqs, 2);
 
-    ModuleInfo app_module_with_debug = make_complex_module("AppModule", 1, 0, 0,
-        [](ecs_world_t*) { g_complex_init_order.push_back("AppModule"); },
-        app_requires, 2);
-
-    // Scenario A: Debug IS available
-    SECTION("optional DebugModule IS present — both core and debug are initialized") {
-        Bootstrapper::stage_module(core_module);
-        Bootstrapper::stage_module(debug_module);
-        Bootstrapper::stage_module(app_module_with_debug);
-
-        Bootstrapper bootstrapper_instance;
-        bootstrapper_instance.activate("sandbox::system", "AppModule", 1, 0, 0);
-
-        flecs::world test_world;
-        REQUIRE_NOTHROW(bootstrapper_instance.boot(test_world));
-
-        REQUIRE(std::find(g_complex_init_order.begin(), g_complex_init_order.end(), "CoreModule")  != g_complex_init_order.end());
-        REQUIRE(std::find(g_complex_init_order.begin(), g_complex_init_order.end(), "DebugModule") != g_complex_init_order.end());
-        REQUIRE(std::find(g_complex_init_order.begin(), g_complex_init_order.end(), "AppModule")   != g_complex_init_order.end());
-        REQUIRE(g_complex_init_order.size() == 3);
-
+    SECTION("optional dep present — all three modules initialize") {
+        Bootstrapper::reset();
+        g_init_order.clear();
+        Bootstrapper::stage_module(core_mod);
+        Bootstrapper::stage_module(debug_mod);
+        Bootstrapper::stage_module(app_mod);
+        Bootstrapper b;
+        b.activate("sandbox::system", "AppModule", 1, 0, 0);
+        flecs::world w;
+        REQUIRE_NOTHROW(b.boot(w));
+        REQUIRE(g_init_order.size() == 3);
+        REQUIRE(std::find(g_init_order.begin(), g_init_order.end(), "DebugModule") != g_init_order.end());
         Bootstrapper::reset();
     }
 
-    // Scenario B: Debug NOT available
-    reset_complex_init_order();
-
-    SECTION("optional DebugModule is ABSENT — only core and app are initialized") {
-        Bootstrapper::stage_module(core_module);
-        // debug NOT staged
-        Bootstrapper::stage_module(app_module_with_debug);
-
-        Bootstrapper bootstrapper_instance;
-        bootstrapper_instance.activate("sandbox::system", "AppModule", 1, 0, 0);
-
-        flecs::world test_world;
-        REQUIRE_NOTHROW(bootstrapper_instance.boot(test_world));
-
-        REQUIRE(std::find(g_complex_init_order.begin(), g_complex_init_order.end(), "CoreModule")  != g_complex_init_order.end());
-        REQUIRE(std::find(g_complex_init_order.begin(), g_complex_init_order.end(), "DebugModule") == g_complex_init_order.end());
-        REQUIRE(std::find(g_complex_init_order.begin(), g_complex_init_order.end(), "AppModule")   != g_complex_init_order.end());
-        REQUIRE(g_complex_init_order.size() == 2);
-
+    SECTION("optional dep absent — only core and app initialize") {
+        Bootstrapper::reset();
+        g_init_order.clear();
+        Bootstrapper::stage_module(core_mod);
+        // DebugModule NOT staged
+        Bootstrapper::stage_module(app_mod);
+        Bootstrapper b;
+        b.activate("sandbox::system", "AppModule", 1, 0, 0);
+        flecs::world w;
+        REQUIRE_NOTHROW(b.boot(w));
+        REQUIRE(g_init_order.size() == 2);
+        REQUIRE(std::find(g_init_order.begin(), g_init_order.end(), "DebugModule") == g_init_order.end());
         Bootstrapper::reset();
     }
 }
