@@ -1,15 +1,5 @@
 // unit/src/bootstrapper/test_bootstrapper_boot.cpp
-//
-// Unit tests for Bootstrapper::boot():
-//   - Modules with no requirements boot in any valid order
-//   - Required service dependency is auto-resolved from the global registry
-//   - Required module dependency is auto-resolved
-//   - Expected (soft) dependency is included when available
-//   - Expected dependency is silently skipped when unavailable
-//   - Service collision evicts the loser (lower version)
-//   - Cyclic dependency between modules throws std::runtime_error
-//   - init_fn call order respects dependencies (provider before consumer)
-//   - Major version collision between two required services throws
+// Tests for Bootstrapper::boot() — dependency resolution and error cases.
 
 #include <catch2/catch_all.hpp>
 #include "core/bootstrapper.h"
@@ -21,405 +11,221 @@ using sandbox::core::Bootstrapper;
 using sandbox::core::ModuleInfo;
 using sandbox::core::ServiceInfo;
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-static ServiceInfo make_service(const char* name, int major, int minor, void (*init_fn)(ecs_world_t*) = nullptr) {
-    ServiceInfo service_info{};
-    service_info.name          = name;
-    service_info.description   = "Boot test service";
-    service_info.architecture  = "sandbox::system";
-    service_info.version_major = major;
-    service_info.version_minor = minor;
-    service_info.init_fn       = init_fn;
-    return service_info;
+static ServiceInfo make_service(const char* name, int major, int minor,
+                                 void (*fn)(ecs_world_t*) = nullptr) {
+    ServiceInfo s{};
+    s.name = name; s.description = "svc"; s.architecture = "sandbox::system";
+    s.version_major = major; s.version_minor = minor; s.init_fn = fn;
+    return s;
 }
 
-static ModuleInfo make_standalone_module(const char* name, int major, int minor, int patch,
-                                         void (*init_fn)(ecs_world_t*) = nullptr) {
-    ModuleInfo module_info{};
-    module_info.name              = name;
-    module_info.description       = "Boot test standalone module";
-    module_info.architecture      = "sandbox::system";
-    module_info.version_major     = major;
-    module_info.version_minor     = minor;
-    module_info.version_patch     = patch;
-    module_info.service           = nullptr;
-    module_info.requirements      = nullptr;
-    module_info.requirement_count = 0;
-    module_info.init_fn           = init_fn;
-    return module_info;
+static ModuleInfo make_mod(const char* name, int major, int minor, int patch,
+                            void (*fn)(ecs_world_t*) = nullptr) {
+    ModuleInfo m{};
+    m.name = name; m.description = "mod"; m.architecture = "sandbox::system";
+    m.version_major = major; m.version_minor = minor; m.version_patch = patch;
+    m.service = nullptr; m.requirements = nullptr; m.requirement_count = 0; m.init_fn = fn;
+    return m;
 }
 
-// ---------------------------------------------------------------------------
-// Feature: Bootstrapper::boot — modules with no requirements
-// ---------------------------------------------------------------------------
-TEST_CASE("Boot:boot: init no reqs",
-          "[bootstrapper][boot][no_deps]")
+TEST_CASE("Boot: boot() initializes modules", "[bootstrapper][boot]")
 {
-    Bootstrapper::reset();
-
-    static int module_a_calls = 0;
-    static int module_b_calls = 0;
-    module_a_calls = 0;
-    module_b_calls = 0;
-
-    ModuleInfo module_alpha = make_standalone_module("Alpha", 1, 0, 0, [](ecs_world_t*) { module_a_calls++; });
-    ModuleInfo module_beta  = make_standalone_module("Beta",  1, 0, 0, [](ecs_world_t*) { module_b_calls++; });
-
-    Bootstrapper::stage_module(module_alpha);
-    Bootstrapper::stage_module(module_beta);
-
-    Bootstrapper bootstrapper_instance;
-    bootstrapper_instance.activate("sandbox::system", "Alpha", 1, 0, 0);
-    bootstrapper_instance.activate("sandbox::system", "Beta",  1, 0, 0);
-
-    flecs::world test_world;
-    bootstrapper_instance.boot(test_world);
-
-    SECTION("Alpha was initialized exactly once") {
-        REQUIRE(module_a_calls == 1);
+    SECTION("modules with no dependencies are all initialized") {
+        Bootstrapper::reset();
+        static int a_calls = 0, b_calls = 0;
+        a_calls = b_calls = 0;
+        auto alpha = make_mod("Alpha", 1, 0, 0, [](ecs_world_t*) { a_calls++; });
+        auto beta  = make_mod("Beta",  1, 0, 0, [](ecs_world_t*) { b_calls++; });
+        Bootstrapper::stage_module(alpha);
+        Bootstrapper::stage_module(beta);
+        Bootstrapper b;
+        b.activate("sandbox::system", "Alpha", 1, 0, 0);
+        b.activate("sandbox::system", "Beta",  1, 0, 0);
+        flecs::world w;
+        b.boot(w);
+        REQUIRE(a_calls == 1);
+        REQUIRE(b_calls == 1);
+        Bootstrapper::reset();
     }
 
-    SECTION("Beta was initialized exactly once") {
-        REQUIRE(module_b_calls == 1);
+    SECTION("required service dependency is auto-pulled") {
+        Bootstrapper::reset();
+        static std::vector<std::string> order;
+        order.clear();
+
+        ServiceInfo logger_svc = make_service("ILogger", 1, 0,
+            [](ecs_world_t*) { order.push_back("ILogger"); });
+        auto provider = make_mod("LoggerImpl", 1, 0, 0,
+            [](ecs_world_t*) { order.push_back("LoggerImpl"); });
+        provider.service = &logger_svc;
+
+        sandbox_requirement_info_t req[1];
+        req[0] = { SANDBOX_REQUIREMENT_KIND_SERVICE, SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED,
+                   "ILogger", "sandbox::system", 1, 0, -1 };
+
+        auto consumer = make_mod("Consumer", 1, 0, 0,
+            [](ecs_world_t*) { order.push_back("Consumer"); });
+        consumer.requirements = req;
+        consumer.requirement_count = 1;
+
+        Bootstrapper::stage_module(provider);
+        Bootstrapper::stage_module(consumer);
+        Bootstrapper b;
+        b.activate("sandbox::system", "Consumer", 1, 0, 0);
+        flecs::world w;
+        REQUIRE_NOTHROW(b.boot(w));
+
+        auto prov_pos = std::find(order.begin(), order.end(), "LoggerImpl");
+        auto cons_pos = std::find(order.begin(), order.end(), "Consumer");
+        REQUIRE(prov_pos != order.end());
+        REQUIRE(cons_pos != order.end());
+        REQUIRE(prov_pos < cons_pos);
+        Bootstrapper::reset();
     }
 
-    Bootstrapper::reset();
+    SECTION("required module dependency is auto-pulled") {
+        Bootstrapper::reset();
+        static bool dep_init = false, cons_init = false;
+        dep_init = cons_init = false;
+
+        auto dep = make_mod("MathLib", 1, 0, 0, [](ecs_world_t*) { dep_init = true; });
+        sandbox_requirement_info_t req[1];
+        req[0] = { SANDBOX_REQUIREMENT_KIND_MODULE, SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED,
+                   "MathLib", "sandbox::system", 1, 0, -1 };
+
+        auto physics = make_mod("Physics", 1, 0, 0, [](ecs_world_t*) { cons_init = true; });
+        physics.requirements = req;
+        physics.requirement_count = 1;
+
+        Bootstrapper::stage_module(dep);
+        Bootstrapper::stage_module(physics);
+        Bootstrapper b;
+        b.activate("sandbox::system", "Physics", 1, 0, 0);
+        flecs::world w;
+        REQUIRE_NOTHROW(b.boot(w));
+        REQUIRE(dep_init == true);
+        REQUIRE(cons_init == true);
+        Bootstrapper::reset();
+    }
+
+    SECTION("optional (expected) dep is skipped when absent") {
+        Bootstrapper::reset();
+        static bool initialized = false;
+        initialized = false;
+
+        sandbox_requirement_info_t req[1];
+        req[0] = { SANDBOX_REQUIREMENT_KIND_MODULE, SANDBOX_REQUIREMENT_STRICTNESS_EXPECTED,
+                   "OptionalModule", "sandbox::system", 1, 0, -1 };
+
+        auto mod = make_mod("Flexible", 1, 0, 0, [](ecs_world_t*) { initialized = true; });
+        mod.requirements = req;
+        mod.requirement_count = 1;
+
+        Bootstrapper::stage_module(mod);
+        Bootstrapper b;
+        b.activate("sandbox::system", "Flexible", 1, 0, 0);
+        flecs::world w;
+        REQUIRE_NOTHROW(b.boot(w));
+        REQUIRE(initialized == true);
+        Bootstrapper::reset();
+    }
+
+    SECTION("service collision evicts the lower-version provider") {
+        Bootstrapper::reset();
+        static int winner = 0, loser = 0;
+        winner = loser = 0;
+
+        ServiceInfo svc_v1 = make_service("IRenderer", 1, 0);
+        ServiceInfo svc_v2 = make_service("IRenderer", 2, 0);
+
+        auto low  = make_mod("OpenGLv1", 1, 0, 0, [](ecs_world_t*) { loser++; });
+        auto high = make_mod("Vulkan",   2, 0, 0, [](ecs_world_t*) { winner++; });
+        low.service  = &svc_v1;
+        high.service = &svc_v2;
+
+        Bootstrapper::stage_module(low);
+        Bootstrapper::stage_module(high);
+        Bootstrapper b;
+        b.activate("sandbox::system", "OpenGLv1", 1, 0, 0);
+        b.activate("sandbox::system", "Vulkan",   2, 0, 0);
+        flecs::world w;
+        REQUIRE_NOTHROW(b.boot(w));
+        REQUIRE(winner == 1);
+        REQUIRE(loser == 0);
+        Bootstrapper::reset();
+    }
 }
 
-// ---------------------------------------------------------------------------
-// Feature: Bootstrapper::boot — required service dependency auto-resolution
-// ---------------------------------------------------------------------------
-TEST_CASE("Boot:boot: auto-pull svc dep",
-          "[bootstrapper][boot][required_service]")
+TEST_CASE("Boot: boot() error cases", "[bootstrapper][boot]")
 {
-    Bootstrapper::reset();
-
-    static std::vector<std::string> boot_order;
-    boot_order.clear();
-
-    // Provider module: provides ILogger service
-    ServiceInfo logger_service = make_service("ILogger", 1, 0,
-        [](ecs_world_t*) { boot_order.push_back("ILogger"); });
-
-    ModuleInfo logger_provider = make_standalone_module("LoggerImpl", 1, 0, 0,
-        [](ecs_world_t*) { boot_order.push_back("LoggerImpl"); });
-    logger_provider.service = &logger_service;
-
-    // Consumer module: requires ILogger service
-    sandbox_requirement_info_t consumer_requirements[1];
-    consumer_requirements[0].kind         = SANDBOX_REQUIREMENT_KIND_SERVICE;
-    consumer_requirements[0].strictness   = SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED;
-    consumer_requirements[0].name         = "ILogger";
-    consumer_requirements[0].architecture = "sandbox::system";
-    consumer_requirements[0].version_major = 1;
-    consumer_requirements[0].version_minor = 0;
-    consumer_requirements[0].version_patch = -1;
-
-    ModuleInfo consumer_module = make_standalone_module("ConsumerModule", 1, 0, 0,
-        [](ecs_world_t*) { boot_order.push_back("ConsumerModule"); });
-    consumer_module.requirements      = consumer_requirements;
-    consumer_module.requirement_count = 1;
-
-    Bootstrapper::stage_module(logger_provider);
-    Bootstrapper::stage_module(consumer_module);
-
-    // Only activate the consumer — provider should be auto-pulled
-    Bootstrapper bootstrapper_instance;
-    bootstrapper_instance.activate("sandbox::system", "ConsumerModule", 1, 0, 0);
-
-    flecs::world test_world;
-    REQUIRE_NOTHROW(bootstrapper_instance.boot(test_world));
-
-    SECTION("provider module was initialized (auto-resolved)") {
-        REQUIRE(std::find(boot_order.begin(), boot_order.end(), "LoggerImpl") != boot_order.end());
+    SECTION("missing required service throws") {
+        Bootstrapper::reset();
+        sandbox_requirement_info_t req[1];
+        req[0] = { SANDBOX_REQUIREMENT_KIND_SERVICE, SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED,
+                   "INonExistent", "sandbox::system", 1, 0, -1 };
+        auto mod = make_mod("Needy", 1, 0, 0);
+        mod.requirements = req;
+        mod.requirement_count = 1;
+        Bootstrapper::stage_module(mod);
+        Bootstrapper b;
+        b.activate("sandbox::system", "Needy", 1, 0, 0);
+        flecs::world w;
+        REQUIRE_THROWS_AS(b.boot(w), std::runtime_error);
+        Bootstrapper::reset();
     }
 
-    SECTION("consumer module was initialized") {
-        REQUIRE(std::find(boot_order.begin(), boot_order.end(), "ConsumerModule") != boot_order.end());
+    SECTION("cyclic dependency throws") {
+        Bootstrapper::reset();
+        sandbox_requirement_info_t req_b[1], req_a[1];
+        req_b[0] = { SANDBOX_REQUIREMENT_KIND_MODULE, SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED,
+                     "ModuleB", "sandbox::system", 0, 0, -1 };
+        req_a[0] = { SANDBOX_REQUIREMENT_KIND_MODULE, SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED,
+                     "ModuleA", "sandbox::system", 0, 0, -1 };
+
+        auto ma = make_mod("ModuleA", 1, 0, 0);
+        ma.requirements = req_b; ma.requirement_count = 1;
+        auto mb = make_mod("ModuleB", 1, 0, 0);
+        mb.requirements = req_a; mb.requirement_count = 1;
+
+        Bootstrapper::stage_module(ma);
+        Bootstrapper::stage_module(mb);
+        Bootstrapper b;
+        b.activate("sandbox::system", "ModuleA", 1, 0, 0);
+        b.activate("sandbox::system", "ModuleB", 1, 0, 0);
+        flecs::world w;
+        REQUIRE_THROWS_AS(b.boot(w), std::runtime_error);
+        Bootstrapper::reset();
     }
 
-    SECTION("provider boots before consumer (dependency ordering)") {
-        auto provider_position = std::find(boot_order.begin(), boot_order.end(), "LoggerImpl");
-        auto consumer_position = std::find(boot_order.begin(), boot_order.end(), "ConsumerModule");
-        REQUIRE(provider_position < consumer_position);
+    SECTION("consumers disagreeing on service major version throws") {
+        Bootstrapper::reset();
+        ServiceInfo svc_v1 = make_service("ILogger", 1, 0);
+        ServiceInfo svc_v2 = make_service("ILogger", 2, 0);
+
+        auto prov1 = make_mod("LoggerV1", 1, 0, 0); prov1.service = &svc_v1;
+        auto prov2 = make_mod("LoggerV2", 2, 0, 0); prov2.service = &svc_v2;
+
+        sandbox_requirement_info_t rq1[1], rq2[1];
+        rq1[0] = { SANDBOX_REQUIREMENT_KIND_SERVICE, SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED,
+                   "ILogger", "sandbox::system", 1, 0, -1 };
+        rq2[0] = { SANDBOX_REQUIREMENT_KIND_SERVICE, SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED,
+                   "ILogger", "sandbox::system", 2, 0, -1 };
+
+        auto cons_a = make_mod("ConsumerA", 1, 0, 0);
+        cons_a.requirements = rq1; cons_a.requirement_count = 1;
+        auto cons_b = make_mod("ConsumerB", 1, 0, 0);
+        cons_b.requirements = rq2; cons_b.requirement_count = 1;
+
+        Bootstrapper::stage_module(prov1);
+        Bootstrapper::stage_module(prov2);
+        Bootstrapper::stage_module(cons_a);
+        Bootstrapper::stage_module(cons_b);
+
+        Bootstrapper b;
+        b.activate("sandbox::system", "ConsumerA", 1, 0, 0);
+        b.activate("sandbox::system", "ConsumerB", 1, 0, 0);
+        flecs::world w;
+        REQUIRE_THROWS_AS(b.boot(w), std::runtime_error);
+        Bootstrapper::reset();
     }
-
-    Bootstrapper::reset();
-}
-
-// ---------------------------------------------------------------------------
-// Feature: Bootstrapper::boot — required module dependency auto-resolution
-// ---------------------------------------------------------------------------
-TEST_CASE("Boot:boot: auto-pull mod dep",
-          "[bootstrapper][boot][required_module]")
-{
-    Bootstrapper::reset();
-
-    static bool dependency_initialized  = false;
-    static bool consumer_initialized    = false;
-    dependency_initialized = false;
-    consumer_initialized   = false;
-
-    ModuleInfo dependency_module = make_standalone_module("MathLib", 1, 0, 0,
-        [](ecs_world_t*) { dependency_initialized = true; });
-
-    sandbox_requirement_info_t math_requirement[1];
-    math_requirement[0].kind          = SANDBOX_REQUIREMENT_KIND_MODULE;
-    math_requirement[0].strictness    = SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED;
-    math_requirement[0].name          = "MathLib";
-    math_requirement[0].architecture  = "sandbox::system";
-    math_requirement[0].version_major = 1;
-    math_requirement[0].version_minor = 0;
-    math_requirement[0].version_patch = -1;
-
-    ModuleInfo physics_module = make_standalone_module("PhysicsEngine", 1, 0, 0,
-        [](ecs_world_t*) { consumer_initialized = true; });
-    physics_module.requirements      = math_requirement;
-    physics_module.requirement_count = 1;
-
-    Bootstrapper::stage_module(dependency_module);
-    Bootstrapper::stage_module(physics_module);
-
-    Bootstrapper bootstrapper_instance;
-    bootstrapper_instance.activate("sandbox::system", "PhysicsEngine", 1, 0, 0);
-
-    flecs::world test_world;
-    REQUIRE_NOTHROW(bootstrapper_instance.boot(test_world));
-
-    SECTION("required dependency (MathLib) was auto-initialized") {
-        REQUIRE(dependency_initialized == true);
-    }
-
-    SECTION("consumer (PhysicsEngine) was initialized") {
-        REQUIRE(consumer_initialized == true);
-    }
-
-    Bootstrapper::reset();
-}
-
-// ---------------------------------------------------------------------------
-// Feature: Bootstrapper::boot — required service missing throws
-// ---------------------------------------------------------------------------
-TEST_CASE("Boot:boot: missing required service throws std::runt...",
-          "[bootstrapper][boot][error]")
-{
-    Bootstrapper::reset();
-
-    sandbox_requirement_info_t missing_service_req[1];
-    missing_service_req[0].kind          = SANDBOX_REQUIREMENT_KIND_SERVICE;
-    missing_service_req[0].strictness    = SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED;
-    missing_service_req[0].name          = "INonExistentService";
-    missing_service_req[0].architecture  = "sandbox::system";
-    missing_service_req[0].version_major = 1;
-    missing_service_req[0].version_minor = 0;
-    missing_service_req[0].version_patch = -1;
-
-    ModuleInfo needy_module = make_standalone_module("NeedyModule", 1, 0, 0);
-    needy_module.requirements      = missing_service_req;
-    needy_module.requirement_count = 1;
-
-    Bootstrapper::stage_module(needy_module);
-
-    Bootstrapper bootstrapper_instance;
-    bootstrapper_instance.activate("sandbox::system", "NeedyModule", 1, 0, 0);
-
-    flecs::world test_world;
-    REQUIRE_THROWS_AS(bootstrapper_instance.boot(test_world), std::runtime_error);
-
-    Bootstrapper::reset();
-}
-
-// ---------------------------------------------------------------------------
-// Feature: Bootstrapper::boot — expected (soft) dependency is optional
-// ---------------------------------------------------------------------------
-TEST_CASE("Boot:boot: skip unavailable dep",
-          "[bootstrapper][boot][expected_optional]")
-{
-    Bootstrapper::reset();
-
-    static bool consumer_was_initialized = false;
-    consumer_was_initialized = false;
-
-    sandbox_requirement_info_t optional_req[1];
-    optional_req[0].kind          = SANDBOX_REQUIREMENT_KIND_MODULE;
-    optional_req[0].strictness    = SANDBOX_REQUIREMENT_STRICTNESS_EXPECTED;
-    optional_req[0].name          = "OptionalModule";
-    optional_req[0].architecture  = "sandbox::system";
-    optional_req[0].version_major = 1;
-    optional_req[0].version_minor = 0;
-    optional_req[0].version_patch = -1;
-
-    ModuleInfo flexible_module = make_standalone_module("FlexibleModule", 1, 0, 0,
-        [](ecs_world_t*) { consumer_was_initialized = true; });
-    flexible_module.requirements      = optional_req;
-    flexible_module.requirement_count = 1;
-
-    Bootstrapper::stage_module(flexible_module);  // optional module NOT staged
-
-    Bootstrapper bootstrapper_instance;
-    bootstrapper_instance.activate("sandbox::system", "FlexibleModule", 1, 0, 0);
-
-    flecs::world test_world;
-    REQUIRE_NOTHROW(bootstrapper_instance.boot(test_world));
-
-    SECTION("consumer module still initialized even though expected dep is absent") {
-        REQUIRE(consumer_was_initialized == true);
-    }
-
-    Bootstrapper::reset();
-}
-
-// ---------------------------------------------------------------------------
-// Feature: Bootstrapper::boot — service collision eviction
-// ---------------------------------------------------------------------------
-TEST_CASE("Boot:boot: collision evict lower",
-          "[bootstrapper][boot][collision]")
-{
-    Bootstrapper::reset();
-
-    static int winner_init_calls = 0;
-    static int loser_init_calls  = 0;
-    winner_init_calls = 0;
-    loser_init_calls  = 0;
-
-    ServiceInfo renderer_service_v1 = make_service("IRenderer", 1, 0);
-    ServiceInfo renderer_service_v2 = make_service("IRenderer", 2, 0);
-
-    ModuleInfo low_version_provider  = make_standalone_module("OpenGLv1", 1, 0, 0,
-        [](ecs_world_t*) { loser_init_calls++; });
-    low_version_provider.service = &renderer_service_v1;
-
-    ModuleInfo high_version_provider = make_standalone_module("VulkanRenderer", 2, 0, 0,
-        [](ecs_world_t*) { winner_init_calls++; });
-    high_version_provider.service = &renderer_service_v2;
-
-    Bootstrapper::stage_module(low_version_provider);
-    Bootstrapper::stage_module(high_version_provider);
-
-    Bootstrapper bootstrapper_instance;
-    bootstrapper_instance.activate("sandbox::system", "OpenGLv1",      1, 0, 0);
-    bootstrapper_instance.activate("sandbox::system", "VulkanRenderer", 2, 0, 0);
-
-    flecs::world test_world;
-    REQUIRE_NOTHROW(bootstrapper_instance.boot(test_world));
-
-    SECTION("winner (higher version) was initialized") {
-        REQUIRE(winner_init_calls == 1);
-    }
-
-    SECTION("loser (lower version) was suppressed") {
-        REQUIRE(loser_init_calls == 0);
-    }
-
-    Bootstrapper::reset();
-}
-
-// ---------------------------------------------------------------------------
-// Feature: Bootstrapper::boot — cyclic dependency detection
-// ---------------------------------------------------------------------------
-TEST_CASE("Boot:boot: cycle throws",
-          "[bootstrapper][boot][cyclic]")
-{
-    Bootstrapper::reset();
-
-    // Module A requires Module B and Module B requires Module A
-    sandbox_requirement_info_t req_b[1];
-    req_b[0].kind          = SANDBOX_REQUIREMENT_KIND_MODULE;
-    req_b[0].strictness    = SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED;
-    req_b[0].name          = "ModuleB";
-    req_b[0].architecture  = "sandbox::system";
-    req_b[0].version_major = 0;
-    req_b[0].version_minor = 0;
-    req_b[0].version_patch = -1;
-
-    sandbox_requirement_info_t req_a[1];
-    req_a[0].kind          = SANDBOX_REQUIREMENT_KIND_MODULE;
-    req_a[0].strictness    = SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED;
-    req_a[0].name          = "ModuleA";
-    req_a[0].architecture  = "sandbox::system";
-    req_a[0].version_major = 0;
-    req_a[0].version_minor = 0;
-    req_a[0].version_patch = -1;
-
-    ModuleInfo module_a = make_standalone_module("ModuleA", 1, 0, 0);
-    module_a.requirements      = req_b;
-    module_a.requirement_count = 1;
-
-    ModuleInfo module_b = make_standalone_module("ModuleB", 1, 0, 0);
-    module_b.requirements      = req_a;
-    module_b.requirement_count = 1;
-
-    Bootstrapper::stage_module(module_a);
-    Bootstrapper::stage_module(module_b);
-
-    Bootstrapper bootstrapper_instance;
-    bootstrapper_instance.activate("sandbox::system", "ModuleA", 1, 0, 0);
-    bootstrapper_instance.activate("sandbox::system", "ModuleB", 1, 0, 0);
-
-    flecs::world test_world;
-    REQUIRE_THROWS_AS(bootstrapper_instance.boot(test_world), std::runtime_error);
-
-    Bootstrapper::reset();
-}
-
-// ---------------------------------------------------------------------------
-// Feature: Bootstrapper::boot — major version service collision
-// ---------------------------------------------------------------------------
-TEST_CASE("Boot:boot: disagreeing major throws",
-          "[bootstrapper][boot][version_collision]")
-{
-    Bootstrapper::reset();
-
-    ServiceInfo logger_v1_service = make_service("ILogger", 1, 0);
-    ServiceInfo logger_v2_service = make_service("ILogger", 2, 0);
-
-    ModuleInfo logger_v1_provider = make_standalone_module("LoggerV1", 1, 0, 0);
-    logger_v1_provider.service = &logger_v1_service;
-
-    ModuleInfo logger_v2_provider = make_standalone_module("LoggerV2", 2, 0, 0);
-    logger_v2_provider.service = &logger_v2_service;
-
-    // Consumer A: requires ILogger v1
-    sandbox_requirement_info_t req_logger_v1[1];
-    req_logger_v1[0].kind          = SANDBOX_REQUIREMENT_KIND_SERVICE;
-    req_logger_v1[0].strictness    = SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED;
-    req_logger_v1[0].name          = "ILogger";
-    req_logger_v1[0].architecture  = "sandbox::system";
-    req_logger_v1[0].version_major = 1;
-    req_logger_v1[0].version_minor = 0;
-    req_logger_v1[0].version_patch = -1;
-
-    // Consumer B: requires ILogger v2
-    sandbox_requirement_info_t req_logger_v2[1];
-    req_logger_v2[0].kind          = SANDBOX_REQUIREMENT_KIND_SERVICE;
-    req_logger_v2[0].strictness    = SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED;
-    req_logger_v2[0].name          = "ILogger";
-    req_logger_v2[0].architecture  = "sandbox::system";
-    req_logger_v2[0].version_major = 2;
-    req_logger_v2[0].version_minor = 0;
-    req_logger_v2[0].version_patch = -1;
-
-    ModuleInfo consumer_a = make_standalone_module("ConsumerA", 1, 0, 0);
-    consumer_a.requirements      = req_logger_v1;
-    consumer_a.requirement_count = 1;
-
-    ModuleInfo consumer_b = make_standalone_module("ConsumerB", 1, 0, 0);
-    consumer_b.requirements      = req_logger_v2;
-    consumer_b.requirement_count = 1;
-
-    Bootstrapper::stage_module(logger_v1_provider);
-    Bootstrapper::stage_module(logger_v2_provider);
-    Bootstrapper::stage_module(consumer_a);
-    Bootstrapper::stage_module(consumer_b);
-
-    Bootstrapper bootstrapper_instance;
-    bootstrapper_instance.activate("sandbox::system", "ConsumerA", 1, 0, 0);
-    bootstrapper_instance.activate("sandbox::system", "ConsumerB", 1, 0, 0);
-
-    flecs::world test_world;
-    REQUIRE_THROWS_AS(bootstrapper_instance.boot(test_world), std::runtime_error);
-
-    Bootstrapper::reset();
 }

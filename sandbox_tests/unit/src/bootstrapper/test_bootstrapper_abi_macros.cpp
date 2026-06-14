@@ -1,15 +1,9 @@
 // unit/src/bootstrapper/test_bootstrapper_abi_macros.cpp
-//
-// Unit tests for the bootstrapper's C ABI and macro layer:
-//   - sandbox_stage_service() C function (via ABI)
-//   - sandbox_stage_module() C function (via ABI)
-//   - SANDBOX_DECLARE_MODULE macro generates correct info struct
-//   - SANDBOX_DECLARE_SERVICE macro generates correct info struct
-//   - SANDBOX_GET_SERVICE macro (C++ path) retrieves component from Flecs world
+// Tests for the bootstrapper C ABI functions and macro-generated structs.
 
 #include <catch2/catch_all.hpp>
-#include "sandbox/core/bootstrapper.h"  // public C ABI + macros
-#include "core/bootstrapper.h"          // internal C++ class for reset/boot
+#include "sandbox/core/bootstrapper.h"
+#include "core/bootstrapper.h"
 #include "sandbox/core/platform.h"
 
 #include <flecs.h>
@@ -17,91 +11,34 @@
 using sandbox::core::Bootstrapper;
 
 // ---------------------------------------------------------------------------
-// Feature: Bootstrapper ABI — C staging functions
+// Minimal Flecs modules for import tests
 // ---------------------------------------------------------------------------
-TEST_CASE("BootABI: sandbox_stage_service registers a service",
-          "[bootstrapper][abi][staging]")
-{
-    Bootstrapper::reset();
-
-    sandbox_service_info_t audio_service{};
-    audio_service.name          = "IAudio";
-    audio_service.description   = "ABI test audio service";
-    audio_service.architecture  = "sandbox::system";
-    audio_service.version_major = 1;
-    audio_service.version_minor = 0;
-    audio_service.init_fn       = nullptr;
-
-    // Calling the C ABI function — must not crash
-    REQUIRE_NOTHROW(sandbox_stage_service(&audio_service));
-
-    Bootstrapper::reset();
-}
-
-TEST_CASE("BootABI: sandbox_stage_service with null pointer is ...",
-          "[bootstrapper][abi][staging]")
-{
-    Bootstrapper::reset();
-    REQUIRE_NOTHROW(sandbox_stage_service(nullptr));
-    Bootstrapper::reset();
-}
-
-TEST_CASE("BootABI: sandbox_stage_module registers a module",
-          "[bootstrapper][abi][staging]")
-{
-    Bootstrapper::reset();
-
-    sandbox_module_info_t video_module{};
-    video_module.name              = "VideoModule";
-    video_module.description       = "ABI test video module";
-    video_module.architecture      = "sandbox::system";
-    video_module.version_major     = 1;
-    video_module.version_minor     = 0;
-    video_module.version_patch     = 0;
-    video_module.service           = nullptr;
-    video_module.requirements      = nullptr;
-    video_module.requirement_count = 0;
-    video_module.init_fn           = nullptr;
-
-    REQUIRE_NOTHROW(sandbox_stage_module(&video_module));
-
-    // Module should now be found by activate
-    Bootstrapper bootstrapper_instance;
-    REQUIRE_NOTHROW(bootstrapper_instance.activate("sandbox::system", "VideoModule", 1, 0, 0));
-
-    Bootstrapper::reset();
-}
-
-TEST_CASE("BootABI: sandbox_stage_module with null pointer is a...",
-          "[bootstrapper][abi][staging]")
-{
-    Bootstrapper::reset();
-    REQUIRE_NOTHROW(sandbox_stage_module(nullptr));
-    Bootstrapper::reset();
-}
-
-// ---------------------------------------------------------------------------
-// Feature: Bootstrapper ABI — SANDBOX_DECLARE_MODULE macro structure
-// ---------------------------------------------------------------------------
-// We test the macro by defining a minimal module here and verifying the
-// generated info struct is populated correctly.
-//
-// NOTE: The SANDBOX_DECLARE_MODULE macro uses a compound-literal style
-// initializer (ModuleInfoConfig) which must be a brace-list — we use
-// aggregate initialization with explicit field assignment.
-// ---------------------------------------------------------------------------
-
-// Minimum viable Flecs module for testing import via SANDBOX_DECLARE_MODULE.
-// Flecs requires the module constructor to be named exactly (ModuleClass)(ecs_world_t*).
 struct TestMacroFlecs {
-    TestMacroFlecs(ecs_world_t* /* ecs */) {
-        // No systems or components needed for this test
-    }
+    TestMacroFlecs(ecs_world_t*) {}
 };
 
-// Build the info initializer as a local constexpr-friendly struct
-// (cannot use GCC compound literal ({ }) at global scope in standard C++).
-// We initialize via the macro using aggregate brace init:
+struct CounterFlecs {
+    CounterFlecs(ecs_world_t*) {}
+};
+
+// ---------------------------------------------------------------------------
+// Manual service info (mirrors what SANDBOX_DECLARE_SERVICE would generate)
+// ---------------------------------------------------------------------------
+struct ISimpleCounter { int count; };
+static ISimpleCounter simple_counter_singleton = { .count = 42 };
+
+static const sandbox_service_info_t SimpleCounterService_manual_info = {
+    .name          = "ISimpleCounter",
+    .description   = "Simple counter service for macro test",
+    .architecture  = "sandbox::system",
+    .version_major = 1,
+    .version_minor = 0,
+    .init_fn       = nullptr,
+};
+
+// ---------------------------------------------------------------------------
+// Manual module info (mirrors what SANDBOX_DECLARE_MODULE would generate)
+// ---------------------------------------------------------------------------
 static const sandbox_module_info_t TestMacroModule_manual_info = {
     .name              = "TestMacroModule",
     .description       = "Macro-declared test module",
@@ -115,167 +52,130 @@ static const sandbox_module_info_t TestMacroModule_manual_info = {
     .init_fn           = nullptr,
 };
 
-// Manually stage the module in the test (simulating what SANDBOX_CONSTRUCTOR would do)
-// so we can test the auto-staging behavior without relying on GCC compound-literal extension.
-
-TEST_CASE("DeclMod: info struct has correct metadata",
-          "[bootstrapper][abi][macro]")
-{
-    SECTION("module name is set correctly") {
-        REQUIRE(std::string(TestMacroModule_manual_info.name) == "TestMacroModule");
-    }
-
-    SECTION("module architecture is set correctly") {
-        REQUIRE(std::string(TestMacroModule_manual_info.architecture) == "sandbox::system");
-    }
-
-    SECTION("module version major is correct") {
-        REQUIRE(TestMacroModule_manual_info.version_major == 1);
-    }
-
-    SECTION("module version minor is correct") {
-        REQUIRE(TestMacroModule_manual_info.version_minor == 0);
-    }
-
-    SECTION("module version patch is correct") {
-        REQUIRE(TestMacroModule_manual_info.version_patch == 0);
-    }
-}
-
-TEST_CASE("DeclMod: module is stageable and activatable",
-          "[bootstrapper][abi][macro]")
-{
-    Bootstrapper::reset();
-
-    // Manually stage (simulates the SANDBOX_CONSTRUCTOR call)
-    sandbox_module_info_t stageable_module = TestMacroModule_manual_info;
-    stageable_module.init_fn = [](ecs_world_t* /* ecs */) {
-        // No-op init for structural test
-    };
-    Bootstrapper::stage_module(stageable_module);
-
-    Bootstrapper bootstrapper_instance;
-    REQUIRE_NOTHROW(bootstrapper_instance.activate("sandbox::system", "TestMacroModule", 1, 0, 0));
-
-    flecs::world test_world;
-    REQUIRE_NOTHROW(bootstrapper_instance.boot(test_world));
-
-    Bootstrapper::reset();
-}
-
-// ---------------------------------------------------------------------------
-// Feature: SANDBOX_DECLARE_SERVICE macro structure test
-// ---------------------------------------------------------------------------
-
-struct ISimpleCounter {
-    int count;
-};
-
-static ISimpleCounter simple_counter_singleton = { .count = 42 };
-
-// Service info (what SANDBOX_DECLARE_SERVICE would generate)
-static const sandbox_service_info_t SimpleCounterService_manual_info = {
-    .name          = "ISimpleCounter",
-    .description   = "Simple counter service for macro test",
-    .architecture  = "sandbox::system",
-    .version_major = 1,
-    .version_minor = 0,
-    .init_fn       = nullptr,
-};
-
-TEST_CASE("DeclSvc: service info struct has correct metadata",
-          "[bootstrapper][abi][macro]")
-{
-    SECTION("service name is set correctly") {
-        REQUIRE(std::string(SimpleCounterService_manual_info.name) == "ISimpleCounter");
-    }
-
-    SECTION("service architecture is set correctly") {
-        REQUIRE(std::string(SimpleCounterService_manual_info.architecture) == "sandbox::system");
-    }
-
-    SECTION("service major version is correct") {
-        REQUIRE(SimpleCounterService_manual_info.version_major == 1);
-    }
-}
-
-// ---------------------------------------------------------------------------
-// Feature: Bootstrapper — Boot with a proper Flecs module init function
-// ---------------------------------------------------------------------------
-// This validates the C++ path of the module import inside SANDBOX_DECLARE_MODULE.
-// We use a proper Flecs module struct and manually replicate what the macro does.
-
-// Flecs module struct (this is what __SANDBOX_IMPORT_MODULE expects)
-struct CounterFlecs {
-    CounterFlecs(ecs_world_t* /* ecs */) {
-        // No ECS registrations needed for the test
-    }
-};
-
-// Represent the "service component" as a Flecs singleton manually
+// Flecs singleton component for SANDBOX_GET_SERVICE test
 struct CounterServiceComponent {
     ISimpleCounter* api;
     const sandbox_service_info_t* info;
 };
-
 ECS_COMPONENT_DECLARE(CounterServiceComponent);
 
-TEST_CASE("BootABI: manual svc comp accessible",
-          "[bootstrapper][abi][macro][get_service]")
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
+TEST_CASE("BootABI: C staging functions", "[bootstrapper][abi][staging]")
+{
+    SECTION("sandbox_stage_service does not crash") {
+        Bootstrapper::reset();
+        sandbox_service_info_t svc{};
+        svc.name = "IAudio"; svc.description = "ABI test"; svc.architecture = "sandbox::system";
+        svc.version_major = 1; svc.version_minor = 0; svc.init_fn = nullptr;
+        REQUIRE_NOTHROW(sandbox_stage_service(&svc));
+        Bootstrapper::reset();
+    }
+
+    SECTION("sandbox_stage_service with null is safe") {
+        Bootstrapper::reset();
+        REQUIRE_NOTHROW(sandbox_stage_service(nullptr));
+        Bootstrapper::reset();
+    }
+
+    SECTION("sandbox_stage_module registers and allows activate") {
+        Bootstrapper::reset();
+        sandbox_module_info_t mod{};
+        mod.name = "VideoModule"; mod.description = "ABI test"; mod.architecture = "sandbox::system";
+        mod.version_major = 1; mod.version_minor = 0; mod.version_patch = 0;
+        mod.service = nullptr; mod.requirements = nullptr; mod.requirement_count = 0; mod.init_fn = nullptr;
+        REQUIRE_NOTHROW(sandbox_stage_module(&mod));
+        Bootstrapper b;
+        REQUIRE_NOTHROW(b.activate("sandbox::system", "VideoModule", 1, 0, 0));
+        Bootstrapper::reset();
+    }
+
+    SECTION("sandbox_stage_module with null is safe") {
+        Bootstrapper::reset();
+        REQUIRE_NOTHROW(sandbox_stage_module(nullptr));
+        Bootstrapper::reset();
+    }
+}
+
+TEST_CASE("BootABI: SANDBOX_DECLARE_MODULE struct metadata", "[bootstrapper][abi][macro]")
+{
+    SECTION("name, architecture, and version are set correctly") {
+        REQUIRE(std::string(TestMacroModule_manual_info.name) == "TestMacroModule");
+        REQUIRE(std::string(TestMacroModule_manual_info.architecture) == "sandbox::system");
+        REQUIRE(TestMacroModule_manual_info.version_major == 1);
+        REQUIRE(TestMacroModule_manual_info.version_minor == 0);
+        REQUIRE(TestMacroModule_manual_info.version_patch == 0);
+    }
+
+    SECTION("module can be staged and activated") {
+        Bootstrapper::reset();
+        sandbox_module_info_t stageable = TestMacroModule_manual_info;
+        stageable.init_fn = [](ecs_world_t*) {};
+        Bootstrapper::stage_module(stageable);
+        Bootstrapper b;
+        REQUIRE_NOTHROW(b.activate("sandbox::system", "TestMacroModule", 1, 0, 0));
+        flecs::world w;
+        REQUIRE_NOTHROW(b.boot(w));
+        Bootstrapper::reset();
+    }
+}
+
+TEST_CASE("BootABI: SANDBOX_DECLARE_SERVICE struct metadata", "[bootstrapper][abi][macro]")
+{
+    SECTION("name, architecture, and version are set correctly") {
+        REQUIRE(std::string(SimpleCounterService_manual_info.name) == "ISimpleCounter");
+        REQUIRE(std::string(SimpleCounterService_manual_info.architecture) == "sandbox::system");
+        REQUIRE(SimpleCounterService_manual_info.version_major == 1);
+    }
+}
+
+TEST_CASE("BootABI: service component accessible via Flecs", "[bootstrapper][abi][get_service]")
 {
     Bootstrapper::reset();
 
-    // Build a module that registers CounterServiceComponent in the ECS world
-    sandbox_module_info_t counter_module{};
-    counter_module.name              = "CounterModule";
-    counter_module.description       = "Counter service provider";
-    counter_module.architecture      = "sandbox::system";
-    counter_module.version_major     = 1;
-    counter_module.version_minor     = 0;
-    counter_module.version_patch     = 0;
-    counter_module.service           = nullptr;
-    counter_module.requirements      = nullptr;
-    counter_module.requirement_count = 0;
-    counter_module.init_fn           = [](ecs_world_t* ecs) {
+    sandbox_module_info_t mod{};
+    mod.name = "CounterModule"; mod.description = "Counter provider";
+    mod.architecture = "sandbox::system";
+    mod.version_major = 1; mod.version_minor = 0; mod.version_patch = 0;
+    mod.service = nullptr; mod.requirements = nullptr; mod.requirement_count = 0;
+    mod.init_fn = [](ecs_world_t* ecs) {
         ECS_COMPONENT_DEFINE(ecs, CounterServiceComponent);
-        static const sandbox_service_info_t* info_ptr = &SimpleCounterService_manual_info;
-        CounterServiceComponent component_instance;
-        component_instance.api  = &simple_counter_singleton;
-        component_instance.info = info_ptr;
+        CounterServiceComponent comp;
+        comp.api  = &simple_counter_singleton;
+        comp.info = &SimpleCounterService_manual_info;
         ecs_set_id(ecs, ecs_id(CounterServiceComponent),
                    ecs_id(CounterServiceComponent),
-                   sizeof(CounterServiceComponent),
-                   &component_instance);
+                   sizeof(CounterServiceComponent), &comp);
     };
 
-    Bootstrapper::stage_module(counter_module);
+    Bootstrapper::stage_module(mod);
+    Bootstrapper b;
+    b.activate("sandbox::system", "CounterModule", 1, 0, 0);
+    flecs::world w;
+    b.boot(w);
 
-    Bootstrapper bootstrapper_instance;
-    bootstrapper_instance.activate("sandbox::system", "CounterModule", 1, 0, 0);
+    const CounterServiceComponent* retrieved = w.try_get<CounterServiceComponent>();
 
-    flecs::world test_world;
-    bootstrapper_instance.boot(test_world);
-
-    // Retrieve the singleton via C++ Flecs world (try_get returns const T* or nullptr)
-    const CounterServiceComponent* retrieved = test_world.try_get<CounterServiceComponent>();
-
-    SECTION("service component singleton is accessible from Flecs world") {
+    SECTION("singleton is accessible from Flecs world") {
         REQUIRE(retrieved != nullptr);
     }
 
-    if (retrieved) {
-        SECTION("api pointer is the correct singleton address") {
-            REQUIRE(retrieved->api == &simple_counter_singleton);
-        }
+    SECTION("api pointer is the correct singleton address") {
+        REQUIRE(retrieved != nullptr);
+        REQUIRE(retrieved->api == &simple_counter_singleton);
+    }
 
-        SECTION("api data has the correct initialized value") {
-            REQUIRE(retrieved->api->count == 42);
-        }
+    SECTION("api data has the correct value") {
+        REQUIRE(retrieved != nullptr);
+        REQUIRE(retrieved->api->count == 42);
+    }
 
-        SECTION("info pointer refers to the correct service info struct") {
-            REQUIRE(retrieved->info != nullptr);
-            REQUIRE(std::string(retrieved->info->name) == "ISimpleCounter");
-        }
+    SECTION("info pointer name matches the service") {
+        REQUIRE(retrieved != nullptr);
+        REQUIRE(retrieved->info != nullptr);
+        REQUIRE(std::string(retrieved->info->name) == "ISimpleCounter");
     }
 
     Bootstrapper::reset();
