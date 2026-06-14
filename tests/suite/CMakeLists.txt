@@ -14,7 +14,7 @@ target_include_directories(sandbox_tests PRIVATE
     ${CMAKE_SOURCE_DIR}/sandbox/source
 )
 
-add_dependencies(sandbox_tests mock_plugin sandbox_launcher)
+add_dependencies(sandbox_tests sandbox_launcher)
 
 include(CTest)
 include(Catch)

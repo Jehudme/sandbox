@@ -9,6 +9,5 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(Catch2)
 
-add_subdirectory(plugin)
 add_subdirectory(suite)
 add_subdirectory(unit)

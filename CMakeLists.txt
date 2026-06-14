@@ -15,7 +15,4 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 add_subdirectory(sandbox)
 add_subdirectory(launcher)
-
-if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-    add_subdirectory(tests)
-endif()
+add_subdirectory(tests)
