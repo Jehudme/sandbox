@@ -67,15 +67,15 @@ SANDBOX_API void sandbox_stage_module(const sandbox_module_info_t* info);
  * SANDBOX_DECLARE_SERVICE
  * Generates the struct, Flecs Component, auto-init function, and stages it.
  */
-#define SANDBOX_DECLARE_SERVICE(ServiceClass, IModuleType, api_ptr, ServiceInfoConfig) \
-    typedef struct { \
+#define SANDBOX_DECLARE_SERVICE(ServiceClass, IModuleType, api_ptr, ...) \
+    typedef struct ServiceClass { \
         IModuleType* api; \
         const sandbox_service_info_t* info; \
     } ServiceClass; \
     \
     ECS_COMPONENT_DECLARE(ServiceClass); \
     \
-    static sandbox_service_info_t ServiceClass##_info; \
+    static sandbox_service_info_t ServiceClass##_info = __VA_ARGS__; \
     \
     static void ServiceClass##_init_fn(ecs_world_t* ecs) { \
         ECS_COMPONENT_DEFINE(ecs, ServiceClass); \
@@ -84,8 +84,6 @@ SANDBOX_API void sandbox_stage_module(const sandbox_module_info_t* info);
         inst.info = &ServiceClass##_info; \
         ecs_set_id(ecs, ecs_id(ServiceClass), ecs_id(ServiceClass), sizeof(ServiceClass), &inst); \
     } \
-    \
-    static sandbox_service_info_t ServiceClass##_info = ServiceInfoConfig; \
     \
     SANDBOX_CONSTRUCTOR(__sandbox_stage_##ServiceClass) { \
         ServiceClass##_info.init_fn = ServiceClass##_init_fn; \
@@ -113,8 +111,8 @@ SANDBOX_API void sandbox_stage_module(const sandbox_module_info_t* info);
  * SANDBOX_DECLARE_MODULE
  * Generates info struct, ties the service init via pointer, imports module, and stages it.
  */
-#define SANDBOX_DECLARE_MODULE(ModuleClass, ModuleInfoConfig) \
-    static sandbox_module_info_t ModuleClass##_info; \
+#define SANDBOX_DECLARE_MODULE(ModuleClass, ...) \
+    static sandbox_module_info_t ModuleClass##_info = __VA_ARGS__; \
     \
     static void ModuleClass##_init_fn(ecs_world_t* ecs) { \
         /* Safely check if a service is attached and initialize it first */ \
@@ -124,8 +122,6 @@ SANDBOX_API void sandbox_stage_module(const sandbox_module_info_t* info);
         /* Import the module systems/components into Flecs */ \
         __SANDBOX_IMPORT_MODULE(ecs, ModuleClass); \
     } \
-    \
-    static sandbox_module_info_t ModuleClass##_info = ModuleInfoConfig; \
     \
     SANDBOX_CONSTRUCTOR(__sandbox_stage_##ModuleClass) { \
         ModuleClass##_info.init_fn = ModuleClass##_init_fn; \

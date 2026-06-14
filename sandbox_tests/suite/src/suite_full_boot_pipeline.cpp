@@ -189,7 +189,12 @@ SANDBOX_DECLARE_MODULE(
 TEST_CASE("Suite: Full boot pipeline — single top-level module bootstraps all providers",
           "[suite][full_boot]")
 {
-    // Only activate the game layer — boot() must auto-pull the three providers
+    // Re-stage the globally declared modules in case another test cleared the Bootstrapper registry
+    sandbox_stage_module(&OpenGLRendererModule_info);
+    sandbox_stage_module(&FMODAudioModule_info);
+    sandbox_stage_module(&RawInputModule_info);
+    sandbox_stage_module(&GameLayerModule_info);
+
     Bootstrapper bootstrapper_instance;
     bootstrapper_instance.activate("x86_64", "GameLayerModule", 1, 0, 0);
 
@@ -231,6 +236,12 @@ TEST_CASE("Suite: Full boot pipeline — single top-level module bootstraps all 
 TEST_CASE("Suite: Full boot pipeline — explicitly activating all providers is also valid",
           "[suite][full_boot]")
 {
+    // Re-stage the globally declared modules in case another test cleared the Bootstrapper registry
+    sandbox_stage_module(&OpenGLRendererModule_info);
+    sandbox_stage_module(&FMODAudioModule_info);
+    sandbox_stage_module(&RawInputModule_info);
+    sandbox_stage_module(&GameLayerModule_info);
+
     Bootstrapper bootstrapper_instance;
     bootstrapper_instance.activate("x86_64", "OpenGLRendererModule", 1, 0, -1);
     bootstrapper_instance.activate("x86_64", "FMODAudioModule",      1, 0, -1);

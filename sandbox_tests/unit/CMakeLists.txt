@@ -34,7 +34,6 @@ target_link_libraries(sandbox_unit_tests
 target_include_directories(sandbox_unit_tests
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
-        # Internal sandbox headers (non-public, for white-box testing)
         ${CMAKE_CURRENT_SOURCE_DIR}/../../sandbox/source
 )
 

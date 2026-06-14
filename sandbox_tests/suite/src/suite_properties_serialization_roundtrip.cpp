@@ -150,8 +150,8 @@ TEST_CASE("Suite: Properties — merge two configs and serialize as JSON",
     base_config.set<double>({"app", "version"}, 1.0);
 
     Properties override_config;
-    override_config.set<double>({"app", "version"}, 2.0);
-    override_config.set<bool>({"app", "debug"}, true);
+    override_config.set<double>({"version"}, 2.0);
+    override_config.set<bool>({"debug"}, true);
 
     // Merge override into base at root/app
     base_config.merge({"app"}, override_config);
