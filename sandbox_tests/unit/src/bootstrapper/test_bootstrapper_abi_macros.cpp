@@ -220,7 +220,7 @@ struct CounterServiceComponent {
 
 ECS_COMPONENT_DECLARE(CounterServiceComponent);
 
-TEST_CASE("Bootstrapper ABI: manually-assembled service component accessible via Flecs world",
+TEST_CASE("Bootstrapper ABI: manually-assembled service component accessible",
           "[bootstrapper][abi][macro][get_service]")
 {
     Bootstrapper::reset();

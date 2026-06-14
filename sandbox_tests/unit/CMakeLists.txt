@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(sandbox_unit_tests LANGUAGES CXX)
+project(sandbox_unit_tests LANGUAGES C CXX)
 
 # =============================================================================
 # SOURCE FILES

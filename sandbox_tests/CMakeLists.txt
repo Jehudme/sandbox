@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(sandbox_tests LANGUAGES CXX)
+project(sandbox_tests LANGUAGES C CXX)
 
 FetchContent_Declare(
     Catch2

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(sandbox_library LANGUAGES CXX)
+project(sandbox_library LANGUAGES C CXX)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 

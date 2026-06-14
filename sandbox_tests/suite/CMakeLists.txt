@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(sandbox_suite_tests LANGUAGES CXX)
+project(sandbox_suite_tests LANGUAGES C CXX)
 
 set(SANDBOX_SUITE_TEST_SOURCES
     src/suite_full_boot_pipeline.cpp
