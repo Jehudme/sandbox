@@ -43,7 +43,7 @@ SANDBOX_DECLARE_SERVICE(
     {
         .name          = "IRenderer",
         .description   = "Renderer interface",
-        .architecture  = "x86_64",
+        .architecture  = "sandbox::system",
         .version_major = 1,
         .version_minor = 0,
         .init_fn       = nullptr,
@@ -57,7 +57,7 @@ SANDBOX_DECLARE_SERVICE(
     {
         .name          = "IAudio",
         .description   = "Audio interface",
-        .architecture  = "x86_64",
+        .architecture  = "sandbox::system",
         .version_major = 1,
         .version_minor = 0,
         .init_fn       = nullptr,
@@ -71,7 +71,7 @@ SANDBOX_DECLARE_SERVICE(
     {
         .name          = "IInput",
         .description   = "Input interface",
-        .architecture  = "x86_64",
+        .architecture  = "sandbox::system",
         .version_major = 1,
         .version_minor = 0,
         .init_fn       = nullptr,
@@ -93,7 +93,7 @@ SANDBOX_DECLARE_MODULE(
     {
         .name          = "OpenGLRendererModule",
         .description   = "OpenGL renderer implementation",
-        .architecture  = "x86_64",
+        .architecture  = "sandbox::system",
         .version_major = 1,
         .version_minor = 0,
         .version_patch = 5,
@@ -109,7 +109,7 @@ SANDBOX_DECLARE_MODULE(
     {
         .name          = "FMODAudioModule",
         .description   = "FMOD audio implementation",
-        .architecture  = "x86_64",
+        .architecture  = "sandbox::system",
         .version_major = 1,
         .version_minor = 0,
         .version_patch = 2,
@@ -125,7 +125,7 @@ SANDBOX_DECLARE_MODULE(
     {
         .name          = "RawInputModule",
         .description   = "Raw OS input implementation",
-        .architecture  = "x86_64",
+        .architecture  = "sandbox::system",
         .version_major = 1,
         .version_minor = 0,
         .version_patch = 0,
@@ -142,7 +142,7 @@ static sandbox_requirement_info_t game_layer_requirements[] = {
         .kind          = SANDBOX_REQUIREMENT_KIND_SERVICE,
         .strictness    = SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED,
         .name          = "IRenderer",
-        .architecture  = "x86_64",
+        .architecture  = "sandbox::system",
         .version_major = 1,
         .version_minor = 0,
         .version_patch = -1,
@@ -151,7 +151,7 @@ static sandbox_requirement_info_t game_layer_requirements[] = {
         .kind          = SANDBOX_REQUIREMENT_KIND_SERVICE,
         .strictness    = SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED,
         .name          = "IAudio",
-        .architecture  = "x86_64",
+        .architecture  = "sandbox::system",
         .version_major = 1,
         .version_minor = 0,
         .version_patch = -1,
@@ -160,7 +160,7 @@ static sandbox_requirement_info_t game_layer_requirements[] = {
         .kind          = SANDBOX_REQUIREMENT_KIND_SERVICE,
         .strictness    = SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED,
         .name          = "IInput",
-        .architecture  = "x86_64",
+        .architecture  = "sandbox::system",
         .version_major = 1,
         .version_minor = 0,
         .version_patch = -1,
@@ -172,7 +172,7 @@ SANDBOX_DECLARE_MODULE(
     {
         .name          = "GameLayerModule",
         .description   = "High-level game layer",
-        .architecture  = "x86_64",
+        .architecture  = "sandbox::system",
         .version_major = 1,
         .version_minor = 0,
         .version_patch = 0,
@@ -186,7 +186,7 @@ SANDBOX_DECLARE_MODULE(
 // ---------------------------------------------------------------------------
 // Suite: Full boot pipeline
 // ---------------------------------------------------------------------------
-TEST_CASE("Suite: Full boot pipeline — single top-level module bootstraps all providers",
+TEST_CASE("Suite: Full boot pipeline — top-level boots all",
           "[suite][full_boot]")
 {
     // Re-stage the globally declared modules in case another test cleared the Bootstrapper registry
@@ -196,7 +196,7 @@ TEST_CASE("Suite: Full boot pipeline — single top-level module bootstraps all 
     sandbox_stage_module(&GameLayerModule_info);
 
     Bootstrapper bootstrapper_instance;
-    bootstrapper_instance.activate("x86_64", "GameLayerModule", 1, 0, 0);
+    bootstrapper_instance.activate("sandbox::system", "GameLayerModule", 1, 0, 0);
 
     flecs::world test_world;
     REQUIRE_NOTHROW(bootstrapper_instance.boot(test_world));
@@ -233,7 +233,7 @@ TEST_CASE("Suite: Full boot pipeline — single top-level module bootstraps all 
     Bootstrapper::reset();
 }
 
-TEST_CASE("Suite: Full boot pipeline — explicitly activating all providers is also valid",
+TEST_CASE("Suite: Full boot pipeline — explicit activate valid",
           "[suite][full_boot]")
 {
     // Re-stage the globally declared modules in case another test cleared the Bootstrapper registry
@@ -243,10 +243,10 @@ TEST_CASE("Suite: Full boot pipeline — explicitly activating all providers is 
     sandbox_stage_module(&GameLayerModule_info);
 
     Bootstrapper bootstrapper_instance;
-    bootstrapper_instance.activate("x86_64", "OpenGLRendererModule", 1, 0, -1);
-    bootstrapper_instance.activate("x86_64", "FMODAudioModule",      1, 0, -1);
-    bootstrapper_instance.activate("x86_64", "RawInputModule",       1, 0, -1);
-    bootstrapper_instance.activate("x86_64", "GameLayerModule",      1, 0,  0);
+    bootstrapper_instance.activate("sandbox::system", "OpenGLRendererModule", 1, 0, -1);
+    bootstrapper_instance.activate("sandbox::system", "FMODAudioModule",      1, 0, -1);
+    bootstrapper_instance.activate("sandbox::system", "RawInputModule",       1, 0, -1);
+    bootstrapper_instance.activate("sandbox::system", "GameLayerModule",      1, 0,  0);
 
     flecs::world test_world;
     REQUIRE_NOTHROW(bootstrapper_instance.boot(test_world));

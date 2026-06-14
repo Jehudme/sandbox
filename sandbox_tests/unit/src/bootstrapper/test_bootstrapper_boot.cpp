@@ -28,7 +28,7 @@ static ServiceInfo make_service(const char* name, int major, int minor, void (*i
     ServiceInfo service_info{};
     service_info.name          = name;
     service_info.description   = "Boot test service";
-    service_info.architecture  = "x86_64";
+    service_info.architecture  = "sandbox::system";
     service_info.version_major = major;
     service_info.version_minor = minor;
     service_info.init_fn       = init_fn;
@@ -40,7 +40,7 @@ static ModuleInfo make_standalone_module(const char* name, int major, int minor,
     ModuleInfo module_info{};
     module_info.name              = name;
     module_info.description       = "Boot test standalone module";
-    module_info.architecture      = "x86_64";
+    module_info.architecture      = "sandbox::system";
     module_info.version_major     = major;
     module_info.version_minor     = minor;
     module_info.version_patch     = patch;
@@ -54,7 +54,7 @@ static ModuleInfo make_standalone_module(const char* name, int major, int minor,
 // ---------------------------------------------------------------------------
 // Feature: Bootstrapper::boot — modules with no requirements
 // ---------------------------------------------------------------------------
-TEST_CASE("Bootstrapper::boot: modules without requirements all get initialized",
+TEST_CASE("Boot:boot: init no reqs",
           "[bootstrapper][boot][no_deps]")
 {
     Bootstrapper::reset();
@@ -71,8 +71,8 @@ TEST_CASE("Bootstrapper::boot: modules without requirements all get initialized"
     Bootstrapper::stage_module(module_beta);
 
     Bootstrapper bootstrapper_instance;
-    bootstrapper_instance.activate("x86_64", "Alpha", 1, 0, 0);
-    bootstrapper_instance.activate("x86_64", "Beta",  1, 0, 0);
+    bootstrapper_instance.activate("sandbox::system", "Alpha", 1, 0, 0);
+    bootstrapper_instance.activate("sandbox::system", "Beta",  1, 0, 0);
 
     flecs::world test_world;
     bootstrapper_instance.boot(test_world);
@@ -91,7 +91,7 @@ TEST_CASE("Bootstrapper::boot: modules without requirements all get initialized"
 // ---------------------------------------------------------------------------
 // Feature: Bootstrapper::boot — required service dependency auto-resolution
 // ---------------------------------------------------------------------------
-TEST_CASE("Bootstrapper::boot: required service dependency is auto-pulled in",
+TEST_CASE("Boot:boot: auto-pull svc dep",
           "[bootstrapper][boot][required_service]")
 {
     Bootstrapper::reset();
@@ -112,7 +112,7 @@ TEST_CASE("Bootstrapper::boot: required service dependency is auto-pulled in",
     consumer_requirements[0].kind         = SANDBOX_REQUIREMENT_KIND_SERVICE;
     consumer_requirements[0].strictness   = SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED;
     consumer_requirements[0].name         = "ILogger";
-    consumer_requirements[0].architecture = "x86_64";
+    consumer_requirements[0].architecture = "sandbox::system";
     consumer_requirements[0].version_major = 1;
     consumer_requirements[0].version_minor = 0;
     consumer_requirements[0].version_patch = -1;
@@ -127,7 +127,7 @@ TEST_CASE("Bootstrapper::boot: required service dependency is auto-pulled in",
 
     // Only activate the consumer — provider should be auto-pulled
     Bootstrapper bootstrapper_instance;
-    bootstrapper_instance.activate("x86_64", "ConsumerModule", 1, 0, 0);
+    bootstrapper_instance.activate("sandbox::system", "ConsumerModule", 1, 0, 0);
 
     flecs::world test_world;
     REQUIRE_NOTHROW(bootstrapper_instance.boot(test_world));
@@ -152,7 +152,7 @@ TEST_CASE("Bootstrapper::boot: required service dependency is auto-pulled in",
 // ---------------------------------------------------------------------------
 // Feature: Bootstrapper::boot — required module dependency auto-resolution
 // ---------------------------------------------------------------------------
-TEST_CASE("Bootstrapper::boot: required module dependency is auto-pulled in",
+TEST_CASE("Boot:boot: auto-pull mod dep",
           "[bootstrapper][boot][required_module]")
 {
     Bootstrapper::reset();
@@ -169,7 +169,7 @@ TEST_CASE("Bootstrapper::boot: required module dependency is auto-pulled in",
     math_requirement[0].kind          = SANDBOX_REQUIREMENT_KIND_MODULE;
     math_requirement[0].strictness    = SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED;
     math_requirement[0].name          = "MathLib";
-    math_requirement[0].architecture  = "x86_64";
+    math_requirement[0].architecture  = "sandbox::system";
     math_requirement[0].version_major = 1;
     math_requirement[0].version_minor = 0;
     math_requirement[0].version_patch = -1;
@@ -183,7 +183,7 @@ TEST_CASE("Bootstrapper::boot: required module dependency is auto-pulled in",
     Bootstrapper::stage_module(physics_module);
 
     Bootstrapper bootstrapper_instance;
-    bootstrapper_instance.activate("x86_64", "PhysicsEngine", 1, 0, 0);
+    bootstrapper_instance.activate("sandbox::system", "PhysicsEngine", 1, 0, 0);
 
     flecs::world test_world;
     REQUIRE_NOTHROW(bootstrapper_instance.boot(test_world));
@@ -202,7 +202,7 @@ TEST_CASE("Bootstrapper::boot: required module dependency is auto-pulled in",
 // ---------------------------------------------------------------------------
 // Feature: Bootstrapper::boot — required service missing throws
 // ---------------------------------------------------------------------------
-TEST_CASE("Bootstrapper::boot: missing required service throws std::runtime_error",
+TEST_CASE("Boot:boot: missing required service throws std::runt...",
           "[bootstrapper][boot][error]")
 {
     Bootstrapper::reset();
@@ -211,7 +211,7 @@ TEST_CASE("Bootstrapper::boot: missing required service throws std::runtime_erro
     missing_service_req[0].kind          = SANDBOX_REQUIREMENT_KIND_SERVICE;
     missing_service_req[0].strictness    = SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED;
     missing_service_req[0].name          = "INonExistentService";
-    missing_service_req[0].architecture  = "x86_64";
+    missing_service_req[0].architecture  = "sandbox::system";
     missing_service_req[0].version_major = 1;
     missing_service_req[0].version_minor = 0;
     missing_service_req[0].version_patch = -1;
@@ -223,7 +223,7 @@ TEST_CASE("Bootstrapper::boot: missing required service throws std::runtime_erro
     Bootstrapper::stage_module(needy_module);
 
     Bootstrapper bootstrapper_instance;
-    bootstrapper_instance.activate("x86_64", "NeedyModule", 1, 0, 0);
+    bootstrapper_instance.activate("sandbox::system", "NeedyModule", 1, 0, 0);
 
     flecs::world test_world;
     REQUIRE_THROWS_AS(bootstrapper_instance.boot(test_world), std::runtime_error);
@@ -234,7 +234,7 @@ TEST_CASE("Bootstrapper::boot: missing required service throws std::runtime_erro
 // ---------------------------------------------------------------------------
 // Feature: Bootstrapper::boot — expected (soft) dependency is optional
 // ---------------------------------------------------------------------------
-TEST_CASE("Bootstrapper::boot: expected dependency is silently skipped when unavailable",
+TEST_CASE("Boot:boot: skip unavailable dep",
           "[bootstrapper][boot][expected_optional]")
 {
     Bootstrapper::reset();
@@ -246,7 +246,7 @@ TEST_CASE("Bootstrapper::boot: expected dependency is silently skipped when unav
     optional_req[0].kind          = SANDBOX_REQUIREMENT_KIND_MODULE;
     optional_req[0].strictness    = SANDBOX_REQUIREMENT_STRICTNESS_EXPECTED;
     optional_req[0].name          = "OptionalModule";
-    optional_req[0].architecture  = "x86_64";
+    optional_req[0].architecture  = "sandbox::system";
     optional_req[0].version_major = 1;
     optional_req[0].version_minor = 0;
     optional_req[0].version_patch = -1;
@@ -259,7 +259,7 @@ TEST_CASE("Bootstrapper::boot: expected dependency is silently skipped when unav
     Bootstrapper::stage_module(flexible_module);  // optional module NOT staged
 
     Bootstrapper bootstrapper_instance;
-    bootstrapper_instance.activate("x86_64", "FlexibleModule", 1, 0, 0);
+    bootstrapper_instance.activate("sandbox::system", "FlexibleModule", 1, 0, 0);
 
     flecs::world test_world;
     REQUIRE_NOTHROW(bootstrapper_instance.boot(test_world));
@@ -274,7 +274,7 @@ TEST_CASE("Bootstrapper::boot: expected dependency is silently skipped when unav
 // ---------------------------------------------------------------------------
 // Feature: Bootstrapper::boot — service collision eviction
 // ---------------------------------------------------------------------------
-TEST_CASE("Bootstrapper::boot: service collision evicts lower-version provider",
+TEST_CASE("Boot:boot: collision evict lower",
           "[bootstrapper][boot][collision]")
 {
     Bootstrapper::reset();
@@ -299,8 +299,8 @@ TEST_CASE("Bootstrapper::boot: service collision evicts lower-version provider",
     Bootstrapper::stage_module(high_version_provider);
 
     Bootstrapper bootstrapper_instance;
-    bootstrapper_instance.activate("x86_64", "OpenGLv1",      1, 0, 0);
-    bootstrapper_instance.activate("x86_64", "VulkanRenderer", 2, 0, 0);
+    bootstrapper_instance.activate("sandbox::system", "OpenGLv1",      1, 0, 0);
+    bootstrapper_instance.activate("sandbox::system", "VulkanRenderer", 2, 0, 0);
 
     flecs::world test_world;
     REQUIRE_NOTHROW(bootstrapper_instance.boot(test_world));
@@ -319,7 +319,7 @@ TEST_CASE("Bootstrapper::boot: service collision evicts lower-version provider",
 // ---------------------------------------------------------------------------
 // Feature: Bootstrapper::boot — cyclic dependency detection
 // ---------------------------------------------------------------------------
-TEST_CASE("Bootstrapper::boot: cyclic module dependency throws std::runtime_error",
+TEST_CASE("Boot:boot: cycle throws",
           "[bootstrapper][boot][cyclic]")
 {
     Bootstrapper::reset();
@@ -329,7 +329,7 @@ TEST_CASE("Bootstrapper::boot: cyclic module dependency throws std::runtime_erro
     req_b[0].kind          = SANDBOX_REQUIREMENT_KIND_MODULE;
     req_b[0].strictness    = SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED;
     req_b[0].name          = "ModuleB";
-    req_b[0].architecture  = "x86_64";
+    req_b[0].architecture  = "sandbox::system";
     req_b[0].version_major = 0;
     req_b[0].version_minor = 0;
     req_b[0].version_patch = -1;
@@ -338,7 +338,7 @@ TEST_CASE("Bootstrapper::boot: cyclic module dependency throws std::runtime_erro
     req_a[0].kind          = SANDBOX_REQUIREMENT_KIND_MODULE;
     req_a[0].strictness    = SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED;
     req_a[0].name          = "ModuleA";
-    req_a[0].architecture  = "x86_64";
+    req_a[0].architecture  = "sandbox::system";
     req_a[0].version_major = 0;
     req_a[0].version_minor = 0;
     req_a[0].version_patch = -1;
@@ -355,8 +355,8 @@ TEST_CASE("Bootstrapper::boot: cyclic module dependency throws std::runtime_erro
     Bootstrapper::stage_module(module_b);
 
     Bootstrapper bootstrapper_instance;
-    bootstrapper_instance.activate("x86_64", "ModuleA", 1, 0, 0);
-    bootstrapper_instance.activate("x86_64", "ModuleB", 1, 0, 0);
+    bootstrapper_instance.activate("sandbox::system", "ModuleA", 1, 0, 0);
+    bootstrapper_instance.activate("sandbox::system", "ModuleB", 1, 0, 0);
 
     flecs::world test_world;
     REQUIRE_THROWS_AS(bootstrapper_instance.boot(test_world), std::runtime_error);
@@ -367,7 +367,7 @@ TEST_CASE("Bootstrapper::boot: cyclic module dependency throws std::runtime_erro
 // ---------------------------------------------------------------------------
 // Feature: Bootstrapper::boot — major version service collision
 // ---------------------------------------------------------------------------
-TEST_CASE("Bootstrapper::boot: two required consumers disagreeing on service major version throws",
+TEST_CASE("Boot:boot: disagreeing major throws",
           "[bootstrapper][boot][version_collision]")
 {
     Bootstrapper::reset();
@@ -386,7 +386,7 @@ TEST_CASE("Bootstrapper::boot: two required consumers disagreeing on service maj
     req_logger_v1[0].kind          = SANDBOX_REQUIREMENT_KIND_SERVICE;
     req_logger_v1[0].strictness    = SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED;
     req_logger_v1[0].name          = "ILogger";
-    req_logger_v1[0].architecture  = "x86_64";
+    req_logger_v1[0].architecture  = "sandbox::system";
     req_logger_v1[0].version_major = 1;
     req_logger_v1[0].version_minor = 0;
     req_logger_v1[0].version_patch = -1;
@@ -396,7 +396,7 @@ TEST_CASE("Bootstrapper::boot: two required consumers disagreeing on service maj
     req_logger_v2[0].kind          = SANDBOX_REQUIREMENT_KIND_SERVICE;
     req_logger_v2[0].strictness    = SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED;
     req_logger_v2[0].name          = "ILogger";
-    req_logger_v2[0].architecture  = "x86_64";
+    req_logger_v2[0].architecture  = "sandbox::system";
     req_logger_v2[0].version_major = 2;
     req_logger_v2[0].version_minor = 0;
     req_logger_v2[0].version_patch = -1;
@@ -415,8 +415,8 @@ TEST_CASE("Bootstrapper::boot: two required consumers disagreeing on service maj
     Bootstrapper::stage_module(consumer_b);
 
     Bootstrapper bootstrapper_instance;
-    bootstrapper_instance.activate("x86_64", "ConsumerA", 1, 0, 0);
-    bootstrapper_instance.activate("x86_64", "ConsumerB", 1, 0, 0);
+    bootstrapper_instance.activate("sandbox::system", "ConsumerA", 1, 0, 0);
+    bootstrapper_instance.activate("sandbox::system", "ConsumerB", 1, 0, 0);
 
     flecs::world test_world;
     REQUIRE_THROWS_AS(bootstrapper_instance.boot(test_world), std::runtime_error);

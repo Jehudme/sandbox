@@ -13,7 +13,7 @@ using sandbox::core::Properties;
 // ---------------------------------------------------------------------------
 // Feature: Properties — Default Construction
 // ---------------------------------------------------------------------------
-TEST_CASE("Properties: default construction produces a valid empty object",
+TEST_CASE("Prop: default construction valid empty obj",
           "[properties][lifecycle]")
 {
     Properties properties;
@@ -39,7 +39,7 @@ TEST_CASE("Properties: default construction produces a valid empty object",
 // ---------------------------------------------------------------------------
 // Feature: Properties — Multiple Independent Instances
 // ---------------------------------------------------------------------------
-TEST_CASE("Properties: two instances do not share internal state",
+TEST_CASE("Prop: two instances do not share internal state",
           "[properties][lifecycle]")
 {
     Properties first_instance;
@@ -56,7 +56,7 @@ TEST_CASE("Properties: two instances do not share internal state",
 // ---------------------------------------------------------------------------
 // Feature: Properties — Sub-object independence
 // ---------------------------------------------------------------------------
-TEST_CASE("Properties: sub() returns an independent copy",
+TEST_CASE("Prop: sub() returns an independent copy",
           "[properties][lifecycle]")
 {
     Properties source_properties;

@@ -18,7 +18,7 @@ using sandbox::core::Properties;
 // ---------------------------------------------------------------------------
 // Feature: Properties — Integer (int64_t) get and set
 // ---------------------------------------------------------------------------
-TEST_CASE("Properties::set/get: int64_t round-trip",
+TEST_CASE("Prop:set/get: int64_t round-trip",
           "[properties][getters_setters][int64]")
 {
     Properties properties;
@@ -66,7 +66,7 @@ TEST_CASE("Properties::set/get: int64_t round-trip",
 // ---------------------------------------------------------------------------
 // Feature: Properties — Double get and set
 // ---------------------------------------------------------------------------
-TEST_CASE("Properties::set/get: double round-trip",
+TEST_CASE("Prop:set/get: double round-trip",
           "[properties][getters_setters][double]")
 {
     Properties properties;
@@ -96,7 +96,7 @@ TEST_CASE("Properties::set/get: double round-trip",
 // ---------------------------------------------------------------------------
 // Feature: Properties — Boolean get and set
 // ---------------------------------------------------------------------------
-TEST_CASE("Properties::set/get: bool round-trip",
+TEST_CASE("Prop:set/get: bool round-trip",
           "[properties][getters_setters][bool]")
 {
     Properties properties;
@@ -131,7 +131,7 @@ TEST_CASE("Properties::set/get: bool round-trip",
 // ---------------------------------------------------------------------------
 // Feature: Properties — String get and set
 // ---------------------------------------------------------------------------
-TEST_CASE("Properties::set/get: std::string round-trip",
+TEST_CASE("Prop:set/get: std::string round-trip",
           "[properties][getters_setters][string]")
 {
     Properties properties;
@@ -164,7 +164,7 @@ TEST_CASE("Properties::set/get: std::string round-trip",
 // ---------------------------------------------------------------------------
 // Feature: Properties — Deep nested paths
 // ---------------------------------------------------------------------------
-TEST_CASE("Properties::set/get: deep nested path (3+ levels)",
+TEST_CASE("Prop:set/get: deep nested path (3+ levels)",
           "[properties][getters_setters][nested]")
 {
     Properties properties;
@@ -192,7 +192,7 @@ TEST_CASE("Properties::set/get: deep nested path (3+ levels)",
 // ---------------------------------------------------------------------------
 // Feature: Properties — Overwrite existing key
 // ---------------------------------------------------------------------------
-TEST_CASE("Properties::set: overwriting an existing key replaces the value",
+TEST_CASE("Prop:set: overwriting an existing key replaces the v...",
           "[properties][getters_setters][overwrite]")
 {
     Properties properties;
@@ -226,7 +226,7 @@ TEST_CASE("Properties::set: overwriting an existing key replaces the value",
 // ---------------------------------------------------------------------------
 // Feature: Properties — Missing key returns nullopt
 // ---------------------------------------------------------------------------
-TEST_CASE("Properties::get: missing key returns nullopt",
+TEST_CASE("Prop:get: missing key returns nullopt",
           "[properties][getters_setters][missing]")
 {
     Properties properties;

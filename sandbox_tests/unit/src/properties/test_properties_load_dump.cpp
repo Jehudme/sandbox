@@ -21,7 +21,7 @@ static const std::string NESTED_JSON = R"({"app":{"name":"engine","level":5},"de
 // ---------------------------------------------------------------------------
 // Feature: Properties — JSON load / dump round-trip
 // ---------------------------------------------------------------------------
-TEST_CASE("Properties::load: parses JSON and values become accessible",
+TEST_CASE("Prop:load: parses JSON and values become accessible",
           "[properties][load_dump][json]")
 {
     Properties properties;
@@ -46,7 +46,7 @@ TEST_CASE("Properties::load: parses JSON and values become accessible",
     }
 }
 
-TEST_CASE("Properties::load: parses nested JSON correctly",
+TEST_CASE("Prop:load: parses nested JSON correctly",
           "[properties][load_dump][json]")
 {
     Properties properties;
@@ -71,7 +71,7 @@ TEST_CASE("Properties::load: parses nested JSON correctly",
     }
 }
 
-TEST_CASE("Properties::dump: produces valid JSON from loaded data",
+TEST_CASE("Prop:dump: produces valid JSON from loaded data",
           "[properties][load_dump][json]")
 {
     Properties properties;
@@ -95,7 +95,7 @@ TEST_CASE("Properties::dump: produces valid JSON from loaded data",
 // ---------------------------------------------------------------------------
 // Feature: Properties — TOML load / dump
 // ---------------------------------------------------------------------------
-TEST_CASE("Properties::load: parses TOML format",
+TEST_CASE("Prop:load: parses TOML format",
           "[properties][load_dump][toml]")
 {
     // Use flat TOML key-value format — section headers ([table]) may not be
@@ -121,7 +121,7 @@ TEST_CASE("Properties::load: parses TOML format",
 // ---------------------------------------------------------------------------
 // Feature: Properties — YAML load / dump
 // ---------------------------------------------------------------------------
-TEST_CASE("Properties::load: parses YAML format",
+TEST_CASE("Prop:load: parses YAML format",
           "[properties][load_dump][yaml]")
 {
     const std::string yaml_data = "name: my_app\nversion: 3\n";
@@ -145,7 +145,7 @@ TEST_CASE("Properties::load: parses YAML format",
 // ---------------------------------------------------------------------------
 // Feature: Properties — Invalid data
 // ---------------------------------------------------------------------------
-TEST_CASE("Properties::load: throws on malformed JSON",
+TEST_CASE("Prop:load: throws on malformed JSON",
           "[properties][load_dump][error]")
 {
     Properties properties;
@@ -157,7 +157,7 @@ TEST_CASE("Properties::load: throws on malformed JSON",
     );
 }
 
-TEST_CASE("Properties::dump: empty Properties produces valid empty JSON object",
+TEST_CASE("Prop:dump: empty Properties produces valid empty JSO...",
           "[properties][load_dump][json]")
 {
     Properties empty_properties;

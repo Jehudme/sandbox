@@ -142,7 +142,7 @@ TEST_CASE("Suite: Properties — full engine config YAML round-trip",
 // ---------------------------------------------------------------------------
 // Suite: merge and then serialize
 // ---------------------------------------------------------------------------
-TEST_CASE("Suite: Properties — merge two configs and serialize as JSON",
+TEST_CASE("Suite: Properties — merge two configs and serialize ...",
           "[suite][properties][serialization][merge]")
 {
     Properties base_config;
@@ -174,7 +174,7 @@ TEST_CASE("Suite: Properties — merge two configs and serialize as JSON",
 // ---------------------------------------------------------------------------
 // Suite: C ABI end-to-end serialization
 // ---------------------------------------------------------------------------
-TEST_CASE("Suite: Properties ABI — full engine config round-trip via C API",
+TEST_CASE("Suite: Properties ABI — full engine config round-tri...",
           "[suite][properties][abi][serialization]")
 {
     // Build config using C++ setters via ABI
@@ -225,7 +225,7 @@ TEST_CASE("Suite: Properties ABI — full engine config round-trip via C API",
 // ---------------------------------------------------------------------------
 // Suite: Deep 5-level nesting round-trip
 // ---------------------------------------------------------------------------
-TEST_CASE("Suite: Properties — deeply nested 5-level tree survives JSON round-trip",
+TEST_CASE("Suite: Properties — deeply nested 5-level tree survi...",
           "[suite][properties][serialization][deep_nesting]")
 {
     Properties deep_props;

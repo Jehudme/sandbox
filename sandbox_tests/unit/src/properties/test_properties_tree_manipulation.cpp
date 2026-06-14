@@ -15,7 +15,7 @@ using sandbox::core::Properties;
 // ---------------------------------------------------------------------------
 // Feature: Properties::has()
 // ---------------------------------------------------------------------------
-TEST_CASE("Properties::has: shallow path detection",
+TEST_CASE("Prop:has: shallow path detection",
           "[properties][tree][has]")
 {
     Properties properties;
@@ -36,7 +36,7 @@ TEST_CASE("Properties::has: shallow path detection",
     }
 }
 
-TEST_CASE("Properties::has: deep nested path detection",
+TEST_CASE("Prop:has: deep nested path detection",
           "[properties][tree][has]")
 {
     Properties properties;
@@ -59,7 +59,7 @@ TEST_CASE("Properties::has: deep nested path detection",
 // ---------------------------------------------------------------------------
 // Feature: Properties::clear()
 // ---------------------------------------------------------------------------
-TEST_CASE("Properties::clear: clearing a leaf key",
+TEST_CASE("Prop:clear: clearing a leaf key",
           "[properties][tree][clear]")
 {
     Properties properties;
@@ -77,7 +77,7 @@ TEST_CASE("Properties::clear: clearing a leaf key",
     }
 }
 
-TEST_CASE("Properties::clear: clearing an intermediate object node",
+TEST_CASE("Prop:clear: clearing an intermediate object node",
           "[properties][tree][clear]")
 {
     Properties properties;
@@ -97,7 +97,7 @@ TEST_CASE("Properties::clear: clearing an intermediate object node",
     }
 }
 
-TEST_CASE("Properties::clear: clearing the root (empty path) resets everything",
+TEST_CASE("Prop:clear: clearing the root (empty path) resets ev...",
           "[properties][tree][clear]")
 {
     Properties properties;
@@ -117,7 +117,7 @@ TEST_CASE("Properties::clear: clearing the root (empty path) resets everything",
     }
 }
 
-TEST_CASE("Properties::clear: clearing a non-existent key is a no-op",
+TEST_CASE("Prop:clear: clearing a non-existent key is a no-op",
           "[properties][tree][clear]")
 {
     Properties properties;
@@ -134,7 +134,7 @@ TEST_CASE("Properties::clear: clearing a non-existent key is a no-op",
 // ---------------------------------------------------------------------------
 // Feature: Properties::keys()
 // ---------------------------------------------------------------------------
-TEST_CASE("Properties::keys: empty object returns empty vector",
+TEST_CASE("Prop:keys: empty object returns empty vector",
           "[properties][tree][keys]")
 {
     Properties properties;
@@ -142,7 +142,7 @@ TEST_CASE("Properties::keys: empty object returns empty vector",
     REQUIRE(returned_keys.empty());
 }
 
-TEST_CASE("Properties::keys: single-key object returns that key",
+TEST_CASE("Prop:keys: single-key object returns that key",
           "[properties][tree][keys]")
 {
     Properties properties;
@@ -159,7 +159,7 @@ TEST_CASE("Properties::keys: single-key object returns that key",
     }
 }
 
-TEST_CASE("Properties::keys: multi-key object returns all keys",
+TEST_CASE("Prop:keys: multi-key object returns all keys",
           "[properties][tree][keys]")
 {
     Properties properties;
@@ -181,7 +181,7 @@ TEST_CASE("Properties::keys: multi-key object returns all keys",
     }
 }
 
-TEST_CASE("Properties::keys: keys at nested path",
+TEST_CASE("Prop:keys: keys at nested path",
           "[properties][tree][keys]")
 {
     Properties properties;
@@ -201,7 +201,7 @@ TEST_CASE("Properties::keys: keys at nested path",
     }
 }
 
-TEST_CASE("Properties::keys: path to a leaf returns empty vector",
+TEST_CASE("Prop:keys: path to a leaf returns empty vector",
           "[properties][tree][keys]")
 {
     Properties properties;
@@ -214,7 +214,7 @@ TEST_CASE("Properties::keys: path to a leaf returns empty vector",
 // ---------------------------------------------------------------------------
 // Feature: Properties::merge()
 // ---------------------------------------------------------------------------
-TEST_CASE("Properties::merge: merging another Properties into a sub-path",
+TEST_CASE("Prop:merge: merging another Properties into a sub-path",
           "[properties][tree][merge]")
 {
     Properties destination_properties;
@@ -242,7 +242,7 @@ TEST_CASE("Properties::merge: merging another Properties into a sub-path",
     }
 }
 
-TEST_CASE("Properties::merge: merging at root replaces root data",
+TEST_CASE("Prop:merge: merging at root replaces root data",
           "[properties][tree][merge]")
 {
     Properties destination_properties;

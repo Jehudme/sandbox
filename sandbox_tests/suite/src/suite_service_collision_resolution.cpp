@@ -29,7 +29,7 @@ static ServiceInfo make_collision_service(const char* name, int major, int minor
     ServiceInfo service_info{};
     service_info.name          = name;
     service_info.description   = "Collision test service";
-    service_info.architecture  = "x86_64";
+    service_info.architecture  = "sandbox::system";
     service_info.version_major = major;
     service_info.version_minor = minor;
     service_info.init_fn       = nullptr;
@@ -44,7 +44,7 @@ static ModuleInfo make_collision_module(
     ModuleInfo module_info{};
     module_info.name              = name;
     module_info.description       = "Collision test module";
-    module_info.architecture      = "x86_64";
+    module_info.architecture      = "sandbox::system";
     module_info.version_major     = major;
     module_info.version_minor     = minor;
     module_info.version_patch     = patch;
@@ -58,7 +58,7 @@ static ModuleInfo make_collision_module(
 // ---------------------------------------------------------------------------
 // Suite: Two-way collision — higher module version wins
 // ---------------------------------------------------------------------------
-TEST_CASE("Suite: Service collision — higher module version wins two-way collision",
+TEST_CASE("Suite: Service collision — higher module version win...",
           "[suite][collision][two_way]")
 {
     Bootstrapper::reset();
@@ -81,8 +81,8 @@ TEST_CASE("Suite: Service collision — higher module version wins two-way colli
     Bootstrapper::stage_module(bullet_v2);
 
     Bootstrapper bootstrapper_instance;
-    bootstrapper_instance.activate("x86_64", "BulletPhysicsV1", 1, 0, 0);
-    bootstrapper_instance.activate("x86_64", "BulletPhysicsV2", 2, 0, 0);
+    bootstrapper_instance.activate("sandbox::system", "BulletPhysicsV1", 1, 0, 0);
+    bootstrapper_instance.activate("sandbox::system", "BulletPhysicsV2", 2, 0, 0);
 
     flecs::world test_world;
     REQUIRE_NOTHROW(bootstrapper_instance.boot(test_world));
@@ -101,7 +101,7 @@ TEST_CASE("Suite: Service collision — higher module version wins two-way colli
 // ---------------------------------------------------------------------------
 // Suite: Three-way collision — only one winner survives
 // ---------------------------------------------------------------------------
-TEST_CASE("Suite: Service collision — three-way collision yields exactly one winner",
+TEST_CASE("Suite: Service collision — three-way collision yield...",
           "[suite][collision][three_way]")
 {
     Bootstrapper::reset();
@@ -123,9 +123,9 @@ TEST_CASE("Suite: Service collision — three-way collision yields exactly one w
     Bootstrapper::stage_module(provider_v150);
 
     Bootstrapper bootstrapper_instance;
-    bootstrapper_instance.activate("x86_64", "FMODAudio", 1, 0, 0);
-    bootstrapper_instance.activate("x86_64", "OpenAL",    2, 0, 0);
-    bootstrapper_instance.activate("x86_64", "XAudio2",   1, 5, 0);
+    bootstrapper_instance.activate("sandbox::system", "FMODAudio", 1, 0, 0);
+    bootstrapper_instance.activate("sandbox::system", "OpenAL",    2, 0, 0);
+    bootstrapper_instance.activate("sandbox::system", "XAudio2",   1, 5, 0);
 
     flecs::world test_world;
     REQUIRE_NOTHROW(bootstrapper_instance.boot(test_world));
@@ -152,7 +152,7 @@ TEST_CASE("Suite: Service collision — three-way collision yields exactly one w
 // ---------------------------------------------------------------------------
 // Suite: Collision with auto-resolved provider
 // ---------------------------------------------------------------------------
-TEST_CASE("Suite: Service collision — auto-resolved provider vs explicitly activated provider",
+TEST_CASE("Suite: Service collision — auto-resolved provider vs...",
           "[suite][collision][auto_resolved]")
 {
     Bootstrapper::reset();
@@ -177,7 +177,7 @@ TEST_CASE("Suite: Service collision — auto-resolved provider vs explicitly act
         .kind          = SANDBOX_REQUIREMENT_KIND_SERVICE,
         .strictness    = SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED,
         .name          = "INetworkEngine",
-        .architecture  = "x86_64",
+        .architecture  = "sandbox::system",
         .version_major = 1,
         .version_minor = 0,
         .version_patch = -1,
@@ -193,8 +193,8 @@ TEST_CASE("Suite: Service collision — auto-resolved provider vs explicitly act
 
     // Explicitly activate both providers AND the consumer
     Bootstrapper bootstrapper_instance;
-    bootstrapper_instance.activate("x86_64", "NetworkV2",         2, 0, 0);  // explicit winner
-    bootstrapper_instance.activate("x86_64", "GameNetworkLayer",  1, 0, 0);  // will auto-pull NetworkV1
+    bootstrapper_instance.activate("sandbox::system", "NetworkV2",         2, 0, 0);  // explicit winner
+    bootstrapper_instance.activate("sandbox::system", "GameNetworkLayer",  1, 0, 0);  // will auto-pull NetworkV1
 
     flecs::world test_world;
     REQUIRE_NOTHROW(bootstrapper_instance.boot(test_world));
@@ -216,7 +216,7 @@ TEST_CASE("Suite: Service collision — auto-resolved provider vs explicitly act
 // ---------------------------------------------------------------------------
 // Suite: No collision when modules provide different services
 // ---------------------------------------------------------------------------
-TEST_CASE("Suite: Service non-collision — modules with different services both initialize",
+TEST_CASE("Suite: Service non-collision — modules with differen...",
           "[suite][collision][no_collision]")
 {
     Bootstrapper::reset();
@@ -238,8 +238,8 @@ TEST_CASE("Suite: Service non-collision — modules with different services both
     Bootstrapper::stage_module(audio_module);
 
     Bootstrapper bootstrapper_instance;
-    bootstrapper_instance.activate("x86_64", "OpenGLRenderer", 1, 0, 0);
-    bootstrapper_instance.activate("x86_64", "FMODAudio",      1, 0, 0);
+    bootstrapper_instance.activate("sandbox::system", "OpenGLRenderer", 1, 0, 0);
+    bootstrapper_instance.activate("sandbox::system", "FMODAudio",      1, 0, 0);
 
     flecs::world test_world;
     REQUIRE_NOTHROW(bootstrapper_instance.boot(test_world));

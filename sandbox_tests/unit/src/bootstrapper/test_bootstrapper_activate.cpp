@@ -38,16 +38,16 @@ static ModuleInfo make_module(const char* name, const char* arch, int major, int
 // ---------------------------------------------------------------------------
 // Feature: Bootstrapper::activate — exact patch match
 // ---------------------------------------------------------------------------
-TEST_CASE("Bootstrapper::activate: exact-patch match succeeds",
+TEST_CASE("Boot:activate: exact-patch match succeeds",
           "[bootstrapper][activate][exact]")
 {
     Bootstrapper::reset();
 
-    ModuleInfo renderer_v100 = make_module("Renderer", "x86_64", 1, 0, 0);
+    ModuleInfo renderer_v100 = make_module("Renderer", "sandbox::system", 1, 0, 0);
     Bootstrapper::stage_module(renderer_v100);
 
     Bootstrapper bootstrapper_instance;
-    REQUIRE_NOTHROW(bootstrapper_instance.activate("x86_64", "Renderer", 1, 0, 0));
+    REQUIRE_NOTHROW(bootstrapper_instance.activate("sandbox::system", "Renderer", 1, 0, 0));
 
     Bootstrapper::reset();
 }
@@ -55,15 +55,15 @@ TEST_CASE("Bootstrapper::activate: exact-patch match succeeds",
 // ---------------------------------------------------------------------------
 // Feature: Bootstrapper::activate — wildcard patch (-1) picks highest
 // ---------------------------------------------------------------------------
-TEST_CASE("Bootstrapper::activate: patch=-1 resolves to the highest available patch",
+TEST_CASE("Boot:activate: patch=-1 resolves to the highest avai...",
           "[bootstrapper][activate][wildcard_patch]")
 {
     Bootstrapper::reset();
 
     // Stage three patches — v1.0.3 should win
-    ModuleInfo renderer_v101 = make_module("Renderer", "x86_64", 1, 0, 1);
-    ModuleInfo renderer_v103 = make_module("Renderer", "x86_64", 1, 0, 3);
-    ModuleInfo renderer_v100 = make_module("Renderer", "x86_64", 1, 0, 0);
+    ModuleInfo renderer_v101 = make_module("Renderer", "sandbox::system", 1, 0, 1);
+    ModuleInfo renderer_v103 = make_module("Renderer", "sandbox::system", 1, 0, 3);
+    ModuleInfo renderer_v100 = make_module("Renderer", "sandbox::system", 1, 0, 0);
 
     Bootstrapper::stage_module(renderer_v101);
     Bootstrapper::stage_module(renderer_v103);
@@ -71,7 +71,7 @@ TEST_CASE("Bootstrapper::activate: patch=-1 resolves to the highest available pa
 
     Bootstrapper bootstrapper_instance;
     // version_patch = -1 => wildcard
-    REQUIRE_NOTHROW(bootstrapper_instance.activate("x86_64", "Renderer", 1, 0, -1));
+    REQUIRE_NOTHROW(bootstrapper_instance.activate("sandbox::system", "Renderer", 1, 0, -1));
 
     Bootstrapper::reset();
 }
@@ -79,21 +79,21 @@ TEST_CASE("Bootstrapper::activate: patch=-1 resolves to the highest available pa
 // ---------------------------------------------------------------------------
 // Feature: Bootstrapper::activate — errors
 // ---------------------------------------------------------------------------
-TEST_CASE("Bootstrapper::activate: throws when module name is unknown",
+TEST_CASE("Boot:activate: throws when module name is unknown",
           "[bootstrapper][activate][error]")
 {
     Bootstrapper::reset();
 
     Bootstrapper bootstrapper_instance;
     REQUIRE_THROWS_AS(
-        bootstrapper_instance.activate("x86_64", "NonExistentModule", 1, 0, 0),
+        bootstrapper_instance.activate("sandbox::system", "NonExistentModule", 1, 0, 0),
         std::invalid_argument
     );
 
     Bootstrapper::reset();
 }
 
-TEST_CASE("Bootstrapper::activate: throws when architecture does not match",
+TEST_CASE("Boot:activate: throws when architecture does not match",
           "[bootstrapper][activate][error]")
 {
     Bootstrapper::reset();
@@ -103,24 +103,24 @@ TEST_CASE("Bootstrapper::activate: throws when architecture does not match",
 
     Bootstrapper bootstrapper_instance;
     REQUIRE_THROWS_AS(
-        bootstrapper_instance.activate("x86_64", "Physics", 1, 0, 0),  // wrong arch
+        bootstrapper_instance.activate("sandbox::system", "Physics", 1, 0, 0),  // wrong arch
         std::invalid_argument
     );
 
     Bootstrapper::reset();
 }
 
-TEST_CASE("Bootstrapper::activate: throws when major version does not match (when major > 0)",
+TEST_CASE("Boot:activate: throws when major version does not ma...",
           "[bootstrapper][activate][error]")
 {
     Bootstrapper::reset();
 
-    ModuleInfo engine_v2 = make_module("Engine", "x86_64", 2, 0, 0);
+    ModuleInfo engine_v2 = make_module("Engine", "sandbox::system", 2, 0, 0);
     Bootstrapper::stage_module(engine_v2);
 
     Bootstrapper bootstrapper_instance;
     REQUIRE_THROWS_AS(
-        bootstrapper_instance.activate("x86_64", "Engine", 3, 0, -1),  // major=3 not found
+        bootstrapper_instance.activate("sandbox::system", "Engine", 3, 0, -1),  // major=3 not found
         std::invalid_argument
     );
 
@@ -130,7 +130,7 @@ TEST_CASE("Bootstrapper::activate: throws when major version does not match (whe
 // ---------------------------------------------------------------------------
 // Feature: Bootstrapper::activate — deduplication
 // ---------------------------------------------------------------------------
-TEST_CASE("Bootstrapper::activate: activating the same module twice is a no-op (no duplicate init)",
+TEST_CASE("Boot:activate: activate twice no-op",
           "[bootstrapper][activate][dedup]")
 {
     Bootstrapper::reset();
@@ -138,13 +138,13 @@ TEST_CASE("Bootstrapper::activate: activating the same module twice is a no-op (
     static int init_call_count = 0;
     init_call_count = 0;
 
-    ModuleInfo counter_module = make_module("Counter", "x86_64", 1, 0, 0);
+    ModuleInfo counter_module = make_module("Counter", "sandbox::system", 1, 0, 0);
     counter_module.init_fn = [](ecs_world_t*) { init_call_count++; };
     Bootstrapper::stage_module(counter_module);
 
     Bootstrapper bootstrapper_instance;
-    bootstrapper_instance.activate("x86_64", "Counter", 1, 0, 0);
-    bootstrapper_instance.activate("x86_64", "Counter", 1, 0, 0);  // second call is no-op
+    bootstrapper_instance.activate("sandbox::system", "Counter", 1, 0, 0);
+    bootstrapper_instance.activate("sandbox::system", "Counter", 1, 0, 0);  // second call is no-op
 
     flecs::world test_world;
     bootstrapper_instance.boot(test_world);
@@ -159,14 +159,14 @@ TEST_CASE("Bootstrapper::activate: activating the same module twice is a no-op (
 // ---------------------------------------------------------------------------
 // Feature: Bootstrapper::activate — version resolution with multiple candidates
 // ---------------------------------------------------------------------------
-TEST_CASE("Bootstrapper::activate: picks best minor version when minor >= requested",
+TEST_CASE("Boot:activate: picks best minor",
           "[bootstrapper][activate][version_resolution]")
 {
     Bootstrapper::reset();
 
     // Stage v1.1.0 and v1.5.0
-    ModuleInfo module_v110 = make_module("Service", "x86_64", 1, 1, 0);
-    ModuleInfo module_v150 = make_module("Service", "x86_64", 1, 5, 0);
+    ModuleInfo module_v110 = make_module("Service", "sandbox::system", 1, 1, 0);
+    ModuleInfo module_v150 = make_module("Service", "sandbox::system", 1, 5, 0);
     Bootstrapper::stage_module(module_v110);
     Bootstrapper::stage_module(module_v150);
 
@@ -183,7 +183,7 @@ TEST_CASE("Bootstrapper::activate: picks best minor version when minor >= reques
     Bootstrapper::stage_module(module_v150);
 
     Bootstrapper bootstrapper_instance;
-    bootstrapper_instance.activate("x86_64", "Service", 1, 0, -1);  // want at least minor 0
+    bootstrapper_instance.activate("sandbox::system", "Service", 1, 0, -1);  // want at least minor 0
 
     flecs::world test_world;
     bootstrapper_instance.boot(test_world);

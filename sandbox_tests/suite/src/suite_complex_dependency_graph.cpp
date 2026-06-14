@@ -52,7 +52,7 @@ static ModuleInfo make_complex_module(
     ModuleInfo module_info{};
     module_info.name              = name;
     module_info.description       = "Complex dep graph module";
-    module_info.architecture      = "x86_64";
+    module_info.architecture      = "sandbox::system";
     module_info.version_major     = major;
     module_info.version_minor     = minor;
     module_info.version_patch     = patch;
@@ -66,7 +66,7 @@ static ModuleInfo make_complex_module(
 // ---------------------------------------------------------------------------
 // Suite: Diamond dependency graph
 // ---------------------------------------------------------------------------
-TEST_CASE("Suite: Complex dependency graph — diamond pattern resolves each module once",
+TEST_CASE("Suite: Complex dependency graph — diamond pattern re...",
           "[suite][complex_dep][diamond]")
 {
     Bootstrapper::reset();
@@ -81,7 +81,7 @@ TEST_CASE("Suite: Complex dependency graph — diamond pattern resolves each mod
         .kind          = SANDBOX_REQUIREMENT_KIND_MODULE,
         .strictness    = SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED,
         .name          = "FoundationModule",
-        .architecture  = "x86_64",
+        .architecture  = "sandbox::system",
         .version_major = 1,
         .version_minor = 0,
         .version_patch = -1,
@@ -96,7 +96,7 @@ TEST_CASE("Suite: Complex dependency graph — diamond pattern resolves each mod
         .kind          = SANDBOX_REQUIREMENT_KIND_MODULE,
         .strictness    = SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED,
         .name          = "MathModule",
-        .architecture  = "x86_64",
+        .architecture  = "sandbox::system",
         .version_major = 1,
         .version_minor = 0,
         .version_patch = -1,
@@ -111,7 +111,7 @@ TEST_CASE("Suite: Complex dependency graph — diamond pattern resolves each mod
         .kind          = SANDBOX_REQUIREMENT_KIND_MODULE,
         .strictness    = SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED,
         .name          = "MathModule",
-        .architecture  = "x86_64",
+        .architecture  = "sandbox::system",
         .version_major = 1,
         .version_minor = 0,
         .version_patch = -1,
@@ -127,7 +127,7 @@ TEST_CASE("Suite: Complex dependency graph — diamond pattern resolves each mod
             .kind          = SANDBOX_REQUIREMENT_KIND_MODULE,
             .strictness    = SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED,
             .name          = "PhysicsModule",
-            .architecture  = "x86_64",
+            .architecture  = "sandbox::system",
             .version_major = 1,
             .version_minor = 0,
             .version_patch = -1,
@@ -136,7 +136,7 @@ TEST_CASE("Suite: Complex dependency graph — diamond pattern resolves each mod
             .kind          = SANDBOX_REQUIREMENT_KIND_MODULE,
             .strictness    = SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED,
             .name          = "AIModule",
-            .architecture  = "x86_64",
+            .architecture  = "sandbox::system",
             .version_major = 1,
             .version_minor = 0,
             .version_patch = -1,
@@ -156,7 +156,7 @@ TEST_CASE("Suite: Complex dependency graph — diamond pattern resolves each mod
 
     // Only activate the top-level module
     Bootstrapper bootstrapper_instance;
-    bootstrapper_instance.activate("x86_64", "GameWorldModule", 1, 0, 0);
+    bootstrapper_instance.activate("sandbox::system", "GameWorldModule", 1, 0, 0);
 
     flecs::world test_world;
     REQUIRE_NOTHROW(bootstrapper_instance.boot(test_world));
@@ -225,7 +225,7 @@ TEST_CASE("Suite: Complex dependency graph — diamond pattern resolves each mod
 // ---------------------------------------------------------------------------
 // Suite: Mixed required + expected dependency chain
 // ---------------------------------------------------------------------------
-TEST_CASE("Suite: Complex dependency — mixed required and expected deps",
+TEST_CASE("Suite: Complex dependency — mixed required and expec...",
           "[suite][complex_dep][mixed]")
 {
     Bootstrapper::reset();
@@ -245,7 +245,7 @@ TEST_CASE("Suite: Complex dependency — mixed required and expected deps",
             .kind          = SANDBOX_REQUIREMENT_KIND_MODULE,
             .strictness    = SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED,
             .name          = "CoreModule",
-            .architecture  = "x86_64",
+            .architecture  = "sandbox::system",
             .version_major = 1,
             .version_minor = 0,
             .version_patch = -1,
@@ -254,7 +254,7 @@ TEST_CASE("Suite: Complex dependency — mixed required and expected deps",
             .kind          = SANDBOX_REQUIREMENT_KIND_MODULE,
             .strictness    = SANDBOX_REQUIREMENT_STRICTNESS_EXPECTED,
             .name          = "DebugModule",
-            .architecture  = "x86_64",
+            .architecture  = "sandbox::system",
             .version_major = 1,
             .version_minor = 0,
             .version_patch = -1,
@@ -272,7 +272,7 @@ TEST_CASE("Suite: Complex dependency — mixed required and expected deps",
         Bootstrapper::stage_module(app_module_with_debug);
 
         Bootstrapper bootstrapper_instance;
-        bootstrapper_instance.activate("x86_64", "AppModule", 1, 0, 0);
+        bootstrapper_instance.activate("sandbox::system", "AppModule", 1, 0, 0);
 
         flecs::world test_world;
         REQUIRE_NOTHROW(bootstrapper_instance.boot(test_world));
@@ -294,7 +294,7 @@ TEST_CASE("Suite: Complex dependency — mixed required and expected deps",
         Bootstrapper::stage_module(app_module_with_debug);
 
         Bootstrapper bootstrapper_instance;
-        bootstrapper_instance.activate("x86_64", "AppModule", 1, 0, 0);
+        bootstrapper_instance.activate("sandbox::system", "AppModule", 1, 0, 0);
 
         flecs::world test_world;
         REQUIRE_NOTHROW(bootstrapper_instance.boot(test_world));

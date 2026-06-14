@@ -19,7 +19,7 @@
 // ---------------------------------------------------------------------------
 // Feature: Properties ABI — Lifecycle (create / destroy)
 // ---------------------------------------------------------------------------
-TEST_CASE("Properties ABI: create returns non-null pointer",
+TEST_CASE("PropABI: create returns non-null",
           "[properties][abi][lifecycle]")
 {
     sandbox_properties_t* properties_handle = sandbox_properties_create();
@@ -27,7 +27,7 @@ TEST_CASE("Properties ABI: create returns non-null pointer",
     sandbox_properties_destroy(properties_handle);
 }
 
-TEST_CASE("Properties ABI: destroy with null pointer is safe (no crash)",
+TEST_CASE("PropABI: destroy with null pointer is safe (no crash)",
           "[properties][abi][lifecycle]")
 {
     REQUIRE_NOTHROW(sandbox_properties_destroy(nullptr));
@@ -36,7 +36,7 @@ TEST_CASE("Properties ABI: destroy with null pointer is safe (no crash)",
 // ---------------------------------------------------------------------------
 // Feature: Properties ABI — Load / Dump
 // ---------------------------------------------------------------------------
-TEST_CASE("Properties ABI: load valid JSON returns true",
+TEST_CASE("PropABI: load valid JSON returns true",
           "[properties][abi][load_dump]")
 {
     sandbox_properties_t* properties_handle = sandbox_properties_create();
@@ -53,7 +53,7 @@ TEST_CASE("Properties ABI: load valid JSON returns true",
     sandbox_properties_destroy(properties_handle);
 }
 
-TEST_CASE("Properties ABI: load malformed JSON returns false",
+TEST_CASE("PropABI: load malformed JSON returns false",
           "[properties][abi][load_dump]")
 {
     sandbox_properties_t* properties_handle = sandbox_properties_create();
@@ -70,7 +70,7 @@ TEST_CASE("Properties ABI: load malformed JSON returns false",
     sandbox_properties_destroy(properties_handle);
 }
 
-TEST_CASE("Properties ABI: load with null props returns false (null safety)",
+TEST_CASE("PropABI: load with null props returns false (null sa...",
           "[properties][abi][load_dump]")
 {
     const std::string json_data = R"({"key":1})";
@@ -78,7 +78,7 @@ TEST_CASE("Properties ABI: load with null props returns false (null safety)",
     REQUIRE(load_result == false);
 }
 
-TEST_CASE("Properties ABI: dump returns valid non-null string after load",
+TEST_CASE("PropABI: dump valid str after load",
           "[properties][abi][load_dump]")
 {
     sandbox_properties_t* properties_handle = sandbox_properties_create();
@@ -100,14 +100,14 @@ TEST_CASE("Properties ABI: dump returns valid non-null string after load",
     sandbox_properties_destroy(properties_handle);
 }
 
-TEST_CASE("Properties ABI: dump with null props returns null (null safety)",
+TEST_CASE("PropABI: dump with null props returns null (null saf...",
           "[properties][abi][load_dump]")
 {
     char* result = sandbox_properties_dump(nullptr, SANDBOX_FORMAT_JSON);
     REQUIRE(result == nullptr);
 }
 
-TEST_CASE("Properties ABI: free_string with null is safe",
+TEST_CASE("PropABI: free_string with null is safe",
           "[properties][abi][load_dump]")
 {
     REQUIRE_NOTHROW(sandbox_properties_free_string(nullptr));
@@ -116,7 +116,7 @@ TEST_CASE("Properties ABI: free_string with null is safe",
 // ---------------------------------------------------------------------------
 // Feature: Properties ABI — has / clear
 // ---------------------------------------------------------------------------
-TEST_CASE("Properties ABI: has returns false for missing key",
+TEST_CASE("PropABI: has false if missing",
           "[properties][abi][has_clear]")
 {
     sandbox_properties_t* properties_handle = sandbox_properties_create();
@@ -124,7 +124,7 @@ TEST_CASE("Properties ABI: has returns false for missing key",
     sandbox_properties_destroy(properties_handle);
 }
 
-TEST_CASE("Properties ABI: has returns true after setting a value",
+TEST_CASE("PropABI: has returns true after setting a value",
           "[properties][abi][has_clear]")
 {
     sandbox_properties_t* properties_handle = sandbox_properties_create();
@@ -133,7 +133,7 @@ TEST_CASE("Properties ABI: has returns true after setting a value",
     sandbox_properties_destroy(properties_handle);
 }
 
-TEST_CASE("Properties ABI: clear removes a key",
+TEST_CASE("PropABI: clear removes a key",
           "[properties][abi][has_clear]")
 {
     sandbox_properties_t* properties_handle = sandbox_properties_create();
@@ -145,7 +145,7 @@ TEST_CASE("Properties ABI: clear removes a key",
     sandbox_properties_destroy(properties_handle);
 }
 
-TEST_CASE("Properties ABI: clear with null path clears root",
+TEST_CASE("PropABI: clear with null path clears root",
           "[properties][abi][has_clear]")
 {
     sandbox_properties_t* properties_handle = sandbox_properties_create();
@@ -170,7 +170,7 @@ TEST_CASE("Properties ABI: clear with null path clears root",
 // ---------------------------------------------------------------------------
 // Feature: Properties ABI — keys / free_keys
 // ---------------------------------------------------------------------------
-TEST_CASE("Properties ABI: keys returns null and count=0 for empty object",
+TEST_CASE("PropABI: keys null for empty",
           "[properties][abi][keys]")
 {
     sandbox_properties_t* properties_handle = sandbox_properties_create();
@@ -185,7 +185,7 @@ TEST_CASE("Properties ABI: keys returns null and count=0 for empty object",
     sandbox_properties_destroy(properties_handle);
 }
 
-TEST_CASE("Properties ABI: keys returns correct keys after setting values",
+TEST_CASE("PropABI: keys correct keys",
           "[properties][abi][keys]")
 {
     sandbox_properties_t* properties_handle = sandbox_properties_create();
@@ -220,7 +220,7 @@ TEST_CASE("Properties ABI: keys returns correct keys after setting values",
     sandbox_properties_destroy(properties_handle);
 }
 
-TEST_CASE("Properties ABI: free_keys with null is safe",
+TEST_CASE("PropABI: free_keys with null is safe",
           "[properties][abi][keys]")
 {
     REQUIRE_NOTHROW(sandbox_properties_free_keys(nullptr, 5));
@@ -229,7 +229,7 @@ TEST_CASE("Properties ABI: free_keys with null is safe",
 // ---------------------------------------------------------------------------
 // Feature: Properties ABI — merge / sub
 // ---------------------------------------------------------------------------
-TEST_CASE("Properties ABI: merge copies source into destination at given path",
+TEST_CASE("PropABI: merge copies source into destination at giv...",
           "[properties][abi][merge_sub]")
 {
     sandbox_properties_t* destination_handle = sandbox_properties_create();
@@ -244,7 +244,7 @@ TEST_CASE("Properties ABI: merge copies source into destination at given path",
     sandbox_properties_destroy(destination_handle);
 }
 
-TEST_CASE("Properties ABI: sub extracts a sub-tree into a new object",
+TEST_CASE("PropABI: sub extracts a sub-tree into a new object",
           "[properties][abi][merge_sub]")
 {
     sandbox_properties_t* parent_handle = sandbox_properties_create();
@@ -267,7 +267,7 @@ TEST_CASE("Properties ABI: sub extracts a sub-tree into a new object",
     sandbox_properties_destroy(parent_handle);
 }
 
-TEST_CASE("Properties ABI: sub with null props returns null",
+TEST_CASE("PropABI: sub with null props returns null",
           "[properties][abi][merge_sub]")
 {
     sandbox_properties_t* result = sandbox_properties_sub(nullptr, "any");
@@ -277,7 +277,7 @@ TEST_CASE("Properties ABI: sub with null props returns null",
 // ---------------------------------------------------------------------------
 // Feature: Properties ABI — Getters
 // ---------------------------------------------------------------------------
-TEST_CASE("Properties ABI: get_int64 returns true and correct value",
+TEST_CASE("PropABI: get_int64 returns correct",
           "[properties][abi][getters]")
 {
     sandbox_properties_t* properties_handle = sandbox_properties_create();
@@ -291,7 +291,7 @@ TEST_CASE("Properties ABI: get_int64 returns true and correct value",
     sandbox_properties_destroy(properties_handle);
 }
 
-TEST_CASE("Properties ABI: get_int64 returns false for missing key",
+TEST_CASE("PropABI: get_int64 false if missing",
           "[properties][abi][getters]")
 {
     sandbox_properties_t* properties_handle = sandbox_properties_create();
@@ -300,7 +300,7 @@ TEST_CASE("Properties ABI: get_int64 returns false for missing key",
     sandbox_properties_destroy(properties_handle);
 }
 
-TEST_CASE("Properties ABI: get_double returns true and correct value",
+TEST_CASE("PropABI: get_double returns correct",
           "[properties][abi][getters]")
 {
     sandbox_properties_t* properties_handle = sandbox_properties_create();
@@ -314,7 +314,7 @@ TEST_CASE("Properties ABI: get_double returns true and correct value",
     sandbox_properties_destroy(properties_handle);
 }
 
-TEST_CASE("Properties ABI: get_bool returns true and correct value",
+TEST_CASE("PropABI: get_bool returns correct",
           "[properties][abi][getters]")
 {
     sandbox_properties_t* properties_handle = sandbox_properties_create();
@@ -328,7 +328,7 @@ TEST_CASE("Properties ABI: get_bool returns true and correct value",
     sandbox_properties_destroy(properties_handle);
 }
 
-TEST_CASE("Properties ABI: get_string returns non-null string after set",
+TEST_CASE("PropABI: get_string returns non-null string after set",
           "[properties][abi][getters]")
 {
     sandbox_properties_t* properties_handle = sandbox_properties_create();
@@ -347,7 +347,7 @@ TEST_CASE("Properties ABI: get_string returns non-null string after set",
     sandbox_properties_destroy(properties_handle);
 }
 
-TEST_CASE("Properties ABI: get_string returns null for missing key",
+TEST_CASE("PropABI: get_string returns null for missing key",
           "[properties][abi][getters]")
 {
     sandbox_properties_t* properties_handle = sandbox_properties_create();
@@ -359,7 +359,7 @@ TEST_CASE("Properties ABI: get_string returns null for missing key",
 // ---------------------------------------------------------------------------
 // Feature: Properties ABI — Null safety for getters/setters
 // ---------------------------------------------------------------------------
-TEST_CASE("Properties ABI: setters with null props are safe no-ops",
+TEST_CASE("PropABI: setters with null props are safe no-ops",
           "[properties][abi][null_safety]")
 {
     REQUIRE_NOTHROW(sandbox_properties_set_int64(nullptr, "key", 1));
@@ -368,7 +368,7 @@ TEST_CASE("Properties ABI: setters with null props are safe no-ops",
     REQUIRE_NOTHROW(sandbox_properties_set_string(nullptr, "key", "val"));
 }
 
-TEST_CASE("Properties ABI: getters with null props or null output are safe",
+TEST_CASE("PropABI: getters with null props or null output are ...",
           "[properties][abi][null_safety]")
 {
     int64_t  out_int    = 0;
@@ -391,7 +391,7 @@ TEST_CASE("Properties ABI: getters with null props or null output are safe",
 // ---------------------------------------------------------------------------
 // Feature: Properties ABI — Slash path navigation
 // ---------------------------------------------------------------------------
-TEST_CASE("Properties ABI: slash-delimited path navigates into nested objects",
+TEST_CASE("PropABI: slash-delimited path navigates into nested ...",
           "[properties][abi][path]")
 {
     sandbox_properties_t* properties_handle = sandbox_properties_create();

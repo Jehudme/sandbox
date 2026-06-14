@@ -47,7 +47,7 @@ static ModuleInfo make_module(const char* name, int major, int minor, int patch,
 // ---------------------------------------------------------------------------
 // Feature: Bootstrapper — stage_service
 // ---------------------------------------------------------------------------
-TEST_CASE("Bootstrapper::stage_service: registers a new service",
+TEST_CASE("Boot:stage_service: registers a new service",
           "[bootstrapper][staging][service]")
 {
     Bootstrapper::reset();
@@ -68,7 +68,7 @@ TEST_CASE("Bootstrapper::stage_service: registers a new service",
     Bootstrapper::reset();
 }
 
-TEST_CASE("Bootstrapper::stage_service: duplicate registrations are deduplicated",
+TEST_CASE("Boot:stage_service: dedup duplicates",
           "[bootstrapper][staging][service]")
 {
     Bootstrapper::reset();
@@ -94,7 +94,7 @@ TEST_CASE("Bootstrapper::stage_service: duplicate registrations are deduplicated
 // ---------------------------------------------------------------------------
 // Feature: Bootstrapper — stage_module
 // ---------------------------------------------------------------------------
-TEST_CASE("Bootstrapper::stage_module: registers a new module",
+TEST_CASE("Boot:stage_module: registers a new module",
           "[bootstrapper][staging][module]")
 {
     Bootstrapper::reset();
@@ -108,7 +108,7 @@ TEST_CASE("Bootstrapper::stage_module: registers a new module",
     Bootstrapper::reset();
 }
 
-TEST_CASE("Bootstrapper::stage_module: duplicate registrations are deduplicated",
+TEST_CASE("Boot:stage_module: dedup duplicates",
           "[bootstrapper][staging][module]")
 {
     Bootstrapper::reset();
@@ -129,7 +129,7 @@ TEST_CASE("Bootstrapper::stage_module: duplicate registrations are deduplicated"
 // ---------------------------------------------------------------------------
 // Feature: Bootstrapper — reset()
 // ---------------------------------------------------------------------------
-TEST_CASE("Bootstrapper::reset: clears all staged modules and services",
+TEST_CASE("Boot:reset: clears all",
           "[bootstrapper][staging][reset]")
 {
     // Stage some content
@@ -150,7 +150,7 @@ TEST_CASE("Bootstrapper::reset: clears all staged modules and services",
     );
 }
 
-TEST_CASE("Bootstrapper::reset: is safe to call multiple times on empty registry",
+TEST_CASE("Boot:reset: safe multi calls",
           "[bootstrapper][staging][reset]")
 {
     Bootstrapper::reset();

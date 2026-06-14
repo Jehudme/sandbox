@@ -19,7 +19,7 @@ using sandbox::core::Bootstrapper;
 // ---------------------------------------------------------------------------
 // Feature: Bootstrapper ABI — C staging functions
 // ---------------------------------------------------------------------------
-TEST_CASE("Bootstrapper ABI: sandbox_stage_service registers a service",
+TEST_CASE("BootABI: sandbox_stage_service registers a service",
           "[bootstrapper][abi][staging]")
 {
     Bootstrapper::reset();
@@ -27,7 +27,7 @@ TEST_CASE("Bootstrapper ABI: sandbox_stage_service registers a service",
     sandbox_service_info_t audio_service{};
     audio_service.name          = "IAudio";
     audio_service.description   = "ABI test audio service";
-    audio_service.architecture  = "x86_64";
+    audio_service.architecture  = "sandbox::system";
     audio_service.version_major = 1;
     audio_service.version_minor = 0;
     audio_service.init_fn       = nullptr;
@@ -38,7 +38,7 @@ TEST_CASE("Bootstrapper ABI: sandbox_stage_service registers a service",
     Bootstrapper::reset();
 }
 
-TEST_CASE("Bootstrapper ABI: sandbox_stage_service with null pointer is a safe no-op",
+TEST_CASE("BootABI: sandbox_stage_service with null pointer is ...",
           "[bootstrapper][abi][staging]")
 {
     Bootstrapper::reset();
@@ -46,7 +46,7 @@ TEST_CASE("Bootstrapper ABI: sandbox_stage_service with null pointer is a safe n
     Bootstrapper::reset();
 }
 
-TEST_CASE("Bootstrapper ABI: sandbox_stage_module registers a module",
+TEST_CASE("BootABI: sandbox_stage_module registers a module",
           "[bootstrapper][abi][staging]")
 {
     Bootstrapper::reset();
@@ -54,7 +54,7 @@ TEST_CASE("Bootstrapper ABI: sandbox_stage_module registers a module",
     sandbox_module_info_t video_module{};
     video_module.name              = "VideoModule";
     video_module.description       = "ABI test video module";
-    video_module.architecture      = "x86_64";
+    video_module.architecture      = "sandbox::system";
     video_module.version_major     = 1;
     video_module.version_minor     = 0;
     video_module.version_patch     = 0;
@@ -67,12 +67,12 @@ TEST_CASE("Bootstrapper ABI: sandbox_stage_module registers a module",
 
     // Module should now be found by activate
     Bootstrapper bootstrapper_instance;
-    REQUIRE_NOTHROW(bootstrapper_instance.activate("x86_64", "VideoModule", 1, 0, 0));
+    REQUIRE_NOTHROW(bootstrapper_instance.activate("sandbox::system", "VideoModule", 1, 0, 0));
 
     Bootstrapper::reset();
 }
 
-TEST_CASE("Bootstrapper ABI: sandbox_stage_module with null pointer is a safe no-op",
+TEST_CASE("BootABI: sandbox_stage_module with null pointer is a...",
           "[bootstrapper][abi][staging]")
 {
     Bootstrapper::reset();
@@ -105,7 +105,7 @@ struct TestMacroFlecs {
 static const sandbox_module_info_t TestMacroModule_manual_info = {
     .name              = "TestMacroModule",
     .description       = "Macro-declared test module",
-    .architecture      = "x86_64",
+    .architecture      = "sandbox::system",
     .version_major     = 1,
     .version_minor     = 0,
     .version_patch     = 0,
@@ -118,7 +118,7 @@ static const sandbox_module_info_t TestMacroModule_manual_info = {
 // Manually stage the module in the test (simulating what SANDBOX_CONSTRUCTOR would do)
 // so we can test the auto-staging behavior without relying on GCC compound-literal extension.
 
-TEST_CASE("SANDBOX_DECLARE_MODULE manual equivalent: info struct has correct metadata",
+TEST_CASE("DeclMod: info struct has correct metadata",
           "[bootstrapper][abi][macro]")
 {
     SECTION("module name is set correctly") {
@@ -126,7 +126,7 @@ TEST_CASE("SANDBOX_DECLARE_MODULE manual equivalent: info struct has correct met
     }
 
     SECTION("module architecture is set correctly") {
-        REQUIRE(std::string(TestMacroModule_manual_info.architecture) == "x86_64");
+        REQUIRE(std::string(TestMacroModule_manual_info.architecture) == "sandbox::system");
     }
 
     SECTION("module version major is correct") {
@@ -142,7 +142,7 @@ TEST_CASE("SANDBOX_DECLARE_MODULE manual equivalent: info struct has correct met
     }
 }
 
-TEST_CASE("SANDBOX_DECLARE_MODULE manual equivalent: module is stageable and activatable",
+TEST_CASE("DeclMod: module is stageable and activatable",
           "[bootstrapper][abi][macro]")
 {
     Bootstrapper::reset();
@@ -155,7 +155,7 @@ TEST_CASE("SANDBOX_DECLARE_MODULE manual equivalent: module is stageable and act
     Bootstrapper::stage_module(stageable_module);
 
     Bootstrapper bootstrapper_instance;
-    REQUIRE_NOTHROW(bootstrapper_instance.activate("x86_64", "TestMacroModule", 1, 0, 0));
+    REQUIRE_NOTHROW(bootstrapper_instance.activate("sandbox::system", "TestMacroModule", 1, 0, 0));
 
     flecs::world test_world;
     REQUIRE_NOTHROW(bootstrapper_instance.boot(test_world));
@@ -177,13 +177,13 @@ static ISimpleCounter simple_counter_singleton = { .count = 42 };
 static const sandbox_service_info_t SimpleCounterService_manual_info = {
     .name          = "ISimpleCounter",
     .description   = "Simple counter service for macro test",
-    .architecture  = "x86_64",
+    .architecture  = "sandbox::system",
     .version_major = 1,
     .version_minor = 0,
     .init_fn       = nullptr,
 };
 
-TEST_CASE("SANDBOX_DECLARE_SERVICE manual equivalent: service info struct has correct metadata",
+TEST_CASE("DeclSvc: service info struct has correct metadata",
           "[bootstrapper][abi][macro]")
 {
     SECTION("service name is set correctly") {
@@ -191,7 +191,7 @@ TEST_CASE("SANDBOX_DECLARE_SERVICE manual equivalent: service info struct has co
     }
 
     SECTION("service architecture is set correctly") {
-        REQUIRE(std::string(SimpleCounterService_manual_info.architecture) == "x86_64");
+        REQUIRE(std::string(SimpleCounterService_manual_info.architecture) == "sandbox::system");
     }
 
     SECTION("service major version is correct") {
@@ -220,7 +220,7 @@ struct CounterServiceComponent {
 
 ECS_COMPONENT_DECLARE(CounterServiceComponent);
 
-TEST_CASE("Bootstrapper ABI: manually-assembled service component accessible",
+TEST_CASE("BootABI: manual svc comp accessible",
           "[bootstrapper][abi][macro][get_service]")
 {
     Bootstrapper::reset();
@@ -229,7 +229,7 @@ TEST_CASE("Bootstrapper ABI: manually-assembled service component accessible",
     sandbox_module_info_t counter_module{};
     counter_module.name              = "CounterModule";
     counter_module.description       = "Counter service provider";
-    counter_module.architecture      = "x86_64";
+    counter_module.architecture      = "sandbox::system";
     counter_module.version_major     = 1;
     counter_module.version_minor     = 0;
     counter_module.version_patch     = 0;
@@ -251,7 +251,7 @@ TEST_CASE("Bootstrapper ABI: manually-assembled service component accessible",
     Bootstrapper::stage_module(counter_module);
 
     Bootstrapper bootstrapper_instance;
-    bootstrapper_instance.activate("x86_64", "CounterModule", 1, 0, 0);
+    bootstrapper_instance.activate("sandbox::system", "CounterModule", 1, 0, 0);
 
     flecs::world test_world;
     bootstrapper_instance.boot(test_world);
