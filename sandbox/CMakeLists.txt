@@ -20,16 +20,21 @@ FetchContent_MakeAvailable(glaze flecs)
 # =============================================================================
 # 2. CORE LIBRARY TARGET
 # =============================================================================
-add_library(sandbox_library SHARED
+add_library(sandbox_library STATIC
         source/core/properties.h
         source/core/properties.cpp
-        source/abi/core/properties.cpp
+        source/abi/properties.cpp
         include/sandbox/core/properties.h
+        source/core/bootstrapper.cpp
+        source/core/bootstrapper.h
+        include/sandbox/core/bootstrapper.h
+        source/abi/bootstrapper.cpp
+        include/sandbox/core/platform.h
 )
 
 add_library(sandbox::library ALIAS sandbox_library)
 
-target_compile_definitions(sandbox_library PRIVATE SANDBOX_BUILD_SHARED)
+# target_compile_definitions(sandbox_library PRIVATE SANDBOX_BUILD_SHARED)
 target_compile_features(sandbox_library PUBLIC cxx_std_23)
 
 target_include_directories(sandbox_library

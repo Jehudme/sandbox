@@ -3,7 +3,7 @@ project(sandbox_unit_tests CXX)
 
 add_executable(sandbox_unit_tests
     main.cpp
-    core/properties_c_api_test.cpp
+        core/properties_test.cpp
 )
 
 target_link_libraries(sandbox_unit_tests PRIVATE 
