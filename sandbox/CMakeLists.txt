@@ -30,6 +30,8 @@ add_library(sandbox_library STATIC
         include/sandbox/core/bootstrapper.h
         source/abi/bootstrapper.cpp
         include/sandbox/core/platform.h
+        source/core/engine.cpp
+        source/core/engine.h
 )
 
 add_library(sandbox::library ALIAS sandbox_library)

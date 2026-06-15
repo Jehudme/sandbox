@@ -7,19 +7,19 @@
 using namespace sandbox::core;
 
 // Helper to safely cast the opaque C pointer back to the real C++ class
-static Properties* cast(sandbox_properties_t* props) {
-    return reinterpret_cast<Properties*>(props);
+static properties_t* cast(sandbox_properties_t* props) {
+    return reinterpret_cast<properties_t*>(props);
 }
 
-static const Properties* cast(const sandbox_properties_t* props) {
-    return reinterpret_cast<const Properties*>(props);
+static const properties_t* cast(const sandbox_properties_t* props) {
+    return reinterpret_cast<const properties_t*>(props);
 }
 
 #include <string_view>
 
 // Helper to build the C++ Path vector from a string format "a/b/c"
-static Properties::Path parse_path(const char* path_str) {
-    Properties::Path cpp_path;
+static properties_t::path_t parse_path(const char* path_str) {
+    properties_t::path_t cpp_path;
     if (!path_str) return cpp_path;
     
     std::string_view view(path_str);
@@ -38,20 +38,20 @@ static Properties::Path parse_path(const char* path_str) {
     return cpp_path;
 }
 
-static Properties::Format map_format(sandbox_properties_format_t fmt) {
+static properties_t::Format map_format(sandbox_properties_format_t fmt) {
     switch (fmt) {
-        case SANDBOX_FORMAT_JSON: return Properties::Format::JSON;
-        case SANDBOX_FORMAT_BEVE: return Properties::Format::BEVE;
-        case SANDBOX_FORMAT_TOML: return Properties::Format::TOML;
-        case SANDBOX_FORMAT_YAML: return Properties::Format::YAML;
-        default: return Properties::Format::JSON;
+        case SANDBOX_FORMAT_JSON: return properties_t::Format::JSON;
+        case SANDBOX_FORMAT_BEVE: return properties_t::Format::BEVE;
+        case SANDBOX_FORMAT_TOML: return properties_t::Format::TOML;
+        case SANDBOX_FORMAT_YAML: return properties_t::Format::YAML;
+        default: return properties_t::Format::JSON;
     }
 }
 
 extern "C" {
 
     sandbox_properties_t* sandbox_properties_create(void) {
-        return reinterpret_cast<sandbox_properties_t*>(new Properties());
+        return reinterpret_cast<sandbox_properties_t*>(new properties_t());
     }
 
     void sandbox_properties_destroy(sandbox_properties_t* props) {
@@ -129,8 +129,8 @@ extern "C" {
 
     sandbox_properties_t* sandbox_properties_sub(const sandbox_properties_t* props, const char* path_str) {
         if (!props) return nullptr;
-        Properties sub_props = cast(props)->sub(parse_path(path_str));
-        return reinterpret_cast<sandbox_properties_t*>(new Properties(std::move(sub_props)));
+        properties_t sub_props = cast(props)->sub(parse_path(path_str));
+        return reinterpret_cast<sandbox_properties_t*>(new properties_t(std::move(sub_props)));
     }
 
     // --- GETTERS ---

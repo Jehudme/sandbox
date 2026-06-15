@@ -48,7 +48,7 @@ namespace sandbox::core::detail {
 namespace sandbox::core {
 
     template <typename Type>
-    std::optional<Type> Properties::get(const Path& path) const {
+    std::optional<Type> properties_t::get(const path_t& path) const {
         const glz::generic* target_node = detail::RetrieveNodeReadOnly(m_data, path);
 
         if (!target_node) {
@@ -80,7 +80,7 @@ namespace sandbox::core {
     }
 
     template <typename Type>
-    void Properties::set(const Path& path, Type value) {
+    void properties_t::set(const path_t& path, Type value) {
         glz::generic* target_node = detail::RetrieveOrCreateNode(m_data, path);
 
         // Ensure values are cast correctly into Glaze's expected memory layout

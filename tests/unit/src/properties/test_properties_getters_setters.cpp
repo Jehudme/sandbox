@@ -1,14 +1,14 @@
 // unit/src/properties/test_properties_getters_setters.cpp
-// Tests for Properties typed get<T>() and set<T>() with all supported types.
+// Tests for properties_t typed get<T>() and set<T>() with all supported types.
 
 #include <catch2/catch_all.hpp>
 #include "core/properties.h"
 
-using sandbox::core::Properties;
+using sandbox::core::properties_t;
 
 TEST_CASE("Prop: typed set/get round-trips", "[properties][getters_setters]")
 {
-    Properties p;
+    properties_t p;
 
     SECTION("int64_t stores and retrieves") {
         p.set<int64_t>({"count"}, 42);
@@ -63,7 +63,7 @@ TEST_CASE("Prop: typed set/get round-trips", "[properties][getters_setters]")
 
 TEST_CASE("Prop: nested paths and overwrite", "[properties][getters_setters]")
 {
-    Properties p;
+    properties_t p;
 
     SECTION("deep nested path (3 levels)") {
         p.set<double>({"a", "b", "c"}, 99.0);

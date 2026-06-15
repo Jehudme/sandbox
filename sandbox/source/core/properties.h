@@ -3,32 +3,32 @@
 #include <glaze/glaze.hpp>
 
 namespace sandbox::core {
-    class Properties {
+    class properties_t {
     public:
-        using Path = std::vector<std::string>;
-        using Keys = std::vector<std::string>;
+        using path_t = std::vector<std::string>;
+        using keys_t = std::vector<std::string>;
 
         enum Format { JSON, BEVE, TOML, YAML };
 
-        Properties();
-        ~Properties();
+        properties_t();
+        ~properties_t();
 
         void load(std::string_view data, Format format);
         std::string dump(Format format) const;
 
-        void clear(const Path& path);
+        void clear(const path_t& path);
 
-        bool has(const Path& path) const;
-        Keys keys(const Path& path) const;
+        bool has(const path_t& path) const;
+        keys_t keys(const path_t& path) const;
 
-        void merge(const Path& path, const Properties& other);
+        void merge(const path_t& path, const properties_t& other);
 
-        Properties sub(const Path& path) const;
+        properties_t sub(const path_t& path) const;
 
         template <typename Type>
-        std::optional<Type> get(const Path& path = {}) const;
+        std::optional<Type> get(const path_t& path = {}) const;
         template <typename Type>
-        void set(const Path& path, Type value);
+        void set(const path_t& path, Type value);
 
     private:
         glz::generic m_data;

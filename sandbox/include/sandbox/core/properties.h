@@ -8,10 +8,10 @@
 extern "C" {
 #endif
 
-/* Opaque pointer representing sandbox::core::Properties */
+/* Opaque pointer representing sandbox::core::properties_t */
 typedef struct sandbox_properties sandbox_properties_t;
 
-/* Mirrors sandbox::core::Properties::Format */
+/* Mirrors sandbox::core::properties_t::Format */
 typedef enum {
     SANDBOX_FORMAT_JSON = 0,
     SANDBOX_FORMAT_BEVE,

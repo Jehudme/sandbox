@@ -8,7 +8,7 @@
 
 #include <flecs.h>
 
-using sandbox::core::Bootstrapper;
+using sandbox::core::bootstrapper_t;
 
 // ---------------------------------------------------------------------------
 // Minimal Flecs modules for import tests
@@ -66,36 +66,36 @@ ECS_COMPONENT_DECLARE(CounterServiceComponent);
 TEST_CASE("BootABI: C staging functions", "[bootstrapper][abi][staging]")
 {
     SECTION("sandbox_stage_service does not crash") {
-        Bootstrapper::reset();
+        bootstrapper_t::reset();
         sandbox_service_info_t svc{};
         svc.name = "IAudio"; svc.description = "ABI test"; svc.architecture = "sandbox::system";
         svc.version_major = 1; svc.version_minor = 0; svc.init_fn = nullptr;
         REQUIRE_NOTHROW(sandbox_stage_service(&svc));
-        Bootstrapper::reset();
+        bootstrapper_t::reset();
     }
 
     SECTION("sandbox_stage_service with null is safe") {
-        Bootstrapper::reset();
+        bootstrapper_t::reset();
         REQUIRE_NOTHROW(sandbox_stage_service(nullptr));
-        Bootstrapper::reset();
+        bootstrapper_t::reset();
     }
 
     SECTION("sandbox_stage_module registers and allows activate") {
-        Bootstrapper::reset();
+        bootstrapper_t::reset();
         sandbox_module_info_t mod{};
         mod.name = "VideoModule"; mod.description = "ABI test"; mod.architecture = "sandbox::system";
         mod.version_major = 1; mod.version_minor = 0; mod.version_patch = 0;
         mod.service = nullptr; mod.requirements = nullptr; mod.requirement_count = 0; mod.init_fn = nullptr;
         REQUIRE_NOTHROW(sandbox_stage_module(&mod));
-        Bootstrapper b;
+        bootstrapper_t b;
         REQUIRE_NOTHROW(b.activate("sandbox::system", "VideoModule", 1, 0, 0));
-        Bootstrapper::reset();
+        bootstrapper_t::reset();
     }
 
     SECTION("sandbox_stage_module with null is safe") {
-        Bootstrapper::reset();
+        bootstrapper_t::reset();
         REQUIRE_NOTHROW(sandbox_stage_module(nullptr));
-        Bootstrapper::reset();
+        bootstrapper_t::reset();
     }
 }
 
@@ -110,15 +110,15 @@ TEST_CASE("BootABI: SANDBOX_DECLARE_MODULE struct metadata", "[bootstrapper][abi
     }
 
     SECTION("module can be staged and activated") {
-        Bootstrapper::reset();
+        bootstrapper_t::reset();
         sandbox_module_info_t stageable = TestMacroModule_manual_info;
         stageable.init_fn = [](ecs_world_t*) {};
-        Bootstrapper::stage_module(stageable);
-        Bootstrapper b;
+        bootstrapper_t::stage_module(stageable);
+        bootstrapper_t b;
         REQUIRE_NOTHROW(b.activate("sandbox::system", "TestMacroModule", 1, 0, 0));
         flecs::world w;
         REQUIRE_NOTHROW(b.boot(w));
-        Bootstrapper::reset();
+        bootstrapper_t::reset();
     }
 }
 
@@ -133,7 +133,7 @@ TEST_CASE("BootABI: SANDBOX_DECLARE_SERVICE struct metadata", "[bootstrapper][ab
 
 TEST_CASE("BootABI: service component accessible via Flecs", "[bootstrapper][abi][get_service]")
 {
-    Bootstrapper::reset();
+    bootstrapper_t::reset();
 
     sandbox_module_info_t mod{};
     mod.name = "CounterModule"; mod.description = "Counter provider";
@@ -150,8 +150,8 @@ TEST_CASE("BootABI: service component accessible via Flecs", "[bootstrapper][abi
                    sizeof(CounterServiceComponent), &comp);
     };
 
-    Bootstrapper::stage_module(mod);
-    Bootstrapper b;
+    bootstrapper_t::stage_module(mod);
+    bootstrapper_t b;
     b.activate("sandbox::system", "CounterModule", 1, 0, 0);
     flecs::world w;
     b.boot(w);
@@ -178,5 +178,5 @@ TEST_CASE("BootABI: service component accessible via Flecs", "[bootstrapper][abi
         REQUIRE(std::string(retrieved->info->name) == "ISimpleCounter");
     }
 
-    Bootstrapper::reset();
+    bootstrapper_t::reset();
 }

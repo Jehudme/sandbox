@@ -1,5 +1,5 @@
 // suite/src/suite_properties_serialization_roundtrip.cpp
-// Integration: Properties serialization round-trips across JSON, TOML, YAML, C ABI.
+// Integration: properties_t serialization round-trips across JSON, TOML, YAML, C ABI.
 
 #include <catch2/catch_all.hpp>
 #include "core/properties.h"
@@ -8,12 +8,12 @@
 #include <string>
 #include <vector>
 
-using sandbox::core::Properties;
+using sandbox::core::properties_t;
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-static void populate_engine_config(Properties& p) {
+static void populate_engine_config(properties_t& p) {
     p.set<double>({"window", "width"},  1920.0);
     p.set<double>({"window", "height"}, 1080.0);
     p.set<bool>({"window", "fullscreen"}, false);
@@ -30,7 +30,7 @@ static void populate_engine_config(Properties& p) {
     p.set<double>({"network", "timeout_ms"}, 5000.0);
 }
 
-static void verify_engine_config(const Properties& p) {
+static void verify_engine_config(const properties_t& p) {
     REQUIRE(p.get<double>({"window", "width"})      == std::optional<double>(1920.0));
     REQUIRE(p.get<double>({"window", "height"})     == std::optional<double>(1080.0));
     REQUIRE(p.get<bool>({"window", "fullscreen"})   == std::optional<bool>(false));
@@ -49,12 +49,12 @@ static void verify_engine_config(const Properties& p) {
 // ---------------------------------------------------------------------------
 TEST_CASE("Suite: Engine config round-trip (JSON, TOML, YAML)", "[suite][properties][serialization]")
 {
-    Properties source;
+    properties_t source;
     populate_engine_config(source);
 
     SECTION("JSON — window settings survive") {
-        Properties rt;
-        REQUIRE_NOTHROW(rt.load(source.dump(Properties::Format::JSON), Properties::Format::JSON));
+        properties_t rt;
+        REQUIRE_NOTHROW(rt.load(source.dump(properties_t::Format::JSON), properties_t::Format::JSON));
         REQUIRE(rt.get<double>({"window", "width"})        == std::optional<double>(1920.0));
         REQUIRE(rt.get<double>({"window", "height"})       == std::optional<double>(1080.0));
         REQUIRE(rt.get<bool>({"window", "fullscreen"})     == std::optional<bool>(false));
@@ -62,26 +62,26 @@ TEST_CASE("Suite: Engine config round-trip (JSON, TOML, YAML)", "[suite][propert
     }
 
     SECTION("JSON — graphics and audio survive") {
-        Properties rt;
-        rt.load(source.dump(Properties::Format::JSON), Properties::Format::JSON);
+        properties_t rt;
+        rt.load(source.dump(properties_t::Format::JSON), properties_t::Format::JSON);
         REQUIRE(rt.get<bool>({"graphics", "vsync"})              == std::optional<bool>(true));
         REQUIRE(rt.get<std::string>({"graphics", "api"})         == std::optional<std::string>("OpenGL"));
         REQUIRE(rt.get<double>({"audio", "master_volume"}).value() == Catch::Approx(0.8));
     }
 
     SECTION("TOML round-trip preserves all values") {
-        Properties rt;
-        auto toml = source.dump(Properties::Format::TOML);
+        properties_t rt;
+        auto toml = source.dump(properties_t::Format::TOML);
         REQUIRE_FALSE(toml.empty());
-        REQUIRE_NOTHROW(rt.load(toml, Properties::Format::TOML));
+        REQUIRE_NOTHROW(rt.load(toml, properties_t::Format::TOML));
         verify_engine_config(rt);
     }
 
     SECTION("YAML round-trip preserves all values") {
-        Properties rt;
-        auto yaml = source.dump(Properties::Format::YAML);
+        properties_t rt;
+        auto yaml = source.dump(properties_t::Format::YAML);
         REQUIRE_FALSE(yaml.empty());
-        REQUIRE_NOTHROW(rt.load(yaml, Properties::Format::YAML));
+        REQUIRE_NOTHROW(rt.load(yaml, properties_t::Format::YAML));
         verify_engine_config(rt);
     }
 }
@@ -89,28 +89,28 @@ TEST_CASE("Suite: Engine config round-trip (JSON, TOML, YAML)", "[suite][propert
 TEST_CASE("Suite: Merge and deep nesting", "[suite][properties][serialization]")
 {
     SECTION("merged config serializes without error") {
-        Properties base;
+        properties_t base;
         base.set<std::string>({"app", "name"}, std::string("BaseApp"));
         base.set<double>({"app", "version"}, 1.0);
 
-        Properties override;
+        properties_t override;
         override.set<double>({"version"}, 2.0);
         override.set<bool>({"debug"}, true);
         base.merge({"app"}, override);
 
         std::string json;
-        REQUIRE_NOTHROW(json = base.dump(Properties::Format::JSON));
+        REQUIRE_NOTHROW(json = base.dump(properties_t::Format::JSON));
         REQUIRE_FALSE(json.empty());
         REQUIRE(base.get<double>({"app", "version"}).has_value());
     }
 
     SECTION("5-level deep tree survives JSON round-trip") {
-        Properties deep;
+        properties_t deep;
         deep.set<std::string>({"a", "b", "c", "d", "leaf"}, std::string("deep_value"));
         deep.set<double>({"a", "b", "c", "d", "count"}, 99.0);
 
-        Properties rt;
-        REQUIRE_NOTHROW(rt.load(deep.dump(Properties::Format::JSON), Properties::Format::JSON));
+        properties_t rt;
+        REQUIRE_NOTHROW(rt.load(deep.dump(properties_t::Format::JSON), properties_t::Format::JSON));
         REQUIRE(*rt.get<std::string>({"a", "b", "c", "d", "leaf"}) == "deep_value");
         REQUIRE(*rt.get<double>({"a", "b", "c", "d", "count"}) == Catch::Approx(99.0));
     }

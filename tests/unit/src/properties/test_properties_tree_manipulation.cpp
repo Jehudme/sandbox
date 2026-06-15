@@ -4,11 +4,11 @@
 #include <catch2/catch_all.hpp>
 #include "core/properties.h"
 
-using sandbox::core::Properties;
+using sandbox::core::properties_t;
 
 TEST_CASE("Prop: has() detects paths", "[properties][tree][has]")
 {
-    Properties p;
+    properties_t p;
     p.set<double>({"alpha"}, 1.0);
     p.set<std::string>({"beta"}, std::string{"hello"});
     p.set<double>({"level1", "level2", "level3"}, 7.0);
@@ -31,7 +31,7 @@ TEST_CASE("Prop: has() detects paths", "[properties][tree][has]")
 TEST_CASE("Prop: clear() removes keys", "[properties][tree][clear]")
 {
     SECTION("clearing a leaf removes only that key") {
-        Properties p;
+        properties_t p;
         p.set<double>({"x"}, 10.0);
         p.set<double>({"y"}, 20.0);
         p.clear({"x"});
@@ -40,7 +40,7 @@ TEST_CASE("Prop: clear() removes keys", "[properties][tree][clear]")
     }
 
     SECTION("clearing an intermediate node removes all children") {
-        Properties p;
+        properties_t p;
         p.set<double>({"config", "timeout"}, 30.0);
         p.set<std::string>({"config", "host"}, std::string{"localhost"});
         p.set<double>({"other"}, 5.0);
@@ -51,7 +51,7 @@ TEST_CASE("Prop: clear() removes keys", "[properties][tree][clear]")
     }
 
     SECTION("clearing root (empty path) resets everything") {
-        Properties p;
+        properties_t p;
         p.set<double>({"a"}, 1.0);
         p.set<double>({"b"}, 2.0);
         p.clear({});
@@ -61,7 +61,7 @@ TEST_CASE("Prop: clear() removes keys", "[properties][tree][clear]")
     }
 
     SECTION("clearing nonexistent key is a no-op") {
-        Properties p;
+        properties_t p;
         p.set<double>({"existing"}, 42.0);
         REQUIRE_NOTHROW(p.clear({"nonexistent"}));
         REQUIRE(p.has({"existing"}));
@@ -71,12 +71,12 @@ TEST_CASE("Prop: clear() removes keys", "[properties][tree][clear]")
 TEST_CASE("Prop: keys() enumerates children", "[properties][tree][keys]")
 {
     SECTION("empty object returns empty") {
-        Properties p;
+        properties_t p;
         REQUIRE(p.keys({}).empty());
     }
 
     SECTION("single key object") {
-        Properties p;
+        properties_t p;
         p.set<double>({"only_key"}, 1.0);
         auto keys = p.keys({});
         REQUIRE(keys.size() == 1);
@@ -84,7 +84,7 @@ TEST_CASE("Prop: keys() enumerates children", "[properties][tree][keys]")
     }
 
     SECTION("multi-key object returns all keys") {
-        Properties p;
+        properties_t p;
         p.set<double>({"apple"}, 1.0);
         p.set<double>({"banana"}, 2.0);
         p.set<double>({"cherry"}, 3.0);
@@ -97,7 +97,7 @@ TEST_CASE("Prop: keys() enumerates children", "[properties][tree][keys]")
     }
 
     SECTION("nested path returns child keys") {
-        Properties p;
+        properties_t p;
         p.set<double>({"section", "width"}, 100.0);
         p.set<double>({"section", "height"}, 200.0);
         auto keys = p.keys({"section"});
@@ -108,7 +108,7 @@ TEST_CASE("Prop: keys() enumerates children", "[properties][tree][keys]")
     }
 
     SECTION("path to a leaf returns empty") {
-        Properties p;
+        properties_t p;
         p.set<double>({"leaf"}, 5.0);
         REQUIRE(p.keys({"leaf"}).empty());
     }
@@ -117,10 +117,10 @@ TEST_CASE("Prop: keys() enumerates children", "[properties][tree][keys]")
 TEST_CASE("Prop: merge() combines objects", "[properties][tree][merge]")
 {
     SECTION("merge at sub-path") {
-        Properties dst;
+        properties_t dst;
         dst.set<double>({"existing"}, 1.0);
 
-        Properties src;
+        properties_t src;
         src.set<double>({"merged_key"}, 2.0);
         src.set<std::string>({"label"}, std::string{"source"});
 
@@ -133,10 +133,10 @@ TEST_CASE("Prop: merge() combines objects", "[properties][tree][merge]")
     }
 
     SECTION("merge at root replaces all keys") {
-        Properties dst;
+        properties_t dst;
         dst.set<double>({"old"}, 99.0);
 
-        Properties src;
+        properties_t src;
         src.set<double>({"new"}, 1.0);
 
         dst.merge({}, src);

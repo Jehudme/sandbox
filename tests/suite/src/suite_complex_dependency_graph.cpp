@@ -10,16 +10,16 @@
 #include <string>
 #include <algorithm>
 
-using sandbox::core::Bootstrapper;
-using sandbox::core::ModuleInfo;
+using sandbox::core::bootstrapper_t;
+using sandbox::core::module_info_t;
 
 static std::vector<std::string> g_init_order;
 
-static ModuleInfo make_mod(const char* name, int major, int minor, int patch,
+static module_info_t make_mod(const char* name, int major, int minor, int patch,
                             void (*fn)(ecs_world_t*),
                             const sandbox_requirement_info_t* reqs = nullptr,
                             size_t req_count = 0) {
-    ModuleInfo m{};
+    module_info_t m{};
     m.name = name; m.description = "Complex dep"; m.architecture = "sandbox::system";
     m.version_major = major; m.version_minor = minor; m.version_patch = patch;
     m.service = nullptr; m.requirements = reqs; m.requirement_count = req_count;
@@ -32,7 +32,7 @@ static ModuleInfo make_mod(const char* name, int major, int minor, int patch,
 // ---------------------------------------------------------------------------
 TEST_CASE("Suite: Diamond dependency — correct order, no duplicates", "[suite][complex_dep]")
 {
-    Bootstrapper::reset();
+    bootstrapper_t::reset();
     g_init_order.clear();
 
     // Foundation → Math → {Physics, AI} → GameWorld
@@ -68,13 +68,13 @@ TEST_CASE("Suite: Diamond dependency — correct order, no duplicates", "[suite]
         [](ecs_world_t*) { g_init_order.push_back("GameWorld"); },
         req_world, 2);
 
-    Bootstrapper::stage_module(foundation);
-    Bootstrapper::stage_module(math);
-    Bootstrapper::stage_module(physics);
-    Bootstrapper::stage_module(ai);
-    Bootstrapper::stage_module(world);
+    bootstrapper_t::stage_module(foundation);
+    bootstrapper_t::stage_module(math);
+    bootstrapper_t::stage_module(physics);
+    bootstrapper_t::stage_module(ai);
+    bootstrapper_t::stage_module(world);
 
-    Bootstrapper b;
+    bootstrapper_t b;
     b.activate("sandbox::system", "GameWorld", 1, 0, 0);
     flecs::world w;
     REQUIRE_NOTHROW(b.boot(w));
@@ -105,7 +105,7 @@ TEST_CASE("Suite: Diamond dependency — correct order, no duplicates", "[suite]
         REQUIRE(g_init_order.back() == "GameWorld");
     }
 
-    Bootstrapper::reset();
+    bootstrapper_t::reset();
 }
 
 // ---------------------------------------------------------------------------
@@ -129,32 +129,32 @@ TEST_CASE("Suite: Optional dependency — present and absent", "[suite][complex_
         app_reqs, 2);
 
     SECTION("optional dep present — all three modules initialize") {
-        Bootstrapper::reset();
+        bootstrapper_t::reset();
         g_init_order.clear();
-        Bootstrapper::stage_module(core_mod);
-        Bootstrapper::stage_module(debug_mod);
-        Bootstrapper::stage_module(app_mod);
-        Bootstrapper b;
+        bootstrapper_t::stage_module(core_mod);
+        bootstrapper_t::stage_module(debug_mod);
+        bootstrapper_t::stage_module(app_mod);
+        bootstrapper_t b;
         b.activate("sandbox::system", "AppModule", 1, 0, 0);
         flecs::world w;
         REQUIRE_NOTHROW(b.boot(w));
         REQUIRE(g_init_order.size() == 3);
         REQUIRE(std::find(g_init_order.begin(), g_init_order.end(), "DebugModule") != g_init_order.end());
-        Bootstrapper::reset();
+        bootstrapper_t::reset();
     }
 
     SECTION("optional dep absent — only core and app initialize") {
-        Bootstrapper::reset();
+        bootstrapper_t::reset();
         g_init_order.clear();
-        Bootstrapper::stage_module(core_mod);
+        bootstrapper_t::stage_module(core_mod);
         // DebugModule NOT staged
-        Bootstrapper::stage_module(app_mod);
-        Bootstrapper b;
+        bootstrapper_t::stage_module(app_mod);
+        bootstrapper_t b;
         b.activate("sandbox::system", "AppModule", 1, 0, 0);
         flecs::world w;
         REQUIRE_NOTHROW(b.boot(w));
         REQUIRE(g_init_order.size() == 2);
         REQUIRE(std::find(g_init_order.begin(), g_init_order.end(), "DebugModule") == g_init_order.end());
-        Bootstrapper::reset();
+        bootstrapper_t::reset();
     }
 }

@@ -9,13 +9,13 @@
 
 namespace sandbox::core {
 
-    void Bootstrapper::reset() {
+    void bootstrapper_t::reset() {
         m_services.clear();
         m_modules.clear();
     }
 
-    void Bootstrapper::stage_service(const ServiceInfo& info) {
-        auto it = std::find_if(m_services.begin(), m_services.end(), [&](const ServiceInfo& service) {
+    void bootstrapper_t::stage_service(const service_info_t& info) {
+        auto it = std::find_if(m_services.begin(), m_services.end(), [&](const service_info_t& service) {
             return std::strcmp(service.name, info.name) == 0
                 && service.version_major == info.version_major
                 && service.version_minor == info.version_minor;
@@ -25,8 +25,8 @@ namespace sandbox::core {
         }
     }
 
-    void Bootstrapper::stage_module(const ModuleInfo &info) {
-        auto it = std::find_if(m_modules.begin(), m_modules.end(), [&](const ModuleInfo& module) {
+    void bootstrapper_t::stage_module(const module_info_t &info) {
+        auto it = std::find_if(m_modules.begin(), m_modules.end(), [&](const module_info_t& module) {
             return std::strcmp(module.name, info.name) == 0
                 && module.version_major == info.version_major
                 && module.version_minor == info.version_minor
@@ -37,8 +37,8 @@ namespace sandbox::core {
         }
     }
 
-    static const ModuleInfo* find_best_module(std::string_view name, std::string_view arch, int v_maj, int v_min, int v_patch, bool exact_patch, const std::vector<ModuleInfo>& modules) {
-        const ModuleInfo* best = nullptr;
+    static const module_info_t* find_best_module(std::string_view name, std::string_view arch, int v_maj, int v_min, int v_patch, bool exact_patch, const std::vector<module_info_t>& modules) {
+        const module_info_t* best = nullptr;
         for (const auto& mod : modules) {
             if (std::string_view(mod.name) != name) continue;
             if (std::string_view(mod.architecture) != arch) continue;
@@ -63,8 +63,8 @@ namespace sandbox::core {
         return best;
     }
 
-    static const ModuleInfo* find_best_service_provider(std::string_view srv_name, std::string_view arch, int v_maj, int v_min, const std::vector<ModuleInfo>& modules) {
-        const ModuleInfo* best = nullptr;
+    static const module_info_t* find_best_service_provider(std::string_view srv_name, std::string_view arch, int v_maj, int v_min, const std::vector<module_info_t>& modules) {
+        const module_info_t* best = nullptr;
         for (const auto& mod : modules) {
             if (!mod.service) continue;
             if (std::string_view(mod.service->name) != srv_name) continue;
@@ -93,11 +93,11 @@ namespace sandbox::core {
         return best;
     }
 
-    void Bootstrapper::activate(std::string_view architecture, std::string_view name, int version_major, int version_minor, int version_patch) {
+    void bootstrapper_t::activate(std::string_view architecture, std::string_view name, int version_major, int version_minor, int version_patch) {
         bool exact_patch = (version_patch >= 0);
-        const ModuleInfo* best = find_best_module(name, architecture, version_major, version_minor, version_patch, exact_patch, m_modules);
+        const module_info_t* best = find_best_module(name, architecture, version_major, version_minor, version_patch, exact_patch, m_modules);
         if (best) {
-            auto it = std::find_if(m_active_modules.begin(), m_active_modules.end(), [&](const ModuleInfo& active) {
+            auto it = std::find_if(m_active_modules.begin(), m_active_modules.end(), [&](const module_info_t& active) {
                 return std::strcmp(active.name, best->name) == 0 && std::strcmp(active.architecture, best->architecture) == 0;
             });
             if (it == m_active_modules.end()) {
@@ -108,13 +108,13 @@ namespace sandbox::core {
         }
     }
 
-    void Bootstrapper::boot(flecs::world &ecs) {
+    void bootstrapper_t::boot(flecs::world &ecs) {
         std::unordered_map<std::string_view, int> service_version_locks;
         
         // Pass 1: Required dependencies
         size_t processed_index = 0;
         while (processed_index < m_active_modules.size()) {
-            const ModuleInfo& current = m_active_modules[processed_index++];
+            const module_info_t& current = m_active_modules[processed_index++];
             
             for (size_t i = 0; i < current.requirement_count; ++i) {
                 const auto& req = current.requirements[i];
@@ -137,7 +137,7 @@ namespace sandbox::core {
                         }
                     }
                     if (!fulfilled) {
-                        const ModuleInfo* provider = find_best_service_provider(req.name, req.architecture, req.version_major, req.version_minor, m_modules);
+                        const module_info_t* provider = find_best_service_provider(req.name, req.architecture, req.version_major, req.version_minor, m_modules);
                         if (!provider) {
                             throw std::runtime_error(std::format("Required service not found: {}", req.name));
                         }
@@ -153,7 +153,7 @@ namespace sandbox::core {
                     }
                     if (!fulfilled) {
                         bool exact = (req.version_patch >= 0);
-                        const ModuleInfo* provider = find_best_module(req.name, req.architecture, req.version_major, req.version_minor, req.version_patch, exact, m_modules);
+                        const module_info_t* provider = find_best_module(req.name, req.architecture, req.version_major, req.version_minor, req.version_patch, exact, m_modules);
                         if (!provider) {
                             throw std::runtime_error(std::format("Required module not found: {}", req.name));
                         }
@@ -166,7 +166,7 @@ namespace sandbox::core {
         // Pass 2: Expected dependencies
         processed_index = 0;
         while (processed_index < m_active_modules.size()) {
-            const ModuleInfo& current = m_active_modules[processed_index++];
+            const module_info_t& current = m_active_modules[processed_index++];
             for (size_t i = 0; i < current.requirement_count; ++i) {
                 const auto& req = current.requirements[i];
                 if (req.strictness != SANDBOX_REQUIREMENT_STRICTNESS_EXPECTED) continue;
@@ -188,7 +188,7 @@ namespace sandbox::core {
                         }
                     }
                     if (!fulfilled) {
-                        const ModuleInfo* provider = find_best_service_provider(req.name, req.architecture, req.version_major, req.version_minor, m_modules);
+                        const module_info_t* provider = find_best_service_provider(req.name, req.architecture, req.version_major, req.version_minor, m_modules);
                         if (provider) {
                             m_active_modules.push_back(*provider);
                         }
@@ -203,7 +203,7 @@ namespace sandbox::core {
                     }
                     if (!fulfilled) {
                         bool exact = (req.version_patch >= 0);
-                        const ModuleInfo* provider = find_best_module(req.name, req.architecture, req.version_major, req.version_minor, req.version_patch, exact, m_modules);
+                        const module_info_t* provider = find_best_module(req.name, req.architecture, req.version_major, req.version_minor, req.version_patch, exact, m_modules);
                         if (provider) {
                             m_active_modules.push_back(*provider);
                         }
@@ -226,8 +226,8 @@ namespace sandbox::core {
             if (indices.size() > 1) {
                 size_t winner_idx = indices[0];
                 for (size_t i = 1; i < indices.size(); ++i) {
-                    const ModuleInfo& current = m_active_modules[indices[i]];
-                    const ModuleInfo& winner = m_active_modules[winner_idx];
+                    const module_info_t& current = m_active_modules[indices[i]];
+                    const module_info_t& winner = m_active_modules[winner_idx];
                     
                     bool current_wins = false;
                     if (current.version_major != winner.version_major) current_wins = current.version_major > winner.version_major;
@@ -257,7 +257,7 @@ namespace sandbox::core {
         std::vector<int> in_degree(m_active_modules.size(), 0);
         
         for (size_t a = 0; a < m_active_modules.size(); ++a) {
-            const ModuleInfo& mod_a = m_active_modules[a];
+            const module_info_t& mod_a = m_active_modules[a];
             for (size_t i = 0; i < mod_a.requirement_count; ++i) {
                 const auto& req = mod_a.requirements[i];
                 

@@ -7,11 +7,11 @@
 namespace sandbox::core {
 
     // Updated to glz::generic
-    Properties::Properties() : m_data(glz::generic::object_t{}) {}
+    properties_t::properties_t() : m_data(glz::generic::object_t{}) {}
 
-    Properties::~Properties() = default;
+    properties_t::~properties_t() = default;
 
-    void Properties::load(std::string_view data, Format format) {
+    void properties_t::load(std::string_view data, Format format) {
         glz::error_ctx ec{}; // Capture the error context
 
         switch (format) {
@@ -28,15 +28,15 @@ namespace sandbox::core {
                 ec = glz::read_yaml(m_data, data);
                 break;
             default:
-                throw std::invalid_argument("Unsupported format provided to Properties::load");
+                throw std::invalid_argument("Unsupported format provided to properties_t::load");
         }
 
         if (ec) {
-            throw std::runtime_error("Properties Load Error: " + glz::format_error(ec, data));
+            throw std::runtime_error("properties_t Load Error: " + glz::format_error(ec, data));
         }
     }
 
-    std::string Properties::dump(Format format) const {
+    std::string properties_t::dump(Format format) const {
         std::string serialized_output;
         glz::error_ctx ec{}; // Capture the error context
 
@@ -54,25 +54,25 @@ namespace sandbox::core {
                 ec = glz::write_yaml(m_data, serialized_output);
                 break;
             default:
-                throw std::invalid_argument("Unsupported format provided to Properties::dump");
+                throw std::invalid_argument("Unsupported format provided to properties_t::dump");
         }
 
         // Properly handle the [[nodiscard]] error
         if (ec) {
-            throw std::runtime_error("Properties Dump Error: Serialization failed.");
+            throw std::runtime_error("properties_t Dump Error: Serialization failed.");
         }
 
         return serialized_output;
     }
 
-    void Properties::clear(const Path& path) {
+    void properties_t::clear(const path_t& path) {
         if (path.empty()) {
             // Updated to glz::generic
             m_data = glz::generic::object_t{};
             return;
         }
 
-        Path parent_path(path.begin(), path.end() - 1);
+        path_t parent_path(path.begin(), path.end() - 1);
         const std::string& target_key = path.back();
 
         // Updated to glz::generic
@@ -83,12 +83,12 @@ namespace sandbox::core {
         }
     }
 
-    bool Properties::has(const Path& path) const {
+    bool properties_t::has(const path_t& path) const {
         return detail::RetrieveNodeReadOnly(m_data, path) != nullptr;
     }
 
-    Properties::Keys Properties::keys(const Path& path) const {
-        Keys extracted_keys;
+    properties_t::keys_t properties_t::keys(const path_t& path) const {
+        keys_t extracted_keys;
 
         // Updated to glz::generic
         const glz::generic* target_node = detail::RetrieveNodeReadOnly(m_data, path);
@@ -105,14 +105,14 @@ namespace sandbox::core {
         return extracted_keys;
     }
 
-    void Properties::merge(const Path& path, const Properties& other) {
+    void properties_t::merge(const path_t& path, const properties_t& other) {
         // Updated to glz::generic
         glz::generic* target_node = detail::RetrieveOrCreateNode(m_data, path);
         *target_node = other.m_data;
     }
 
-    Properties Properties::sub(const Path& path) const {
-        Properties extracted_properties;
+    properties_t properties_t::sub(const path_t& path) const {
+        properties_t extracted_properties;
 
         // Updated to glz::generic
         const glz::generic* target_node = detail::RetrieveNodeReadOnly(m_data, path);

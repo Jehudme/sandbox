@@ -10,9 +10,9 @@
 #include <string>
 #include <algorithm>
 
-using sandbox::core::Bootstrapper;
-using sandbox::core::ModuleInfo;
-using sandbox::core::ServiceInfo;
+using sandbox::core::bootstrapper_t;
+using sandbox::core::module_info_t;
+using sandbox::core::service_info_t;
 
 // ---------------------------------------------------------------------------
 // Services
@@ -96,7 +96,7 @@ TEST_CASE("Suite: Boot via top-level module auto-pulls providers", "[suite][full
 {
     restage_all();
 
-    Bootstrapper b;
+    bootstrapper_t b;
     b.activate("sandbox::system", "GameLayerModule", 1, 0, 0);
 
     flecs::world w;
@@ -120,14 +120,14 @@ TEST_CASE("Suite: Boot via top-level module auto-pulls providers", "[suite][full
         REQUIRE(a->api == &global_audio_singleton);
     }
 
-    Bootstrapper::reset();
+    bootstrapper_t::reset();
 }
 
 TEST_CASE("Suite: Explicit activate of all providers is valid", "[suite][full_boot]")
 {
     restage_all();
 
-    Bootstrapper b;
+    bootstrapper_t b;
     b.activate("sandbox::system", "OpenGLRendererModule", 1, 0, -1);
     b.activate("sandbox::system", "FMODAudioModule",      1, 0, -1);
     b.activate("sandbox::system", "RawInputModule",       1, 0, -1);
@@ -142,5 +142,5 @@ TEST_CASE("Suite: Explicit activate of all providers is valid", "[suite][full_bo
         REQUIRE(SANDBOX_GET_SERVICE(w, InputService)    != nullptr);
     }
 
-    Bootstrapper::reset();
+    bootstrapper_t::reset();
 }
