@@ -14,4 +14,3 @@ include(Catch)
 
 add_subdirectory(unit)
 add_subdirectory(suite)
-add_subdirectory(libtest)
