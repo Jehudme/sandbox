@@ -8,14 +8,33 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 # =============================================================================
 include(FetchContent)
 
-FetchContent_Declare(glaze GIT_REPOSITORY https://github.com/stephenberry/glaze.git GIT_TAG v7.8.1 GIT_SHALLOW TRUE)
-FetchContent_Declare(flecs GIT_REPOSITORY https://github.com/SanderMertens/flecs.git GIT_TAG v4.1.4 GIT_SHALLOW TRUE)
+FetchContent_Declare(
+        glaze
+        GIT_REPOSITORY https://github.com/stephenberry/glaze.git
+        GIT_TAG v7.8.1
+        GIT_SHALLOW TRUE
+)
+
+FetchContent_Declare(
+        flecs
+        GIT_REPOSITORY https://github.com/SanderMertens/flecs.git
+        GIT_TAG v4.1.4
+        GIT_SHALLOW TRUE
+)
+
+FetchContent_Declare(
+        dylib
+        GIT_REPOSITORY https://github.com/martin-olivier/dylib.git
+        GIT_TAG v3.0.1
+        GIT_SHALLOW TRUE
+)
+
+# Populate and make targets available
+FetchContent_MakeAvailable(glaze flecs dylib)
 
 set(FLECS_SHARED ON CACHE INTERNAL "Build Flecs as a shared library")
 set(FLECS_STATIC OFF CACHE INTERNAL "Disable Flecs static library")
 set(glaze_ENABLE_AVX2 OFF CACHE INTERNAL "Disable AVX2 for Glaze")
-
-FetchContent_MakeAvailable(glaze flecs)
 
 # =============================================================================
 # 2. CORE LIBRARY TARGET
@@ -32,6 +51,8 @@ add_library(sandbox_library STATIC
         include/sandbox/core/platform.h
         source/core/engine.cpp
         source/core/engine.h
+        source/core/library_loader.cpp
+        source/core/library_loader.h
 )
 
 add_library(sandbox::library ALIAS sandbox_library)
@@ -48,6 +69,7 @@ target_include_directories(sandbox_library
 target_link_libraries(sandbox_library PUBLIC
         flecs
         glaze::glaze
+        dylib
 )
 
 # Apply the Launcher Precompiled Header
