@@ -18,6 +18,7 @@ set(SANDBOX_UNIT_TEST_SOURCES
     src/bootstrapper/test_bootstrapper_activate.cpp
     src/bootstrapper/test_bootstrapper_boot.cpp
     src/bootstrapper/test_bootstrapper_abi_macros.cpp
+    src/bootstrapper/test_bootstrapper_indexing.cpp
 
     # Core systems feature group
     src/core/test_library_loader.cpp

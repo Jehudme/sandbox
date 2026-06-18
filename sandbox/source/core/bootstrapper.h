@@ -1,7 +1,10 @@
 #pragma once
 #include <string_view>
 #include <vector>
+#include <filesystem>
+#include <flecs.h>
 #include "sandbox/core/bootstrapper.h"
+#include "library_loader.h"
 
 namespace sandbox::core {
     using service_info_t = sandbox_service_info_t;
@@ -17,6 +20,9 @@ namespace sandbox::core {
         static void stage_module(const module_info_t& info);
         static void reset();
 
+        static void index_library(const std::filesystem::path& library_path);
+        static void index_libraries_in_directory(const std::filesystem::path& directory_path);
+
         void activate(std::string_view architecture, std::string_view name, int version_major, int version_minor, int version_patch = -1);
         void boot(flecs::world& ecs);
 
@@ -25,5 +31,6 @@ namespace sandbox::core {
 
         static inline std::vector<service_info_t> m_services;
         static inline std::vector<module_info_t> m_modules;
+        static inline library_loader_t m_loader;
     };
 }
