@@ -99,6 +99,17 @@ TEST_CASE("BootABI: C staging functions", "[bootstrapper][abi][staging]")
     }
 }
 
+TEST_CASE("BootABI: C indexing functions", "[bootstrapper][abi][indexing]")
+{
+    SECTION("sandbox_index_library with null is safe") {
+        REQUIRE_NOTHROW(sandbox_index_library(nullptr));
+    }
+
+    SECTION("sandbox_index_library with nonexistent path doesn't crash") {
+        REQUIRE_NOTHROW(sandbox_index_library("nonexistent_c_lib.so"));
+    }
+}
+
 TEST_CASE("BootABI: SANDBOX_DECLARE_MODULE struct metadata", "[bootstrapper][abi][macro]")
 {
     SECTION("name, architecture, and version are set correctly") {

@@ -12,3 +12,9 @@ void sandbox_stage_module(const sandbox_module_info_t* info) {
         sandbox::core::bootstrapper_t::stage_module(*info);
     }
 }
+
+void sandbox_index_library(const char* library_path) {
+    if (library_path) {
+        sandbox::core::bootstrapper_t::index_library(library_path);
+    }
+}

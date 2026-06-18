@@ -42,19 +42,6 @@ TEST_CASE("Bootstrapper: indexing libraries", "[bootstrapper][indexing]") {
     SECTION("index_library with invalid path does not throw (caught by loader)") {
         REQUIRE_NOTHROW(bootstrapper_t::index_library("nonexistent_lib.so"));
     }
-
-    SECTION("index_libraries_in_directory with valid directory does not throw") {
-        fs::path plugin = dummy_plugin_path();
-        if (fs::exists(plugin)) {
-            REQUIRE_NOTHROW(bootstrapper_t::index_libraries_in_directory(plugin.parent_path()));
-        } else {
-            SUCCEED("Skipped: dummy_plugin not available on disk");
-        }
-    }
-
-    SECTION("index_libraries_in_directory with invalid directory does not throw") {
-        REQUIRE_NOTHROW(bootstrapper_t::index_libraries_in_directory("nonexistent_directory"));
-    }
     
     bootstrapper_t::reset();
 }

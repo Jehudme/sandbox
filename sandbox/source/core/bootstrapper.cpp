@@ -19,21 +19,6 @@ namespace sandbox::core {
         m_loader.load(library_path);
     }
 
-    void bootstrapper_t::index_libraries_in_directory(const std::filesystem::path &directory_path) {
-        if (!std::filesystem::exists(directory_path) || !std::filesystem::is_directory(directory_path)) {
-            return;
-        }
-
-        for (const auto& entry : std::filesystem::directory_iterator(directory_path)) {
-            if (entry.is_regular_file()) {
-                auto ext = entry.path().extension().string();
-                if (ext == ".dll" || ext == ".so" || ext == ".dylib") {
-                    m_loader.load(entry.path());
-                }
-            }
-        }
-    }
-
     void bootstrapper_t::stage_service(const service_info_t& info) {
         auto it = std::find_if(m_services.begin(), m_services.end(), [&](const service_info_t& service) {
             return std::strcmp(service.name, info.name) == 0
