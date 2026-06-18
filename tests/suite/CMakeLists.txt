@@ -7,6 +7,7 @@ set(SANDBOX_SUITE_TEST_SOURCES
     src/suite_complex_dependency_graph.cpp
     src/suite_properties_serialization_roundtrip.cpp
     src/suite_service_collision_resolution.cpp
+    src/suite_library_loading.cpp
 )
 
 # =============================================================================
@@ -25,5 +26,8 @@ target_include_directories(sandbox_suite_tests
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/../../sandbox/source
 )
+
+# Ensure the dummy plugin shared library is built before the test executable
+add_dependencies(sandbox_suite_tests dummy_plugin)
 
 catch_discover_tests(sandbox_suite_tests)

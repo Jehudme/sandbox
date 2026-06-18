@@ -1,0 +1,15 @@
+cmake_minimum_required(VERSION 3.20)
+project(dummy_plugin LANGUAGES CXX)
+
+# Build a minimal shared library used by library_loader tests.
+# Output ends up in the same bin/ directory as the test executables so tests
+# can reference it via a relative path from the executable location.
+add_library(dummy_plugin SHARED dummy_plugin.cpp)
+
+target_compile_features(dummy_plugin PUBLIC cxx_std_23)
+
+set_target_properties(dummy_plugin PROPERTIES
+    PREFIX ""           # no "lib" prefix on Linux → "dummy_plugin.so"
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)

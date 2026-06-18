@@ -18,6 +18,9 @@ set(SANDBOX_UNIT_TEST_SOURCES
     src/bootstrapper/test_bootstrapper_activate.cpp
     src/bootstrapper/test_bootstrapper_boot.cpp
     src/bootstrapper/test_bootstrapper_abi_macros.cpp
+
+    # Core systems feature group
+    src/core/test_library_loader.cpp
 )
 
 # =============================================================================
@@ -36,6 +39,9 @@ target_include_directories(sandbox_unit_tests
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/../../sandbox/source
 )
+
+# Ensure the dummy plugin shared library is built before the test executable
+add_dependencies(sandbox_unit_tests dummy_plugin)
 
 # Register tests with CTest
 catch_discover_tests(sandbox_unit_tests)

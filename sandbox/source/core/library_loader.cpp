@@ -24,8 +24,9 @@ namespace sandbox::core {
 
             std::cout << "[Loader] Successfully loaded: " << library_name << "\n";
         }
-        catch (const dylib::exception& e) {
-            // Catches dylib::load_error or other OS-level dynamic linker errors
+        catch (const std::exception& e) {
+            // Catches dylib::load_error, std::invalid_argument (invalid/missing path),
+            // and any other OS-level dynamic-linker errors from dylib v3.
             std::cerr << "[Loader] Failed to load library at '" << path.string()
                       << "'.\nReason: " << e.what() << "\n";
         }

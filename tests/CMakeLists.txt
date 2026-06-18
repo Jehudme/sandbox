@@ -12,5 +12,6 @@ FetchContent_MakeAvailable(Catch2)
 include(Catch)
 
 
+add_subdirectory(dummy_plugin)
 add_subdirectory(unit)
 add_subdirectory(suite)
