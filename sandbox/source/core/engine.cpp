@@ -5,6 +5,7 @@
 #include "bootstrapper.h"
 #include "sandbox/core/argument.h"
 #include "sandbox/core/bootstrapper.h"
+#include <iostream>
 
 namespace sandbox::core {
     engine_t::engine_t() = default;
@@ -37,5 +38,34 @@ namespace sandbox::core {
     }
 
     void engine_t::boot() {
+        if (!m_arguments || !m_bootstrapper) return;
+        
+        // 1. Index libraries
+        if (m_arguments->has({"engine", "libraries"})) {
+            if (auto libs = m_arguments->get<std::vector<std::string>>({"engine", "libraries"})) {
+                for (const auto& lib : *libs) {
+                    try {
+                        bootstrapper_t::index_library(lib);
+                    } catch (const std::exception& e) {
+                        // Logging is handled by loader or bootstrapper usually, but we could log here if needed
+                    }
+                }
+            }
+        }
+        
+        // 2. Activate modules
+        if (m_arguments->has({"engine", "modules"})) {
+            if (auto mods = m_arguments->get<std::vector<std::string>>({"engine", "modules"})) {
+                for (const auto& mod : *mods) {
+                    try {
+                        m_bootstrapper->activate(mod);
+                    } catch (const std::exception& e) {
+                        std::cerr << "[Engine] Failed to activate module: " << e.what() << "\n";
+                    }
+                }
+            }
+        }
+        
+        m_bootstrapper->boot(ecs);
     }
 }

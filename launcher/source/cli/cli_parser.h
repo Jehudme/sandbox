@@ -1,8 +1,9 @@
 
 
 
+#include "sandbox/core/properties.h"
 
 namespace sandbox::launcher {
 
-    sandbox_pre parse_cli(int argc, char** argv);
+    sandbox_properties_t* parse_cli(int argc, char** argv);
 }

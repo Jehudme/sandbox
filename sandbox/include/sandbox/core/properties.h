@@ -67,6 +67,7 @@ void sandbox_properties_set_int64(sandbox_properties_t* props, const char* path_
 void sandbox_properties_set_double(sandbox_properties_t* props, const char* path_str, double val);
 void sandbox_properties_set_bool(sandbox_properties_t* props, const char* path_str, bool val);
 void sandbox_properties_set_string(sandbox_properties_t* props, const char* path_str, const char* val);
+void sandbox_properties_set_string_array(sandbox_properties_t* props, const char* path_str, const char** values, size_t count);
 
 #ifdef __cplusplus
 }

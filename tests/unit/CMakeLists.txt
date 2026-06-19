@@ -24,8 +24,9 @@ set(SANDBOX_UNIT_TEST_SOURCES
     # Core systems feature group
     src/core/test_library_loader.cpp
     src/core/test_argument.cpp
-    src/core/test_client_parser.cpp
+    src/core/test_cli_parser.cpp
     src/core/test_engine_bootstrapper.cpp
+    ../../launcher/source/cli/cli_parser.cpp
 )
 
 # =============================================================================
@@ -37,6 +38,7 @@ target_link_libraries(sandbox_unit_tests
     PRIVATE
         sandbox::library
         Catch2::Catch2WithMain
+        CLI11::CLI11
 )
 
 target_include_directories(sandbox_unit_tests
