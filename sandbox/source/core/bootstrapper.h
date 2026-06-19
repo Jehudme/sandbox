@@ -23,6 +23,7 @@ namespace sandbox::core {
         static void index_library(const std::filesystem::path& library_path);
 
         void activate(std::string_view architecture, std::string_view name, int version_major, int version_minor, int version_patch = -1);
+        void activate(std::string_view module_str);
         void boot(flecs::world& ecs);
 
     private:

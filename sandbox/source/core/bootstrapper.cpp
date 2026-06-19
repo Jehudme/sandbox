@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <queue>
 #include <iostream>
+#include <charconv>
 
 namespace sandbox::core {
 
@@ -96,6 +97,50 @@ namespace sandbox::core {
             }
         }
         return best;
+    }
+
+    void bootstrapper_t::activate(std::string_view module_str) {
+        size_t at_pos = module_str.find('@');
+        if (at_pos == std::string_view::npos) {
+            throw std::invalid_argument(std::format("Invalid module string format (missing @): {}", module_str));
+        }
+        
+        std::string_view arch_name = module_str.substr(0, at_pos);
+        std::string_view version_str = module_str.substr(at_pos + 1);
+        
+        size_t dash_pos = arch_name.rfind('-');
+        if (dash_pos == std::string_view::npos) {
+            throw std::invalid_argument(std::format("Invalid module string format (missing architecture-name separator): {}", module_str));
+        }
+        
+        std::string_view architecture = arch_name.substr(0, dash_pos);
+        std::string_view name = arch_name.substr(dash_pos + 1);
+        
+        int v_major = 0, v_minor = 0, v_patch = -1;
+        
+        auto parse_int = [](std::string_view str, int default_val) {
+            if (str == "*" || str.empty()) return default_val;
+            int val = 0;
+            auto result = std::from_chars(str.data(), str.data() + str.size(), val);
+            if (result.ec != std::errc()) throw std::invalid_argument(std::format("Invalid version number: {}", str));
+            return val;
+        };
+        
+        size_t dot1 = version_str.find('.');
+        if (dot1 != std::string_view::npos) {
+            v_major = parse_int(version_str.substr(0, dot1), 0);
+            size_t dot2 = version_str.find('.', dot1 + 1);
+            if (dot2 != std::string_view::npos) {
+                v_minor = parse_int(version_str.substr(dot1 + 1, dot2 - dot1 - 1), 0);
+                v_patch = parse_int(version_str.substr(dot2 + 1), -1);
+            } else {
+                v_minor = parse_int(version_str.substr(dot1 + 1), 0);
+            }
+        } else {
+            v_major = parse_int(version_str, 0);
+        }
+        
+        activate(architecture, name, v_major, v_minor, v_patch);
     }
 
     void bootstrapper_t::activate(std::string_view architecture, std::string_view name, int version_major, int version_minor, int version_patch) {

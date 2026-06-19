@@ -11,8 +11,8 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(cli11)
 
 add_executable(sandbox_launcher source/main.cpp
-        source/cli_parser.cpp
-        source/cli_parser.h)
+        source/cli/cli_parser.cpp
+        source/cli/cli_parser.h)
 add_executable(sandbox::launcher ALIAS sandbox_launcher)
 
 target_link_libraries(sandbox_launcher PRIVATE

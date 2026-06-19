@@ -74,6 +74,16 @@ namespace sandbox::core {
                 return *val;
             }
 
+        } else if constexpr (std::is_same_v<Type, std::vector<std::string>>) {
+            if (target_node->is_array()) {
+                std::vector<std::string> result;
+                for (const auto& item : target_node->get_array()) {
+                    if (const std::string* str_val = item.template get_if<std::string>()) {
+                        result.push_back(*str_val);
+                    }
+                }
+                return result;
+            }
         }
 
         return std::nullopt;

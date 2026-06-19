@@ -55,6 +55,8 @@ add_library(sandbox_library STATIC
         source/core/engine.h
         source/core/library_loader.cpp
         source/core/library_loader.h
+        source/core/client_parser.cpp
+        source/core/client_parser.h
 )
 
 add_library(sandbox::library ALIAS sandbox_library)
