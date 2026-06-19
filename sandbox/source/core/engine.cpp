@@ -5,7 +5,6 @@
 #include "bootstrapper.h"
 #include "sandbox/core/argument.h"
 #include "sandbox/core/bootstrapper.h"
-#include "client_parser.h"
 
 namespace sandbox::core {
     engine_t::engine_t() = default;
@@ -38,7 +37,5 @@ namespace sandbox::core {
     }
 
     void engine_t::boot() {
-        client_parser_t::apply_configuration(*m_bootstrapper, *m_arguments);
-        m_bootstrapper->boot(ecs);
     }
 }
