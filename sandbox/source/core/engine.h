@@ -10,8 +10,10 @@ namespace sandbox::core {
 
         void initialize(properties_t& properties);
 
-
     public:
         flecs::world ecs;
+
+    private:
+        std::unique_ptr<properties_t> m_arguments;
     };
 }

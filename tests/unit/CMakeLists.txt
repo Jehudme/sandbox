@@ -22,6 +22,7 @@ set(SANDBOX_UNIT_TEST_SOURCES
 
     # Core systems feature group
     src/core/test_library_loader.cpp
+    src/core/test_argument.cpp
 )
 
 # =============================================================================
