@@ -174,9 +174,17 @@ extern "C" {
     }
 
     void sandbox_properties_set_string(sandbox_properties_t* props, const char* path_str, const char* val) {
-        if (props && val) {
-            std::string cpp_val(val);
-            cast(props)->set<std::string>(parse_path(path_str), cpp_val);
+        if (!props || !val) return;
+        cast(props)->set<std::string>(parse_path(path_str), std::string(val));
+    }
+
+    void sandbox_properties_set_string_array(sandbox_properties_t* props, const char* path_str, const char** values, size_t count) {
+        if (!props || (!values && count > 0)) return;
+        std::vector<std::string> arr;
+        arr.reserve(count);
+        for (size_t i = 0; i < count; ++i) {
+            if (values[i]) arr.emplace_back(values[i]);
         }
+        cast(props)->set<std::vector<std::string>>(parse_path(path_str), std::move(arr));
     }
 }
