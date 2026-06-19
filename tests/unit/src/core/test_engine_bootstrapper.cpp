@@ -1,7 +1,7 @@
 #include <catch2/catch_all.hpp>
 #include "core/engine.h"
 #include "../../../../sandbox/include/sandbox/abi/engine.h"
-#include "sandbox/core/bootstrapper.h"
+#include "sandbox/abi/bootstrapper.h"
 #include "core/bootstrapper.h"
 #include <string>
 

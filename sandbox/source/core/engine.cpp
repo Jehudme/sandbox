@@ -3,7 +3,7 @@
 #include <flecs/addons/cpp/flecs.hpp>
 
 #include "bootstrapper.h"
-#include "sandbox/core/argument.h"
+#include "sandbox/abi/argument.h"
 #include "sandbox/abi/bootstrapper.h"
 #include <iostream>
 

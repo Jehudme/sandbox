@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <flecs.h>
 
-#include "sandbox/core/platform.h"
+#include "sandbox/abi/platform.h"
 #include "properties.h"
 
 #ifdef __cplusplus

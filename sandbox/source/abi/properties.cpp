@@ -159,6 +159,16 @@ extern "C" {
         }
     }
 
+    void sandbox_properties_read_string_array(const sandbox_properties_t* props, const char* path_str, void (*callback)(const char* value, void* user_data), void* user_data) {
+        if (!callback) return;
+        if (!props) return;
+        if (auto arr = cast(props)->get<std::vector<std::string>>(parse_path(path_str))) {
+            for (const auto& val : *arr) {
+                callback(val.c_str(), user_data);
+            }
+        }
+    }
+
     // --- SETTERS ---
 
     void sandbox_properties_set_int64(sandbox_properties_t* props, const char* path_str, int64_t val) {

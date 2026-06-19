@@ -58,6 +58,7 @@ bool sandbox_properties_get_bool(const sandbox_properties_t* props, const char* 
 
 /* Invokes the callback with the string pointer. If not found or type mismatch, invokes with nullptr. Pointer is only valid during the callback. */
 void sandbox_properties_read_string(const sandbox_properties_t* props, const char* path_str, void (*callback)(const char* value, void* user_data), void* user_data);
+void sandbox_properties_read_string_array(const sandbox_properties_t* props, const char* path_str, void (*callback)(const char* value, void* user_data), void* user_data);
 
 /* ========================================================================== */
 /* SETTERS                                                                    */
