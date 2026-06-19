@@ -297,7 +297,7 @@ namespace sandbox::core {
         
         std::sort(to_evict.begin(), to_evict.end(), std::greater<size_t>());
         for (size_t idx : to_evict) {
-            std::cout << std::format("[Warning] ECS registration suppressed for module '{}' due to service collision on '{}'\n", 
+            std::cerr << std::format("[Warning] ECS registration suppressed for module '{}' due to service collision on '{}'\n", 
                                      m_active_modules[idx].name, m_active_modules[idx].service->name);
             m_active_modules.erase(m_active_modules.begin() + idx);
         }

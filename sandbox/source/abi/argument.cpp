@@ -32,11 +32,18 @@ extern "C" {
         return sandbox_properties_get_bool(arg->internal_properties, path, out_val);
     }
 
-    bool sandbox_argument_get_string(ecs_world_t* ecs, const char* path, char* out_buffer, size_t max_size) {
-        if (!ecs) return false;
+    void sandbox_argument_read_string(ecs_world_t* ecs, const char* path, void (*callback)(const char* value, void* user_data), void* user_data) {
+        if (!callback) return;
+        if (!ecs) {
+            callback(nullptr, user_data);
+            return;
+        }
         const sandbox_argument_t* arg = (const sandbox_argument_t*)ecs_singleton_get(ecs, sandbox_argument_t);
-        if (!arg || !arg->internal_properties) return false;
-        return sandbox_properties_get_string(arg->internal_properties, path, out_buffer, max_size);
+        if (!arg || !arg->internal_properties) {
+            callback(nullptr, user_data);
+            return;
+        }
+        sandbox_properties_read_string(arg->internal_properties, path, callback, user_data);
     }
 
     void sandbox_argument_get_keys(ecs_world_t* ecs, const char* path, void (*callback)(const char* key, void* ctx), void* ctx) {

@@ -65,36 +65,42 @@ ECS_COMPONENT_DECLARE(CounterServiceComponent);
 
 TEST_CASE("BootABI: C staging functions", "[bootstrapper][abi][staging]")
 {
-    SECTION("sandbox_stage_service does not crash") {
+    SECTION("sandbox_stage_service returns true on success") {
         bootstrapper_t::reset();
         sandbox_service_info_t svc{};
-        svc.name = "IAudio"; svc.description = "ABI test"; svc.architecture = "sandbox::system";
-        svc.version_major = 1; svc.version_minor = 0; svc.init_fn = nullptr;
-        REQUIRE_NOTHROW(sandbox_stage_service(&svc));
+        svc.name = "MySvc";
+        svc.architecture = "test::arch";
+        svc.version_major = 1;
+        svc.version_minor = 0;
+        svc.init_fn = nullptr;
+        REQUIRE(sandbox_stage_service(&svc) == true);
         bootstrapper_t::reset();
     }
 
-    SECTION("sandbox_stage_service with null is safe") {
+    SECTION("sandbox_stage_service with null is safe and returns false") {
         bootstrapper_t::reset();
-        REQUIRE_NOTHROW(sandbox_stage_service(nullptr));
+        REQUIRE(sandbox_stage_service(nullptr) == false);
         bootstrapper_t::reset();
     }
 
     SECTION("sandbox_stage_module registers and allows activate") {
         bootstrapper_t::reset();
         sandbox_module_info_t mod{};
-        mod.name = "VideoModule"; mod.description = "ABI test"; mod.architecture = "sandbox::system";
-        mod.version_major = 1; mod.version_minor = 0; mod.version_patch = 0;
+        mod.name = "MyMod";
+        mod.architecture = "test::arch";
+        mod.version_major = 1;
+        mod.version_minor = 0;
+        mod.version_patch = 0;
         mod.service = nullptr; mod.requirements = nullptr; mod.requirement_count = 0; mod.init_fn = nullptr;
-        REQUIRE_NOTHROW(sandbox_stage_module(&mod));
+        REQUIRE(sandbox_stage_module(&mod) == true);
         bootstrapper_t b;
-        REQUIRE_NOTHROW(b.activate("sandbox::system", "VideoModule", 1, 0, 0));
+        REQUIRE_NOTHROW(b.activate("test::arch", "MyMod", 1, 0, 0));
         bootstrapper_t::reset();
     }
 
-    SECTION("sandbox_stage_module with null is safe") {
+    SECTION("sandbox_stage_module with null is safe and returns false") {
         bootstrapper_t::reset();
-        REQUIRE_NOTHROW(sandbox_stage_module(nullptr));
+        REQUIRE(sandbox_stage_module(nullptr) == false);
         bootstrapper_t::reset();
     }
 }

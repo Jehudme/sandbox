@@ -22,7 +22,7 @@ namespace sandbox::core {
             // In dylib v3.0+, passing the path to the constructor automatically opens it.
             m_libraries.emplace(library_name, dylib::library(path.string()));
 
-            std::cout << "[Loader] Successfully loaded: " << library_name << "\n";
+            std::cerr << "[Loader] Successfully loaded: " << library_name << "\n";
         }
         catch (const std::exception& e) {
             // Catches dylib::load_error, std::invalid_argument (invalid/missing path),
@@ -40,7 +40,7 @@ namespace sandbox::core {
             // The destructor safely executes dlclose() or FreeLibrary() for you.
             m_libraries.erase(it);
 
-            std::cout << "[Loader] Successfully unloaded: " << library_name << "\n";
+            std::cerr << "[Loader] Successfully unloaded: " << library_name << "\n";
         } else {
             std::cerr << "[Loader] Warning: Attempted to unload '" << library_name
                       << "', but it is not currently loaded.\n";

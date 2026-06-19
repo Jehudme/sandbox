@@ -192,19 +192,24 @@ TEST_CASE("PropABI: typed getters", "[properties][abi][getters]")
         sandbox_properties_destroy(h);
     }
 
-    SECTION("get_string returns correct value") {
+    SECTION("read_string returns correct value") {
         auto* h = sandbox_properties_create();
         sandbox_properties_set_string(h, "label", "engine");
-        char s[64];
-        REQUIRE(sandbox_properties_get_string(h, "label", s, sizeof(s)) == true);
-        REQUIRE(std::string(s) == "engine");
+        std::string s;
+        sandbox_properties_read_string(h, "label", [](const char* val, void* ctx) {
+            if (val) *static_cast<std::string*>(ctx) = val;
+        }, &s);
+        REQUIRE(s == "engine");
         sandbox_properties_destroy(h);
     }
 
-    SECTION("get_string returns null for missing key") {
+    SECTION("read_string returns null for missing key") {
         auto* h = sandbox_properties_create();
-        char s[64];
-        REQUIRE_FALSE(sandbox_properties_get_string(h, "nonexistent", s, sizeof(s)));
+        bool was_null = false;
+        sandbox_properties_read_string(h, "nonexistent", [](const char* val, void* ctx) {
+            *static_cast<bool*>(ctx) = (val == nullptr);
+        }, &was_null);
+        REQUIRE(was_null == true);
         sandbox_properties_destroy(h);
     }
 }
@@ -223,8 +228,11 @@ TEST_CASE("PropABI: null safety", "[properties][abi][null_safety]")
         REQUIRE(sandbox_properties_get_int64(nullptr, "k", &i)    == false);
         REQUIRE(sandbox_properties_get_double(nullptr, "k", &d)   == false);
         REQUIRE(sandbox_properties_get_bool(nullptr, "k", &b)     == false);
-        char s[64];
-        REQUIRE_FALSE(sandbox_properties_get_string(nullptr, "k", s, sizeof(s)));
+        bool was_null = false;
+        sandbox_properties_read_string(nullptr, "k", [](const char* val, void* ctx) {
+            *static_cast<bool*>(ctx) = (val == nullptr);
+        }, &was_null);
+        REQUIRE(was_null == true);
     }
 
     SECTION("getters with null out-pointer return false") {
@@ -243,9 +251,11 @@ TEST_CASE("PropABI: slash-path navigation", "[properties][abi][path]")
     sandbox_properties_set_double(h, "app/version", 1.0);
 
     SECTION("string reachable via slash path") {
-        char s[64];
-        REQUIRE(sandbox_properties_get_string(h, "app/name", s, sizeof(s)) == true);
-        REQUIRE(std::string(s) == "sandbox_engine");
+        std::string s;
+        sandbox_properties_read_string(h, "app/name", [](const char* val, void* ctx) {
+            if (val) *static_cast<std::string*>(ctx) = val;
+        }, &s);
+        REQUIRE(s == "sandbox_engine");
     }
 
     SECTION("double reachable via slash path") {

@@ -146,14 +146,17 @@ extern "C" {
         return false;
     }
 
-    bool sandbox_properties_get_string(const sandbox_properties_t* props, const char* path_str, char* out_buffer, size_t max_size) {
-        if (!props || !out_buffer || max_size == 0) return false;
-        if (auto val = cast(props)->get<std::string>(parse_path(path_str))) {
-            if (val->size() >= max_size) return false; // Buffer too small
-            std::memcpy(out_buffer, val->c_str(), val->size() + 1);
-            return true;
+    void sandbox_properties_read_string(const sandbox_properties_t* props, const char* path_str, void (*callback)(const char* value, void* user_data), void* user_data) {
+        if (!callback) return;
+        if (!props) {
+            callback(nullptr, user_data);
+            return;
         }
-        return false;
+        if (auto val = cast(props)->get<std::string>(parse_path(path_str))) {
+            callback(val->c_str(), user_data);
+        } else {
+            callback(nullptr, user_data);
+        }
     }
 
     // --- SETTERS ---

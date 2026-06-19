@@ -35,9 +35,11 @@ TEST_CASE("Engine Arguments C API", "[engine][argument]") {
         REQUIRE(sandbox_argument_get_bool(ecs, "debug/enabled", &b));
         REQUIRE(b == true);
 
-        char s[64];
-        REQUIRE(sandbox_argument_get_string(ecs, "graphics/api", s, sizeof(s)));
-        REQUIRE(std::string(s) == "Vulkan");
+        std::string s;
+        sandbox_argument_read_string(ecs, "graphics/api", [](const char* val, void* ctx) {
+            if (val) *static_cast<std::string*>(ctx) = val;
+        }, &s);
+        REQUIRE(s == "Vulkan");
     }
 
     SECTION("keys work correctly") {

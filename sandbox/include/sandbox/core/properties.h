@@ -56,8 +56,8 @@ bool sandbox_properties_get_int64(const sandbox_properties_t* props, const char*
 bool sandbox_properties_get_double(const sandbox_properties_t* props, const char* path_str, double* out_val);
 bool sandbox_properties_get_bool(const sandbox_properties_t* props, const char* path_str, bool* out_val);
 
-/* Copies the string value into the provided buffer. Returns true on success, false if type mismatches or buffer is too small. */
-bool sandbox_properties_get_string(const sandbox_properties_t* props, const char* path_str, char* out_buffer, size_t max_size);
+/* Invokes the callback with the string pointer. If not found or type mismatch, invokes with nullptr. Pointer is only valid during the callback. */
+void sandbox_properties_read_string(const sandbox_properties_t* props, const char* path_str, void (*callback)(const char* value, void* user_data), void* user_data);
 
 /* ========================================================================== */
 /* SETTERS                                                                    */

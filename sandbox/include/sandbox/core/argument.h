@@ -29,8 +29,8 @@ SANDBOX_API bool sandbox_argument_get_int64(ecs_world_t* ecs, const char* path, 
 SANDBOX_API bool sandbox_argument_get_double(ecs_world_t* ecs, const char* path, double* out_val);
 SANDBOX_API bool sandbox_argument_get_bool(ecs_world_t* ecs, const char* path, bool* out_val);
 
-/* Copies the string value into the provided buffer. Returns true on success, false if type mismatches or buffer is too small. */
-SANDBOX_API bool sandbox_argument_get_string(ecs_world_t* ecs, const char* path, char* out_buffer, size_t max_size);
+/* Invokes the callback with the string pointer. If not found or type mismatch, invokes with nullptr. Pointer is only valid during the callback. */
+SANDBOX_API void sandbox_argument_read_string(ecs_world_t* ecs, const char* path, void (*callback)(const char* value, void* user_data), void* user_data);
 
 /* ========================================================================== */
 /* SUBTREE & KEYS                                                             */

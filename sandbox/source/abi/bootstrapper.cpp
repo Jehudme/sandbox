@@ -4,15 +4,23 @@
 
 ECS_COMPONENT_DECLARE(sandbox_bootstrapper_component_t);
 
-void sandbox_stage_service(const sandbox_service_info_t* info) {
-    if (info) {
+bool sandbox_stage_service(const sandbox_service_info_t* info) {
+    if (!info) return false;
+    try {
         sandbox::core::bootstrapper_t::stage_service(*info);
+        return true;
+    } catch (...) {
+        return false;
     }
 }
 
-void sandbox_stage_module(const sandbox_module_info_t* info) {
-    if (info) {
+bool sandbox_stage_module(const sandbox_module_info_t* info) {
+    if (!info) return false;
+    try {
         sandbox::core::bootstrapper_t::stage_module(*info);
+        return true;
+    } catch (...) {
+        return false;
     }
 }
 

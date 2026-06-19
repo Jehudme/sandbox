@@ -56,8 +56,8 @@ typedef struct {
 } sandbox_module_info_t;
 
 /* engine_t hooks (Implemented in engine core, called automatically by plugins) */
-SANDBOX_API void sandbox_stage_service(const sandbox_service_info_t* info);
-SANDBOX_API void sandbox_stage_module(const sandbox_module_info_t* info);
+SANDBOX_API bool sandbox_stage_service(const sandbox_service_info_t* info);
+SANDBOX_API bool sandbox_stage_module(const sandbox_module_info_t* info);
 
 /* Indexing hooks */
 SANDBOX_API void sandbox_index_library(const char* library_path);
