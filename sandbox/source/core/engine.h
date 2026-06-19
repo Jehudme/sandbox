@@ -1,8 +1,10 @@
 #pragma once
 #include "properties.h"
 #include <flecs.h>
+#include <memory>
 
 namespace sandbox::core {
+    class bootstrapper_t;
     class engine_t {
     public:
         engine_t();
@@ -14,6 +16,14 @@ namespace sandbox::core {
         flecs::world ecs;
 
     private:
+        void save_arguments();
+        void save_bootstrapper();
+
+        void boot();
+
+
+    private:
         std::unique_ptr<properties_t> m_arguments;
+        std::unique_ptr<bootstrapper_t> m_bootstrapper;
     };
 }

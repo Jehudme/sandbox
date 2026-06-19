@@ -25,6 +25,7 @@ set(SANDBOX_UNIT_TEST_SOURCES
     src/core/test_library_loader.cpp
     src/core/test_argument.cpp
     src/core/test_client_parser.cpp
+    src/core/test_engine_bootstrapper.cpp
 )
 
 # =============================================================================
