@@ -40,9 +40,8 @@ void  sandbox_properties_free_string(char* str);
 void sandbox_properties_clear(sandbox_properties_t* props, const char* path_str);
 bool sandbox_properties_has(const sandbox_properties_t* props, const char* path_str);
 
-/* Returns an array of dynamically allocated strings. Must be freed with sandbox_properties_free_keys */
-char** sandbox_properties_keys(const sandbox_properties_t* props, const char* path_str, size_t* out_count);
-void   sandbox_properties_free_keys(char** keys, size_t count);
+/* Iterates over all keys at the given path. Calls the callback for each key. */
+void sandbox_properties_keys(const sandbox_properties_t* props, const char* path_str, void (*callback)(const char* key, void* ctx), void* ctx);
 
 void sandbox_properties_merge(sandbox_properties_t* props, const char* path_str, const sandbox_properties_t* other);
 
@@ -57,8 +56,8 @@ bool sandbox_properties_get_int64(const sandbox_properties_t* props, const char*
 bool sandbox_properties_get_double(const sandbox_properties_t* props, const char* path_str, double* out_val);
 bool sandbox_properties_get_bool(const sandbox_properties_t* props, const char* path_str, bool* out_val);
 
-/* String pointer is guaranteed valid until the next get_string call on this thread (Thread-local scratchpad) */
-const char* sandbox_properties_get_string(const sandbox_properties_t* props, const char* path_str);
+/* Copies the string value into the provided buffer. Returns true on success, false if type mismatches or buffer is too small. */
+bool sandbox_properties_get_string(const sandbox_properties_t* props, const char* path_str, char* out_buffer, size_t max_size);
 
 /* ========================================================================== */
 /* SETTERS                                                                    */

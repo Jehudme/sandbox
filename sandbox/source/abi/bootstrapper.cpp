@@ -29,28 +29,35 @@ sandbox_bootstrapper_t* sandbox_get_bootstrapper(ecs_world_t* ecs) {
     return comp->internal_bootstrapper;
 }
 
-void sandbox_bootstrapper_activate(sandbox_bootstrapper_t* bootstrapper, const char* architecture, const char* name, int version_major, int version_minor, int version_patch) {
-    if (!bootstrapper || !architecture || !name) return;
+bool sandbox_bootstrapper_activate(sandbox_bootstrapper_t* bootstrapper, const char* architecture, const char* name, int version_major, int version_minor, int version_patch) {
+    if (!bootstrapper || !architecture || !name) return false;
     try {
         reinterpret_cast<sandbox::core::bootstrapper_t*>(bootstrapper)->activate(architecture, name, version_major, version_minor, version_patch);
+        return true;
     } catch (...) {
         // ABI boundary safely swallows exceptions to prevent C-plugin crashes
+        return false;
     }
 }
 
-void sandbox_bootstrapper_activate_string(sandbox_bootstrapper_t* bootstrapper, const char* module_str) {
-    if (!bootstrapper || !module_str) return;
+bool sandbox_bootstrapper_activate_string(sandbox_bootstrapper_t* bootstrapper, const char* module_str) {
+    if (!bootstrapper || !module_str) return false;
     try {
         reinterpret_cast<sandbox::core::bootstrapper_t*>(bootstrapper)->activate(module_str);
+        return true;
     } catch (...) {
         // Catch exceptions across ABI
+        return false;
     }
 }
 
-void sandbox_bootstrapper_boot(sandbox_bootstrapper_t* bootstrapper, ecs_world_t* ecs) {
-    if (!bootstrapper || !ecs) return;
+bool sandbox_bootstrapper_boot(sandbox_bootstrapper_t* bootstrapper, ecs_world_t* ecs) {
+    if (!bootstrapper || !ecs) return false;
     try {
         flecs::world world(ecs);
         reinterpret_cast<sandbox::core::bootstrapper_t*>(bootstrapper)->boot(world);
-    } catch (...) {}
+        return true;
+    } catch (...) {
+        return false;
+    }
 }

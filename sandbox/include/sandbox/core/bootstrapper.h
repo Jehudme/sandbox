@@ -78,9 +78,9 @@ extern ECS_COMPONENT_DECLARE(sandbox_bootstrapper_component_t);
 
 SANDBOX_API sandbox_bootstrapper_t* sandbox_get_bootstrapper(ecs_world_t* ecs);
 
-SANDBOX_API void sandbox_bootstrapper_activate(sandbox_bootstrapper_t* bootstrapper, const char* architecture, const char* name, int version_major, int version_minor, int version_patch);
-SANDBOX_API void sandbox_bootstrapper_activate_string(sandbox_bootstrapper_t* bootstrapper, const char* module_str);
-SANDBOX_API void sandbox_bootstrapper_boot(sandbox_bootstrapper_t* bootstrapper, ecs_world_t* ecs);
+SANDBOX_API bool sandbox_bootstrapper_activate(sandbox_bootstrapper_t* bootstrapper, const char* architecture, const char* name, int version_major, int version_minor, int version_patch);
+SANDBOX_API bool sandbox_bootstrapper_activate_string(sandbox_bootstrapper_t* bootstrapper, const char* module_str);
+SANDBOX_API bool sandbox_bootstrapper_boot(sandbox_bootstrapper_t* bootstrapper, ecs_world_t* ecs);
 
 /* ========================================================================== */
 /* SERVICE DECLARATION (100% Pure C ABI Safe)                                 */

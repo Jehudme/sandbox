@@ -96,28 +96,12 @@ extern "C" {
         return cast(props)->has(parse_path(path_str));
     }
 
-    char** sandbox_properties_keys(const sandbox_properties_t* props, const char* path_str, size_t* out_count) {
-        if (!props || !out_count) return nullptr;
+    void sandbox_properties_keys(const sandbox_properties_t* props, const char* path_str, void (*callback)(const char* key, void* ctx), void* ctx) {
+        if (!props || !callback) return;
 
         auto cpp_keys = cast(props)->keys(parse_path(path_str));
-        *out_count = cpp_keys.size();
-
-        if (cpp_keys.empty()) return nullptr;
-
-        char** c_keys = (char**)malloc(sizeof(char*) * cpp_keys.size());
-        for (size_t i = 0; i < cpp_keys.size(); ++i) {
-            c_keys[i] = (char*)malloc(cpp_keys[i].size() + 1);
-            std::memcpy(c_keys[i], cpp_keys[i].c_str(), cpp_keys[i].size() + 1);
-        }
-        return c_keys;
-    }
-
-    void sandbox_properties_free_keys(char** keys, size_t count) {
-        if (keys) {
-            for (size_t i = 0; i < count; ++i) {
-                free(keys[i]);
-            }
-            free(keys);
+        for (const auto& k : cpp_keys) {
+            callback(k.c_str(), ctx);
         }
     }
 
@@ -162,16 +146,14 @@ extern "C" {
         return false;
     }
 
-    const char* sandbox_properties_get_string(const sandbox_properties_t* props, const char* path_str) {
-        if (!props) return nullptr;
+    bool sandbox_properties_get_string(const sandbox_properties_t* props, const char* path_str, char* out_buffer, size_t max_size) {
+        if (!props || !out_buffer || max_size == 0) return false;
         if (auto val = cast(props)->get<std::string>(parse_path(path_str))) {
-            // Use thread_local to safely pass string pointer across ABI without requiring the caller to free it
-            thread_local std::string scratchpad;
-            scratchpad = std::move(*val);
-            return scratchpad.c_str();
+            if (val->size() >= max_size) return false; // Buffer too small
+            std::memcpy(out_buffer, val->c_str(), val->size() + 1);
+            return true;
         }
-
-        return nullptr;
+        return false;
     }
 
     // --- SETTERS ---

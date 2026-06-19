@@ -89,24 +89,25 @@ TEST_CASE("PropABI: has and clear", "[properties][abi][has_clear]")
         sandbox_properties_set_int64(h, "a", 1);
         sandbox_properties_set_int64(h, "b", 2);
         sandbox_properties_clear(h, "");
-        size_t count = 0;
-        char** keys = sandbox_properties_keys(h, "", &count);
-        REQUIRE(count == 0);
-        REQUIRE(keys == nullptr);
-        sandbox_properties_free_keys(keys, count);
+        std::vector<std::string> keys;
+        sandbox_properties_keys(h, "", [](const char* k, void* ctx) {
+            static_cast<std::vector<std::string>*>(ctx)->emplace_back(k);
+        }, &keys);
+        
+        REQUIRE(keys.size() == 0);
         sandbox_properties_destroy(h);
     }
 }
 
 TEST_CASE("PropABI: keys enumeration", "[properties][abi][keys]")
 {
-    SECTION("empty object returns null and count 0") {
+    SECTION("empty object returns count 0") {
         auto* h = sandbox_properties_create();
-        size_t count = 999;
-        char** keys = sandbox_properties_keys(h, "", &count);
-        REQUIRE(count == 0);
-        REQUIRE(keys == nullptr);
-        sandbox_properties_free_keys(keys, count);
+        std::vector<std::string> keys;
+        sandbox_properties_keys(h, "", [](const char* k, void* ctx) {
+            static_cast<std::vector<std::string>*>(ctx)->emplace_back(k);
+        }, &keys);
+        REQUIRE(keys.size() == 0);
         sandbox_properties_destroy(h);
     }
 
@@ -114,21 +115,15 @@ TEST_CASE("PropABI: keys enumeration", "[properties][abi][keys]")
         auto* h = sandbox_properties_create();
         sandbox_properties_set_int64(h, "alpha", 1);
         sandbox_properties_set_int64(h, "beta", 2);
-        size_t count = 0;
-        char** keys = sandbox_properties_keys(h, "", &count);
-        REQUIRE(count == 2);
-        REQUIRE(keys != nullptr);
-        std::vector<std::string> kv;
-        for (size_t i = 0; i < count; ++i) kv.emplace_back(keys[i]);
-        std::sort(kv.begin(), kv.end());
-        REQUIRE(kv[0] == "alpha");
-        REQUIRE(kv[1] == "beta");
-        sandbox_properties_free_keys(keys, count);
+        std::vector<std::string> keys;
+        sandbox_properties_keys(h, "", [](const char* k, void* ctx) {
+            static_cast<std::vector<std::string>*>(ctx)->emplace_back(k);
+        }, &keys);
+        REQUIRE(keys.size() == 2);
+        std::sort(keys.begin(), keys.end());
+        REQUIRE(keys[0] == "alpha");
+        REQUIRE(keys[1] == "beta");
         sandbox_properties_destroy(h);
-    }
-
-    SECTION("free_keys with null is safe") {
-        REQUIRE_NOTHROW(sandbox_properties_free_keys(nullptr, 5));
     }
 }
 
@@ -200,15 +195,16 @@ TEST_CASE("PropABI: typed getters", "[properties][abi][getters]")
     SECTION("get_string returns correct value") {
         auto* h = sandbox_properties_create();
         sandbox_properties_set_string(h, "label", "engine");
-        const char* s = sandbox_properties_get_string(h, "label");
-        REQUIRE(s != nullptr);
+        char s[64];
+        REQUIRE(sandbox_properties_get_string(h, "label", s, sizeof(s)) == true);
         REQUIRE(std::string(s) == "engine");
         sandbox_properties_destroy(h);
     }
 
     SECTION("get_string returns null for missing key") {
         auto* h = sandbox_properties_create();
-        REQUIRE(sandbox_properties_get_string(h, "nonexistent") == nullptr);
+        char s[64];
+        REQUIRE_FALSE(sandbox_properties_get_string(h, "nonexistent", s, sizeof(s)));
         sandbox_properties_destroy(h);
     }
 }
@@ -227,7 +223,8 @@ TEST_CASE("PropABI: null safety", "[properties][abi][null_safety]")
         REQUIRE(sandbox_properties_get_int64(nullptr, "k", &i)    == false);
         REQUIRE(sandbox_properties_get_double(nullptr, "k", &d)   == false);
         REQUIRE(sandbox_properties_get_bool(nullptr, "k", &b)     == false);
-        REQUIRE(sandbox_properties_get_string(nullptr, "k")       == nullptr);
+        char s[64];
+        REQUIRE_FALSE(sandbox_properties_get_string(nullptr, "k", s, sizeof(s)));
     }
 
     SECTION("getters with null out-pointer return false") {
@@ -246,8 +243,8 @@ TEST_CASE("PropABI: slash-path navigation", "[properties][abi][path]")
     sandbox_properties_set_double(h, "app/version", 1.0);
 
     SECTION("string reachable via slash path") {
-        const char* s = sandbox_properties_get_string(h, "app/name");
-        REQUIRE(s != nullptr);
+        char s[64];
+        REQUIRE(sandbox_properties_get_string(h, "app/name", s, sizeof(s)) == true);
         REQUIRE(std::string(s) == "sandbox_engine");
     }
 

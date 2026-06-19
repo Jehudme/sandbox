@@ -29,15 +29,15 @@ SANDBOX_API bool sandbox_argument_get_int64(ecs_world_t* ecs, const char* path, 
 SANDBOX_API bool sandbox_argument_get_double(ecs_world_t* ecs, const char* path, double* out_val);
 SANDBOX_API bool sandbox_argument_get_bool(ecs_world_t* ecs, const char* path, bool* out_val);
 
-/* Returns a thread-local scratchpad pointer. Do not free. Returns NULL if not found. */
-SANDBOX_API const char* sandbox_argument_get_string(ecs_world_t* ecs, const char* path);
+/* Copies the string value into the provided buffer. Returns true on success, false if type mismatches or buffer is too small. */
+SANDBOX_API bool sandbox_argument_get_string(ecs_world_t* ecs, const char* path, char* out_buffer, size_t max_size);
 
 /* ========================================================================== */
 /* SUBTREE & KEYS                                                             */
 /* ========================================================================== */
 
-/* Returns an array of strings. Must be freed with sandbox_properties_free_keys */
-SANDBOX_API char** sandbox_argument_get_keys(ecs_world_t* ecs, const char* path, size_t* out_count);
+/* Iterates over all keys at the given path. Calls the callback for each key. */
+SANDBOX_API void sandbox_argument_get_keys(ecs_world_t* ecs, const char* path, void (*callback)(const char* key, void* ctx), void* ctx);
 
 /* Returns a dynamically allocated property object. Must be freed with sandbox_properties_destroy */
 SANDBOX_API sandbox_properties_t* sandbox_argument_get_subtree(ecs_world_t* ecs, const char* path);

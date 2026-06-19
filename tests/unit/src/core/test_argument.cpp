@@ -35,18 +35,19 @@ TEST_CASE("Engine Arguments C API", "[engine][argument]") {
         REQUIRE(sandbox_argument_get_bool(ecs, "debug/enabled", &b));
         REQUIRE(b == true);
 
-        const char* s = sandbox_argument_get_string(ecs, "graphics/api");
-        REQUIRE(s != nullptr);
+        char s[64];
+        REQUIRE(sandbox_argument_get_string(ecs, "graphics/api", s, sizeof(s)));
         REQUIRE(std::string(s) == "Vulkan");
     }
 
     SECTION("keys work correctly") {
-        size_t count = 0;
-        char** keys = sandbox_argument_get_keys(ecs, "window", &count);
-        REQUIRE(keys != nullptr);
-        REQUIRE(count == 1);
-        REQUIRE(std::string(keys[0]) == "width");
-        sandbox_properties_free_keys(keys, count);
+        std::vector<std::string> keys;
+        sandbox_argument_get_keys(ecs, "window", [](const char* k, void* ctx) {
+            static_cast<std::vector<std::string>*>(ctx)->emplace_back(k);
+        }, &keys);
+        
+        REQUIRE(keys.size() == 1);
+        REQUIRE(keys[0] == "width");
     }
 
     SECTION("subtree works correctly") {

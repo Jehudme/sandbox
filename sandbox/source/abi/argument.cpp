@@ -32,18 +32,18 @@ extern "C" {
         return sandbox_properties_get_bool(arg->internal_properties, path, out_val);
     }
 
-    const char* sandbox_argument_get_string(ecs_world_t* ecs, const char* path) {
-        if (!ecs) return nullptr;
+    bool sandbox_argument_get_string(ecs_world_t* ecs, const char* path, char* out_buffer, size_t max_size) {
+        if (!ecs) return false;
         const sandbox_argument_t* arg = (const sandbox_argument_t*)ecs_singleton_get(ecs, sandbox_argument_t);
-        if (!arg || !arg->internal_properties) return nullptr;
-        return sandbox_properties_get_string(arg->internal_properties, path);
+        if (!arg || !arg->internal_properties) return false;
+        return sandbox_properties_get_string(arg->internal_properties, path, out_buffer, max_size);
     }
 
-    char** sandbox_argument_get_keys(ecs_world_t* ecs, const char* path, size_t* out_count) {
-        if (!ecs) return nullptr;
+    void sandbox_argument_get_keys(ecs_world_t* ecs, const char* path, void (*callback)(const char* key, void* ctx), void* ctx) {
+        if (!ecs) return;
         const sandbox_argument_t* arg = (const sandbox_argument_t*)ecs_singleton_get(ecs, sandbox_argument_t);
-        if (!arg || !arg->internal_properties) return nullptr;
-        return sandbox_properties_keys(arg->internal_properties, path, out_count);
+        if (!arg || !arg->internal_properties) return;
+        sandbox_properties_keys(arg->internal_properties, path, callback, ctx);
     }
 
     sandbox_properties_t* sandbox_argument_get_subtree(ecs_world_t* ecs, const char* path) {
