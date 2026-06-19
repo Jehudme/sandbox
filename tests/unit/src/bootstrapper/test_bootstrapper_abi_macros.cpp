@@ -2,9 +2,9 @@
 // Tests for the bootstrapper C ABI functions and macro-generated structs.
 
 #include <catch2/catch_all.hpp>
-#include "sandbox/core/bootstrapper.h"
+#include "../../../../sandbox/include/sandbox/abi/bootstrapper.h"
 #include "core/bootstrapper.h"
-#include "sandbox/core/platform.h"
+#include "../../../../sandbox/include/sandbox/abi/platform.h"
 
 #include <flecs.h>
 

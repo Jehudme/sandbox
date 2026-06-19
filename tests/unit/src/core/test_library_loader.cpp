@@ -1,5 +1,5 @@
-// tests/unit/src/core/test_library_loader.cpp
-// Unit tests for sandbox::core::library_loader_t.
+// tests/unit/src/sdk/test_library_loader.cpp
+// Unit tests for sandbox::sdk::library_loader_t.
 //
 // The "success" path requires a real shared library on disk.
 // The dummy_plugin target (tests/dummy_plugin/) is built alongside these tests

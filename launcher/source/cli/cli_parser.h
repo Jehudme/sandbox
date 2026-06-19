@@ -1,7 +1,7 @@
 
 
 
-#include "sandbox/core/properties.h"
+#include "../../../sandbox/include/sandbox/abi/properties.h"
 
 namespace sandbox::launcher {
 

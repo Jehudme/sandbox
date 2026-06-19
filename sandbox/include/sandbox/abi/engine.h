@@ -6,7 +6,7 @@
 extern "C" {
 #endif
 
-/* Opaque pointer representing sandbox::core::engine_t */
+/* Opaque pointer representing sandbox::sdk::engine_t */
 typedef struct sandbox_engine sandbox_engine_t;
 
 /* Creates a new engine instance */

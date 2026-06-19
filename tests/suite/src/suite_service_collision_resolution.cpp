@@ -2,7 +2,7 @@
 // Integration: Service slot collision — winner selection across scenarios.
 
 #include <catch2/catch_all.hpp>
-#include "sandbox/core/bootstrapper.h"
+#include "../../../sandbox/include/sandbox/abi/bootstrapper.h"
 #include "core/bootstrapper.h"
 
 #include <flecs.h>

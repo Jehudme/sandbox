@@ -1,4 +1,4 @@
-#include "sandbox/core/properties.h"
+#include "sandbox/abi/properties.h"
 #include "core/properties.h"
 #include <cstring>
 #include <cstdlib>

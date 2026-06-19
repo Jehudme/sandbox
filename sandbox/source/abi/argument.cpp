@@ -1,4 +1,4 @@
-#include "sandbox/core/argument.h"
+#include "sandbox/abi/argument.h"
 
 ECS_COMPONENT_DECLARE(sandbox_argument_t);
 

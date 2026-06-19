@@ -1,6 +1,6 @@
 #include <catch2/catch_all.hpp>
 #include "core/engine.h"
-#include "sandbox/core/argument.h"
+#include "../../../../sandbox/include/sandbox/abi/argument.h"
 #include <string>
 
 using namespace sandbox::core;

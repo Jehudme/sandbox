@@ -2,7 +2,7 @@
 // Integration: Complex module dependency graphs — diamond, transitive, and optional deps.
 
 #include <catch2/catch_all.hpp>
-#include "sandbox/core/bootstrapper.h"
+#include "../../../sandbox/include/sandbox/abi/bootstrapper.h"
 #include "core/bootstrapper.h"
 
 #include <flecs.h>
@@ -143,7 +143,7 @@ TEST_CASE("Suite: Optional dependency — present and absent", "[suite][complex_
         bootstrapper_t::reset();
     }
 
-    SECTION("optional dep absent — only core and app initialize") {
+    SECTION("optional dep absent — only sdk and app initialize") {
         bootstrapper_t::reset();
         g_init_order.clear();
         bootstrapper_t::stage_module(core_mod);

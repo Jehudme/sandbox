@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <flecs.h>
 
-#include "sandbox/core/platform.h"
+#include "platform.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -55,7 +55,7 @@ typedef struct {
     void (*init_fn)(ecs_world_t* ecs);
 } sandbox_module_info_t;
 
-/* engine_t hooks (Implemented in engine core, called automatically by plugins) */
+/* engine_t hooks (Implemented in engine sdk, called automatically by plugins) */
 SANDBOX_API bool sandbox_stage_service(const sandbox_service_info_t* info);
 SANDBOX_API bool sandbox_stage_module(const sandbox_module_info_t* info);
 

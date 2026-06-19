@@ -3,7 +3,7 @@
 #include <vector>
 #include <filesystem>
 #include <flecs.h>
-#include "sandbox/core/bootstrapper.h"
+#include "sandbox/abi/bootstrapper.h"
 #include "library_loader.h"
 
 namespace sandbox::core {

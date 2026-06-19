@@ -4,7 +4,7 @@
 
 #include "bootstrapper.h"
 #include "sandbox/core/argument.h"
-#include "sandbox/core/bootstrapper.h"
+#include "sandbox/abi/bootstrapper.h"
 #include <iostream>
 
 namespace sandbox::core {

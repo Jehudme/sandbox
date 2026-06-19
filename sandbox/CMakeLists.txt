@@ -43,18 +43,18 @@ add_library(sandbox_library STATIC
         source/core/properties.h
         source/core/properties.cpp
         source/abi/properties.cpp
-        include/sandbox/core/properties.h
+        include/sandbox/abi/properties.h
         source/abi/argument.cpp
-        include/sandbox/core/argument.h
+        include/sandbox/abi/argument.h
         source/core/bootstrapper.cpp
         source/core/bootstrapper.h
-        include/sandbox/core/bootstrapper.h
+        include/sandbox/abi/bootstrapper.h
         source/abi/bootstrapper.cpp
-        include/sandbox/core/platform.h
+        include/sandbox/abi/platform.h
         source/core/engine.cpp
         source/core/engine.h
         source/abi/engine.cpp
-        include/sandbox/core/engine.h
+        include/sandbox/abi/engine.h
         source/core/library_loader.cpp
         source/core/library_loader.h
 )

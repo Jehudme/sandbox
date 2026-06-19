@@ -3,7 +3,7 @@
 
 #include <catch2/catch_all.hpp>
 #include "core/properties.h"
-#include "sandbox/core/properties.h"
+#include "../../../sandbox/include/sandbox/abi/properties.h"
 
 #include <string>
 #include <vector>

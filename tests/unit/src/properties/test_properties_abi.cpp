@@ -2,7 +2,7 @@
 // Tests for the C ABI layer of Properties.
 
 #include <catch2/catch_all.hpp>
-#include "sandbox/core/properties.h"
+#include "../../../../sandbox/include/sandbox/abi/properties.h"
 
 #include <cstring>
 #include <string>

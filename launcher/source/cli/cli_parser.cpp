@@ -6,7 +6,7 @@
 #include <vector>
 #include <string>
 
-#include "sandbox/core/properties.h"
+#include "../../../sandbox/include/sandbox/abi/properties.h"
 
 sandbox_properties_t* sandbox::launcher::parse_cli(int argc, char **argv) {
     CLI::App cli_app{"Sandbox Engine Launcher"};

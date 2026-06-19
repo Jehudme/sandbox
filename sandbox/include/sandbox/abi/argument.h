@@ -6,7 +6,7 @@
 #include <flecs.h>
 
 #include "sandbox/core/platform.h"
-#include "sandbox/core/properties.h"
+#include "properties.h"
 
 #ifdef __cplusplus
 extern "C" {
