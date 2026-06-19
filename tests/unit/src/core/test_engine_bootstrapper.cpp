@@ -1,5 +1,6 @@
 #include <catch2/catch_all.hpp>
 #include "core/engine.h"
+#include "sandbox/core/engine.h"
 #include "sandbox/core/bootstrapper.h"
 #include "core/bootstrapper.h"
 #include <string>
@@ -72,5 +73,36 @@ TEST_CASE("Engine Auto-Bootstrapping Sequence", "[engine][bootstrapper][auto]") 
     REQUIRE_NOTHROW(engine.initialize(props));
 
     REQUIRE(init_called == true);
+    bootstrapper_t::reset();
+}
+
+TEST_CASE("Engine C-ABI Wrapper", "[engine][c_abi]") {
+    bootstrapper_t::reset();
+
+    SECTION("create and destroy") {
+        sandbox_engine_t* engine = sandbox_engine_create();
+        REQUIRE(engine != nullptr);
+        
+        // Before initialization, ECS is null or unpopulated
+        void* ecs = sandbox_engine_get_ecs(engine);
+        // Depending on implementation, ECS might be populated but let's test initialization
+        
+        sandbox_properties_t* props = sandbox_properties_create();
+        bool success = sandbox_engine_initialize(engine, props);
+        REQUIRE(success == true);
+        
+        ecs = sandbox_engine_get_ecs(engine);
+        REQUIRE(ecs != nullptr);
+        
+        sandbox_properties_destroy(props);
+        sandbox_engine_destroy(engine);
+    }
+    
+    SECTION("handles null pointers gracefully") {
+        REQUIRE(sandbox_engine_initialize(nullptr, nullptr) == false);
+        REQUIRE(sandbox_engine_get_ecs(nullptr) == nullptr);
+        REQUIRE_NOTHROW(sandbox_engine_destroy(nullptr));
+    }
+    
     bootstrapper_t::reset();
 }

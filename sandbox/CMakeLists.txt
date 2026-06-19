@@ -53,6 +53,8 @@ add_library(sandbox_library STATIC
         include/sandbox/core/platform.h
         source/core/engine.cpp
         source/core/engine.h
+        source/abi/engine.cpp
+        include/sandbox/core/engine.h
         source/core/library_loader.cpp
         source/core/library_loader.h
 )
