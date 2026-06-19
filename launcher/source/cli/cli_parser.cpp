@@ -1,53 +1,90 @@
 #include "cli_parser.h"
-#include "CLI/CLI.hpp"
+#include <CLI/CLI.hpp>
 
 #include <fstream>
+#include <iostream>
+#include <vector>
+#include <string>
+
 #include "sandbox/core/properties.h"
 
 sandbox_properties_t* sandbox::launcher::parse_cli(int argc, char **argv) {
-    CLI::App app{"Sandbox Engine Launcher"};
+    CLI::App cli_app{"Sandbox Engine Launcher"};
 
-    std::vector<std::string> libraries;
-    app.add_option("-l,--library", libraries, "Libraries to index");
+    // --- Command Line Options Definition ---
+    std::vector<std::string> library_paths;
+    cli_app.add_option("-l,--library", library_paths, "Paths to libraries to index");
 
-    std::vector<std::string> modules;
-    app.add_option("-m,--module", modules, "Modules to activate (format: arch-name@major.minor.patch)");
+    std::vector<std::string> modules_to_activate;
+    cli_app.add_option("-m,--module", modules_to_activate, "Modules to activate (format: arch-name@major.minor.patch)");
 
-    std::string config_path;
-    app.add_option("-c,--config", config_path, "Configuration file path (JSON)");
+    std::string config_file_path;
+    cli_app.add_option("-c,--config", config_file_path, "Path to the base configuration file (JSON format)");
 
+    // --- Parse Arguments ---
     try {
-        app.parse(argc, argv);
-    } catch (const CLI::ParseError& e) {
-        app.exit(e);
+        cli_app.parse(argc, argv);
+    } catch (const CLI::ParseError& parse_error) {
+        cli_app.exit(parse_error);
         return nullptr;
     }
 
-    auto* props_ptr = sandbox_properties_create();
+    sandbox_properties_t* engine_properties = sandbox_properties_create();
 
-    if (!config_path.empty()) {
-        std::ifstream file(config_path);
-        if (file) {
-            std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-            sandbox_properties_load(props_ptr, content.c_str(), content.size(), SANDBOX_FORMAT_JSON);
+    // --- Step 1: Load Base Configuration (File) ---
+    if (!config_file_path.empty()) {
+        std::ifstream config_file(config_file_path);
+
+        if (config_file.is_open()) {
+            std::string config_content(
+                (std::istreambuf_iterator<char>(config_file)),
+                std::istreambuf_iterator<char>()
+            );
+
+            sandbox_properties_load(
+                engine_properties,
+                config_content.c_str(),
+                config_content.size(),
+                SANDBOX_FORMAT_JSON
+            );
         } else {
-            std::cerr << "Failed to open configuration file: " << config_path << "\n";
+            std::cerr << "[Launcher] Failed to open configuration file: " << config_file_path << "\n";
         }
     }
 
-    if (!libraries.empty()) {
-        std::vector<const char*> c_libs;
-        c_libs.reserve(libraries.size());
-        for (const auto& lib : libraries) c_libs.push_back(lib.c_str());
-        sandbox_properties_set_string_array(props_ptr, "engine/libraries", c_libs.data(), c_libs.size());
+    // --- Step 2: Apply Command Line Overrides (Libraries) ---
+    if (!library_paths.empty()) {
+        std::vector<const char*> c_style_library_paths;
+        c_style_library_paths.reserve(library_paths.size());
+
+        for (const std::string& path : library_paths) {
+            c_style_library_paths.push_back(path.c_str());
+        }
+
+        sandbox_properties_set_string_array(
+            engine_properties,
+            "engine/libraries",
+            c_style_library_paths.data(),
+            c_style_library_paths.size()
+        );
     }
 
-    if (!modules.empty()) {
-        std::vector<const char*> c_mods;
-        c_mods.reserve(modules.size());
-        for (const auto& mod : modules) c_mods.push_back(mod.c_str());
-        sandbox_properties_set_string_array(props_ptr, "engine/modules", c_mods.data(), c_mods.size());
+    // --- Step 3: Apply Command Line Overrides (Modules) ---
+    if (!modules_to_activate.empty()) {
+        std::vector<const char*> c_style_modules;
+        c_style_modules.reserve(modules_to_activate.size());
+
+        for (const std::string& module_target : modules_to_activate) {
+            c_style_modules.push_back(module_target.c_str());
+        }
+
+        sandbox_properties_set_string_array(
+            engine_properties,
+            "engine/modules",
+            c_style_modules.data(),
+            c_style_modules.size()
+        );
     }
 
-    return props_ptr;
+    return engine_properties;
 }
