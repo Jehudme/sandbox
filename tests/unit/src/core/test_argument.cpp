@@ -10,7 +10,7 @@ TEST_CASE("Engine Arguments C API", "[engine][argument]") {
     props.set<int64_t>({"window", "width"}, 1920);
     props.set<double>({"physics", "gravity"}, 9.81);
     props.set<bool>({"debug", "enabled"}, true);
-    props.set<std::string>({"graphics", "api"}, "Vulkan");
+    props.set<std::string>({"graphics", "sdk"}, "Vulkan");
 
     engine_t engine;
     engine.initialize(props);
@@ -36,7 +36,7 @@ TEST_CASE("Engine Arguments C API", "[engine][argument]") {
         REQUIRE(b == true);
 
         std::string s;
-        sandbox_argument_read_string(ecs, "graphics/api", [](const char* val, void* ctx) {
+        sandbox_argument_read_string(ecs, "graphics/sdk", [](const char* val, void* ctx) {
             if (val) *static_cast<std::string*>(ctx) = val;
         }, &s);
         REQUIRE(s == "Vulkan");

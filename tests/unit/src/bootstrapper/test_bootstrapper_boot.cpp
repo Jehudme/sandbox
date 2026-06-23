@@ -28,9 +28,9 @@ static module_info_t make_mod(const char* name, int major, int minor, int patch,
     return m;
 }
 
-TEST_CASE("Boot: boot() initializes modules", "[bootstrapper][boot]")
+TEST_CASE("Boot: boot() initializes sandbox", "[bootstrapper][boot]")
 {
-    SECTION("modules with no dependencies are all initialized") {
+    SECTION("sandbox with no dependencies are all initialized") {
         bootstrapper_t::reset();
         static int a_calls = 0, b_calls = 0;
         a_calls = b_calls = 0;

@@ -3,20 +3,21 @@
 #include "properties.hpp"
 
 namespace sandbox {
-    class Engine {
+    class properties;
+    class engine {
     public:
-        Engine();
-        ~Engine();
+        engine();
+        ~engine();
 
-        Engine(const Engine&) = delete;
-        Engine& operator=(const Engine&) = delete;
+        engine(const engine&) = delete;
+        engine& operator=(const engine&) = delete;
 
-        Engine(Engine&& other) noexcept;
-        Engine& operator=(Engine&& other) noexcept;
+        engine(engine&& other) noexcept;
+        engine& operator=(engine&& other) noexcept;
 
-        explicit Engine(sandbox_engine_t* raw);
+        explicit engine(sandbox_engine_t* raw);
 
-        bool initialize(const Properties& properties);
+        bool initialize(const properties& props);
         
         // Returns the ECS world managed by the engine (ecs_world_t*)
         void* get_ecs() const;

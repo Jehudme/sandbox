@@ -79,7 +79,7 @@ TEST_CASE("Suite: Diamond dependency — correct order, no duplicates", "[suite]
     flecs::world w;
     REQUIRE_NOTHROW(b.boot(w));
 
-    SECTION("all 5 modules were initialized") {
+    SECTION("all 5 sandbox were initialized") {
         REQUIRE(g_init_order.size() == 5);
     }
 
@@ -128,7 +128,7 @@ TEST_CASE("Suite: Optional dependency — present and absent", "[suite][complex_
         [](ecs_world_t*) { g_init_order.push_back("AppModule"); },
         app_reqs, 2);
 
-    SECTION("optional dep present — all three modules initialize") {
+    SECTION("optional dep present — all three sandbox initialize") {
         bootstrapper_t::reset();
         g_init_order.clear();
         bootstrapper_t::stage_module(core_mod);

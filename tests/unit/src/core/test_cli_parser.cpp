@@ -14,7 +14,7 @@ TEST_CASE("CLI Parser Suite: Configuration Projects", "[cli_parser][config][suit
         out1 << R"({
             "engine": {
                 "libraries": ["dummy_plugin.so"],
-                "modules": ["test::sys-Renderer@1.0.0"]
+                "sandbox": ["test::sys-Renderer@1.0.0"]
             }
         })";
         
@@ -22,7 +22,7 @@ TEST_CASE("CLI Parser Suite: Configuration Projects", "[cli_parser][config][suit
         out2 << R"({
             "engine": {
                 "libraries": ["audio_plugin.so", "physics_plugin.so"],
-                "modules": ["test::sys-Audio@2.0.0", "test::sys-Physics@1.0.0"]
+                "sandbox": ["test::sys-Audio@2.0.0", "test::sys-Physics@1.0.0"]
             }
         })";
     }
@@ -37,7 +37,7 @@ TEST_CASE("CLI Parser Suite: Configuration Projects", "[cli_parser][config][suit
         bool found_libs = false, found_mods = false;
         sandbox_properties_keys(props, "engine", [](const char* k, void* ctx) {
             if (std::string(k) == "libraries") ((bool*)ctx)[0] = true;
-            if (std::string(k) == "modules") ((bool*)ctx)[1] = true;
+            if (std::string(k) == "sandbox") ((bool*)ctx)[1] = true;
         }, &found_libs); // using array memory layout trick
         
         // Let's use a struct to be perfectly safe across C API
@@ -45,7 +45,7 @@ TEST_CASE("CLI Parser Suite: Configuration Projects", "[cli_parser][config][suit
         sandbox_properties_keys(props, "engine", [](const char* k, void* ctx) {
             auto* p = static_cast<flags*>(ctx);
             if (std::string(k) == "libraries") p->l = true;
-            if (std::string(k) == "modules") p->m = true;
+            if (std::string(k) == "sandbox") p->m = true;
         }, &f);
 
         REQUIRE(f.l == true);
@@ -65,7 +65,7 @@ TEST_CASE("CLI Parser Suite: Configuration Projects", "[cli_parser][config][suit
         sandbox_properties_keys(props, "engine", [](const char* k, void* ctx) {
             auto* p = static_cast<flags*>(ctx);
             if (std::string(k) == "libraries") p->l = true;
-            if (std::string(k) == "modules") p->m = true;
+            if (std::string(k) == "sandbox") p->m = true;
         }, &f);
 
         REQUIRE(f.l == true);
@@ -84,7 +84,7 @@ TEST_CASE("CLI Parser Suite: Configuration Projects", "[cli_parser][config][suit
         sandbox_properties_keys(props, "engine", [](const char* k, void* ctx) {
             auto* p = static_cast<flags*>(ctx);
             if (std::string(k) == "libraries") p->l = true;
-            if (std::string(k) == "modules") p->m = true;
+            if (std::string(k) == "sandbox") p->m = true;
         }, &f);
 
         REQUIRE(f.l == true);

@@ -2,7 +2,7 @@
 // Integration suite: MVP module lifecycle using library_loader_t.
 //
 // Simulates a full engine boot/teardown sequence:
-//   1. Multiple modules are loaded during "boot"
+//   1. Multiple sandbox are loaded during "boot"
 //   2. They are safely unloaded during "teardown"
 // The dummy_plugin shared library (tests/dummy_plugin/) is used for success paths.
 // All failure paths are verified to be silent (exceptions swallowed internally).
@@ -58,7 +58,7 @@ TEST_CASE("Suite: Library loader — failure paths never throw", "[suite][librar
         REQUIRE_NOTHROW(loader.load(fs::path("nonexistent_module_ccc.so")));
     }
 
-    SECTION("unloading modules that were never loaded is silent") {
+    SECTION("unloading sandbox that were never loaded is silent") {
         REQUIRE_NOTHROW(loader.unload("render_system"));
         REQUIRE_NOTHROW(loader.unload("audio_system"));
         REQUIRE_NOTHROW(loader.unload("input_system"));
@@ -113,7 +113,7 @@ TEST_CASE("Suite: Library loader — MVP boot and teardown", "[suite][library_lo
         }());
     }
 
-    SECTION("simulate engine boot sequence with multiple modules") {
+    SECTION("simulate engine boot sequence with multiple sandbox") {
         // In the MVP, we only have one real plugin; we simulate a multi-module
         // boot by loading dummy_plugin under different aliases is not possible
         // (the key is the stem), so we load it once and fill the rest with

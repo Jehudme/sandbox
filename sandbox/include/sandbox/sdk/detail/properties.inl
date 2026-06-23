@@ -4,19 +4,19 @@
 
 namespace sandbox {
 
-    inline Properties::Properties() {
+    inline properties::properties() {
         m_props = sandbox_properties_create();
     }
 
-    inline Properties::~Properties() {
+    inline properties::~properties() {
         sandbox_properties_destroy(m_props);
     }
 
-    inline Properties::Properties(Properties&& other) noexcept : m_props(other.m_props) {
+    inline properties::properties(properties&& other) noexcept : m_props(other.m_props) {
         other.m_props = nullptr;
     }
 
-    inline Properties& Properties::operator=(Properties&& other) noexcept {
+    inline properties& properties::operator=(properties&& other) noexcept {
         if (this != &other) {
             sandbox_properties_destroy(m_props);
             m_props = other.m_props;
@@ -25,9 +25,9 @@ namespace sandbox {
         return *this;
     }
 
-    inline Properties::Properties(sandbox_properties_t* raw) : m_props(raw) {}
+    inline properties::properties(sandbox_properties_t* raw) : m_props(raw) {}
 
-    inline bool Properties::load(const std::string& data, Format format) {
+    inline bool properties::load(const std::string& data, Format format) {
         sandbox_properties_format_t fmt = SANDBOX_FORMAT_JSON;
         switch (format) {
             case Format::JSON: fmt = SANDBOX_FORMAT_JSON; break;
@@ -38,7 +38,7 @@ namespace sandbox {
         return sandbox_properties_load(m_props, data.c_str(), data.size(), fmt);
     }
 
-    inline std::string Properties::dump(Format format) const {
+    inline std::string properties::dump(Format format) const {
         sandbox_properties_format_t fmt = SANDBOX_FORMAT_JSON;
         switch (format) {
             case Format::JSON: fmt = SANDBOX_FORMAT_JSON; break;
@@ -53,15 +53,15 @@ namespace sandbox {
         return result;
     }
 
-    inline void Properties::clear(const std::string& path) {
+    inline void properties::clear(const std::string& path) {
         sandbox_properties_clear(m_props, path.c_str());
     }
 
-    inline bool Properties::has(const std::string& path) const {
+    inline bool properties::has(const std::string& path) const {
         return sandbox_properties_has(m_props, path.c_str());
     }
 
-    inline std::vector<std::string> Properties::keys(const std::string& path) const {
+    inline std::vector<std::string> properties::keys(const std::string& path) const {
         std::vector<std::string> result;
         sandbox_properties_keys(m_props, path.c_str(), [](const char* key, void* ctx) {
             auto* vec = static_cast<std::vector<std::string>*>(ctx);
@@ -70,28 +70,28 @@ namespace sandbox {
         return result;
     }
 
-    inline void Properties::merge(const std::string& path, const Properties& other) {
+    inline void properties::merge(const std::string& path, const properties& other) {
         sandbox_properties_merge(m_props, path.c_str(), other.get_raw());
     }
 
-    inline Properties Properties::sub(const std::string& path) const {
+    inline properties properties::sub(const std::string& path) const {
         sandbox_properties_t* raw_sub = sandbox_properties_sub(m_props, path.c_str());
-        return Properties(raw_sub); // Taking ownership
+        return properties(raw_sub); // Taking ownership
     }
 
-    inline bool Properties::get_int64(const std::string& path, int64_t& out_val) const {
+    inline bool properties::get_int64(const std::string& path, int64_t& out_val) const {
         return sandbox_properties_get_int64(m_props, path.c_str(), &out_val);
     }
 
-    inline bool Properties::get_double(const std::string& path, double& out_val) const {
+    inline bool properties::get_double(const std::string& path, double& out_val) const {
         return sandbox_properties_get_double(m_props, path.c_str(), &out_val);
     }
 
-    inline bool Properties::get_bool(const std::string& path, bool& out_val) const {
+    inline bool properties::get_bool(const std::string& path, bool& out_val) const {
         return sandbox_properties_get_bool(m_props, path.c_str(), &out_val);
     }
 
-    inline bool Properties::get_string(const std::string& path, std::string& out_val) const {
+    inline bool properties::get_string(const std::string& path, std::string& out_val) const {
         bool found = false;
         struct Ctx { std::string* str; bool* found; } ctx = { &out_val, &found };
         
@@ -105,7 +105,7 @@ namespace sandbox {
         return found;
     }
 
-    inline bool Properties::get_string_array(const std::string& path, std::vector<std::string>& out_val) const {
+    inline bool properties::get_string_array(const std::string& path, std::vector<std::string>& out_val) const {
         out_val.clear();
         bool found = false; // We set found to true if the array exists, even if empty
         // We can check if it exists first
@@ -117,23 +117,23 @@ namespace sandbox {
         return true;
     }
 
-    inline void Properties::set_int64(const std::string& path, int64_t val) {
+    inline void properties::set_int64(const std::string& path, int64_t val) {
         sandbox_properties_set_int64(m_props, path.c_str(), val);
     }
 
-    inline void Properties::set_double(const std::string& path, double val) {
+    inline void properties::set_double(const std::string& path, double val) {
         sandbox_properties_set_double(m_props, path.c_str(), val);
     }
 
-    inline void Properties::set_bool(const std::string& path, bool val) {
+    inline void properties::set_bool(const std::string& path, bool val) {
         sandbox_properties_set_bool(m_props, path.c_str(), val);
     }
 
-    inline void Properties::set_string(const std::string& path, const std::string& val) {
+    inline void properties::set_string(const std::string& path, const std::string& val) {
         sandbox_properties_set_string(m_props, path.c_str(), val.c_str());
     }
 
-    inline void Properties::set_string_array(const std::string& path, const std::vector<std::string>& values) {
+    inline void properties::set_string_array(const std::string& path, const std::vector<std::string>& values) {
         std::vector<const char*> c_vals;
         c_vals.reserve(values.size());
         for (const auto& v : values) {

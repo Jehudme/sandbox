@@ -4,20 +4,20 @@
 #include <vector>
 
 namespace sandbox {
-    class Properties {
+    class properties {
     public:
         enum class Format { JSON, BEVE, TOML, YAML };
 
-        Properties();
-        ~Properties();
+        properties();
+        ~properties();
 
-        Properties(const Properties&) = delete;
-        Properties& operator=(const Properties&) = delete;
+        properties(const properties&) = delete;
+        properties& operator=(const properties&) = delete;
 
-        Properties(Properties&& other) noexcept;
-        Properties& operator=(Properties&& other) noexcept;
+        properties(properties&& other) noexcept;
+        properties& operator=(properties&& other) noexcept;
 
-        explicit Properties(sandbox_properties_t* raw);
+        explicit properties(sandbox_properties_t* raw);
 
         bool load(const std::string& data, Format format = Format::JSON);
         std::string dump(Format format = Format::JSON) const;
@@ -26,8 +26,8 @@ namespace sandbox {
         bool has(const std::string& path) const;
         std::vector<std::string> keys(const std::string& path) const;
         
-        void merge(const std::string& path, const Properties& other);
-        Properties sub(const std::string& path) const;
+        void merge(const std::string& path, const properties& other);
+        properties sub(const std::string& path) const;
 
         bool get_int64(const std::string& path, int64_t& out_val) const;
         bool get_double(const std::string& path, double& out_val) const;

@@ -20,7 +20,7 @@ static void populate_engine_config(properties_t& p) {
     p.set<std::string>({"window", "title"}, std::string("Sandbox Engine"));
     p.set<double>({"graphics", "target_fps"}, 60.0);
     p.set<bool>({"graphics", "vsync"}, true);
-    p.set<std::string>({"graphics", "api"}, std::string("OpenGL"));
+    p.set<std::string>({"graphics", "sdk"}, std::string("OpenGL"));
     p.set<double>({"graphics", "msaa_samples"}, 4.0);
     p.set<double>({"audio", "master_volume"}, 0.8);
     p.set<bool>({"audio", "muted"}, false);
@@ -37,7 +37,7 @@ static void verify_engine_config(const properties_t& p) {
     REQUIRE(p.get<std::string>({"window", "title"}) == std::optional<std::string>("Sandbox Engine"));
     REQUIRE(p.get<double>({"graphics", "target_fps"})     == std::optional<double>(60.0));
     REQUIRE(p.get<bool>({"graphics", "vsync"})            == std::optional<bool>(true));
-    REQUIRE(p.get<std::string>({"graphics", "api"})       == std::optional<std::string>("OpenGL"));
+    REQUIRE(p.get<std::string>({"graphics", "sdk"})       == std::optional<std::string>("OpenGL"));
     REQUIRE(p.get<double>({"audio", "master_volume"}).value() == Catch::Approx(0.8));
     REQUIRE(p.get<bool>({"audio", "muted"})               == std::optional<bool>(false));
     REQUIRE(p.get<std::string>({"network", "host"})       == std::optional<std::string>("127.0.0.1"));
@@ -65,7 +65,7 @@ TEST_CASE("Suite: Engine config round-trip (JSON, TOML, YAML)", "[suite][propert
         properties_t rt;
         rt.load(source.dump(properties_t::Format::JSON), properties_t::Format::JSON);
         REQUIRE(rt.get<bool>({"graphics", "vsync"})              == std::optional<bool>(true));
-        REQUIRE(rt.get<std::string>({"graphics", "api"})         == std::optional<std::string>("OpenGL"));
+        REQUIRE(rt.get<std::string>({"graphics", "sdk"})         == std::optional<std::string>("OpenGL"));
         REQUIRE(rt.get<double>({"audio", "master_volume"}).value() == Catch::Approx(0.8));
     }
 

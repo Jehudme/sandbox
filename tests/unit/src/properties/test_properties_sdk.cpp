@@ -3,18 +3,18 @@
 
 using namespace sandbox;
 
-TEST_CASE("Properties SDK Wrapper: Lifecycle", "[properties][sdk]") {
+TEST_CASE("properties SDK Wrapper: Lifecycle", "[properties][sdk]") {
     SECTION("Construct and destroy does not leak") {
         REQUIRE_NOTHROW([]() {
-            Properties props;
+            properties props;
         }());
     }
 
     SECTION("Move semantics transfer ownership correctly") {
-        Properties props;
+        properties props;
         props.set_string("key", "value");
 
-        Properties props2(std::move(props));
+        properties props2(std::move(props));
         REQUIRE(props.get_raw() == nullptr);
         REQUIRE(props2.get_raw() != nullptr);
 
@@ -22,7 +22,7 @@ TEST_CASE("Properties SDK Wrapper: Lifecycle", "[properties][sdk]") {
         REQUIRE(props2.get_string("key", val));
         REQUIRE(val == "value");
 
-        Properties props3;
+        properties props3;
         props3 = std::move(props2);
         REQUIRE(props2.get_raw() == nullptr);
         REQUIRE(props3.get_raw() != nullptr);
@@ -32,8 +32,8 @@ TEST_CASE("Properties SDK Wrapper: Lifecycle", "[properties][sdk]") {
     }
 }
 
-TEST_CASE("Properties SDK Wrapper: Callbacks and Memory", "[properties][sdk]") {
-    Properties props;
+TEST_CASE("properties SDK Wrapper: Callbacks and Memory", "[properties][sdk]") {
+    properties props;
     
     SECTION("Get and Set primitive types") {
         props.set_int64("engine/version", 42);
@@ -60,16 +60,16 @@ TEST_CASE("Properties SDK Wrapper: Callbacks and Memory", "[properties][sdk]") {
 
         // Set an array
         std::vector<std::string> modules = {"mod1", "mod2", "mod3"};
-        props.set_string_array("engine/modules", modules);
+        props.set_string_array("engine/sandbox", modules);
         
         // Get keys in "engine"
         auto keys = props.keys("engine");
         REQUIRE(keys.size() == 1);
-        REQUIRE(keys[0] == "modules");
+        REQUIRE(keys[0] == "sandbox");
         
         // Ensure values are retrievable
         std::vector<std::string> out_modules;
-        REQUIRE(props.get_string_array("engine/modules", out_modules));
+        REQUIRE(props.get_string_array("engine/sandbox", out_modules));
         REQUIRE(out_modules.size() == 3);
         REQUIRE(out_modules[0] == "mod1");
         REQUIRE(out_modules[1] == "mod2");
@@ -77,12 +77,12 @@ TEST_CASE("Properties SDK Wrapper: Callbacks and Memory", "[properties][sdk]") {
     }
 }
 
-TEST_CASE("Properties SDK Wrapper: Tree Operations", "[properties][sdk]") {
-    Properties props;
+TEST_CASE("properties SDK Wrapper: Tree Operations", "[properties][sdk]") {
+    properties props;
     
     SECTION("Sub-properties extraction takes ownership properly") {
         props.set_string("a/b/c", "hello");
-        Properties sub = props.sub("a/b");
+        properties sub = props.sub("a/b");
         
         std::string val;
         REQUIRE(sub.get_string("c", val));
@@ -92,7 +92,7 @@ TEST_CASE("Properties SDK Wrapper: Tree Operations", "[properties][sdk]") {
     SECTION("Merge operations") {
         props.set_string("target/1", "A");
         
-        Properties other;
+        properties other;
         other.set_string("target/2", "B");
         
         props.merge("imported", other);

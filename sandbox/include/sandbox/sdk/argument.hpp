@@ -5,7 +5,7 @@
 #include <vector>
 
 namespace sandbox {
-    class Argument {
+    class argument {
     public:
         static bool has(ecs_world_t* ecs, const std::string& path);
         
@@ -15,7 +15,7 @@ namespace sandbox {
         static bool get_string(ecs_world_t* ecs, const std::string& path, std::string& out_val);
         
         static std::vector<std::string> keys(ecs_world_t* ecs, const std::string& path);
-        static Properties get_subtree(ecs_world_t* ecs, const std::string& path);
+        static properties get_subtree(ecs_world_t* ecs, const std::string& path);
     };
 }
 

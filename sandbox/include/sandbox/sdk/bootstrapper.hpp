@@ -3,11 +3,11 @@
 #include <string>
 
 namespace sandbox {
-    class Bootstrapper {
+    class bootstrapper {
     public:
         // Attaches to the bootstrapper instance for the given ecs world
-        explicit Bootstrapper(ecs_world_t* ecs);
-        explicit Bootstrapper(sandbox_bootstrapper_t* raw);
+        explicit bootstrapper(ecs_world_t* ecs);
+        explicit bootstrapper(sandbox_bootstrapper_t* raw);
 
         void activate(const std::string& arch, const std::string& name, int major, int minor, int patch = -1);
         void activate(const std::string& module_str);

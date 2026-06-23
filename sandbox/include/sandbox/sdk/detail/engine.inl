@@ -3,19 +3,19 @@
 
 namespace sandbox {
 
-    inline Engine::Engine() {
+    inline engine::engine() {
         m_engine = sandbox_engine_create();
     }
 
-    inline Engine::~Engine() {
+    inline engine::~engine() {
         sandbox_engine_destroy(m_engine);
     }
 
-    inline Engine::Engine(Engine&& other) noexcept : m_engine(other.m_engine) {
+    inline engine::engine(engine&& other) noexcept : m_engine(other.m_engine) {
         other.m_engine = nullptr;
     }
 
-    inline Engine& Engine::operator=(Engine&& other) noexcept {
+    inline engine& engine::operator=(engine&& other) noexcept {
         if (this != &other) {
             sandbox_engine_destroy(m_engine);
             m_engine = other.m_engine;
@@ -24,13 +24,13 @@ namespace sandbox {
         return *this;
     }
 
-    inline Engine::Engine(sandbox_engine_t* raw) : m_engine(raw) {}
+    inline engine::engine(sandbox_engine_t* raw) : m_engine(raw) {}
 
-    inline bool Engine::initialize(const Properties& properties) {
-        return sandbox_engine_initialize(m_engine, properties.get_raw());
+    inline bool engine::initialize(const properties& props) {
+        return sandbox_engine_initialize(m_engine, props.get_raw());
     }
 
-    inline void* Engine::get_ecs() const {
+    inline void* engine::get_ecs() const {
         return sandbox_engine_get_ecs(m_engine);
     }
 

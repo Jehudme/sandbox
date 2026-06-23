@@ -11,7 +11,7 @@ TEST_CASE("Engine Bootstrapper C API", "[engine][bootstrapper]") {
     bootstrapper_t::reset();
 
     properties_t props;
-    props.set<std::vector<std::string>>({"engine", "modules"}, {});
+    props.set<std::vector<std::string>>({"engine", "sandbox"}, {});
 
     engine_t engine;
     engine.initialize(props);
@@ -67,7 +67,7 @@ TEST_CASE("Engine Auto-Bootstrapping Sequence", "[engine][bootstrapper][auto]") 
     bootstrapper_t::stage_module(m1);
 
     properties_t props;
-    props.set<std::vector<std::string>>({"engine", "modules"}, {"test::sys-AutoMod@1.0.0"});
+    props.set<std::vector<std::string>>({"engine", "sandbox"}, {"test::sys-AutoMod@1.0.0"});
 
     engine_t engine;
     REQUIRE_NOTHROW(engine.initialize(props));

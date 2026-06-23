@@ -5,35 +5,35 @@
 
 using namespace sandbox;
 
-TEST_CASE("Argument SDK Wrapper", "[argument][sdk]") {
-    Properties init_props;
+TEST_CASE("argument SDK Wrapper", "[argument][sdk]") {
+    properties init_props;
     init_props.set_string("arg_str", "hello");
     init_props.set_int64("arg_int", 42);
 
-    Engine engine;
+    engine engine;
     REQUIRE(engine.initialize(init_props));
 
     auto* ecs = static_cast<ecs_world_t*>(engine.get_ecs());
 
-    SECTION("Retrieves values via Argument SDK") {
-        REQUIRE(Argument::has(ecs, "arg_str"));
+    SECTION("Retrieves values via argument SDK") {
+        REQUIRE(argument::has(ecs, "arg_str"));
         
         std::string s;
-        REQUIRE(Argument::get_string(ecs, "arg_str", s));
+        REQUIRE(argument::get_string(ecs, "arg_str", s));
         REQUIRE(s == "hello");
 
         int64_t i = 0;
-        REQUIRE(Argument::get_int64(ecs, "arg_int", i));
+        REQUIRE(argument::get_int64(ecs, "arg_int", i));
         REQUIRE(i == 42);
     }
 
-    SECTION("Retrieves keys via Argument SDK") {
-        auto keys = Argument::keys(ecs, "");
+    SECTION("Retrieves keys via argument SDK") {
+        auto keys = argument::keys(ecs, "");
         REQUIRE(keys.size() >= 2);
     }
 
-    SECTION("Retrieves subtree via Argument SDK") {
-        Properties sub = Argument::get_subtree(ecs, "");
+    SECTION("Retrieves subtree via argument SDK") {
+        properties sub = argument::get_subtree(ecs, "");
         REQUIRE(sub.has("arg_str"));
         REQUIRE(sub.has("arg_int"));
         

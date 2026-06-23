@@ -80,7 +80,7 @@ sandbox_properties_t* sandbox::launcher::parse_cli(int argc, char **argv) {
 
         sandbox_properties_set_string_array(
             engine_properties,
-            "engine/modules",
+            "engine/sandbox",
             c_style_modules.data(),
             c_style_modules.size()
         );

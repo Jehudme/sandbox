@@ -53,9 +53,9 @@ namespace sandbox::core {
             }
         }
         
-        // 2. Activate modules
-        if (m_arguments->has({"engine", "modules"})) {
-            if (auto mods = m_arguments->get<std::vector<std::string>>({"engine", "modules"})) {
+        // 2. Activate sandbox
+        if (m_arguments->has({"engine", "sandbox"})) {
+            if (auto mods = m_arguments->get<std::vector<std::string>>({"engine", "sandbox"})) {
                 for (const auto& mod : *mods) {
                     try {
                         m_bootstrapper->activate(mod);

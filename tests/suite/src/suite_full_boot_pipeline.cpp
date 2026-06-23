@@ -81,7 +81,7 @@ SANDBOX_DECLARE_MODULE(GameLayerModule, {
     .service = nullptr, .requirements = game_layer_requirements, .requirement_count = 3, .init_fn = nullptr,
 })
 
-// Re-stage helper (modules may have been cleared by another test's reset)
+// Re-stage helper (sandbox may have been cleared by another test's reset)
 static void restage_all() {
     sandbox_stage_module(&OpenGLRendererModule_info);
     sandbox_stage_module(&FMODAudioModule_info);
@@ -108,13 +108,13 @@ TEST_CASE("Suite: Boot via top-level module auto-pulls providers", "[suite][full
         REQUIRE(SANDBOX_GET_SERVICE(w, InputService)    != nullptr);
     }
 
-    SECTION("renderer api pointer is correct") {
+    SECTION("renderer sdk pointer is correct") {
         const RendererService* r = SANDBOX_GET_SERVICE(w, RendererService);
         REQUIRE(r != nullptr);
         REQUIRE(r->api == &global_renderer_singleton);
     }
 
-    SECTION("audio api pointer is correct") {
+    SECTION("audio sdk pointer is correct") {
         const AudioService* a = SANDBOX_GET_SERVICE(w, AudioService);
         REQUIRE(a != nullptr);
         REQUIRE(a->api == &global_audio_singleton);

@@ -5,15 +5,15 @@
 
 using namespace sandbox;
 
-TEST_CASE("Bootstrapper SDK Wrapper", "[bootstrapper][sdk]") {
-    Properties props;
-    Engine engine;
+TEST_CASE("bootstrapper SDK Wrapper", "[bootstrapper][sdk]") {
+    properties props;
+    engine engine;
     REQUIRE(engine.initialize(props));
 
     auto* ecs = static_cast<ecs_world_t*>(engine.get_ecs());
 
-    SECTION("Bootstrapper wrappers execution") {
-        Bootstrapper b(ecs);
+    SECTION("bootstrapper wrappers execution") {
+        bootstrapper b(ecs);
         REQUIRE(b.get_raw() != nullptr);
         
         // Boot execution

@@ -11,7 +11,7 @@
 using sandbox::core::bootstrapper_t;
 
 // ---------------------------------------------------------------------------
-// Minimal Flecs modules for import tests
+// Minimal Flecs sandbox for import tests
 // ---------------------------------------------------------------------------
 struct TestMacroFlecs {
     TestMacroFlecs(ecs_world_t*) {}
@@ -179,12 +179,12 @@ TEST_CASE("BootABI: service component accessible via Flecs", "[bootstrapper][abi
         REQUIRE(retrieved != nullptr);
     }
 
-    SECTION("api pointer is the correct singleton address") {
+    SECTION("sdk pointer is the correct singleton address") {
         REQUIRE(retrieved != nullptr);
         REQUIRE(retrieved->api == &simple_counter_singleton);
     }
 
-    SECTION("api data has the correct value") {
+    SECTION("sdk data has the correct value") {
         REQUIRE(retrieved != nullptr);
         REQUIRE(retrieved->api->count == 42);
     }

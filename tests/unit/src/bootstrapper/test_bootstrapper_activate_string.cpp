@@ -6,7 +6,7 @@ using namespace sandbox::core;
 TEST_CASE("Bootstrapper string activation parsing", "[bootstrapper][activation]") {
     bootstrapper_t::reset();
 
-    // Setup some fake modules for activate to resolve against
+    // Setup some fake sandbox for activate to resolve against
     sandbox_module_info_t m1{};
     m1.name = "Renderer"; m1.architecture = "sandbox::system";
     m1.version_major = 1; m1.version_minor = 2; m1.version_patch = 3;
