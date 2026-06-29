@@ -28,6 +28,7 @@ set(SANDBOX_UNIT_TEST_SOURCES
     src/core/test_cli_parser.cpp
     src/core/test_engine_bootstrapper.cpp
     src/core/test_engine_sdk.cpp
+    src/modules/test_configuration.cpp
     ../../launcher/source/cli/cli_parser.cpp
 )
 
@@ -47,6 +48,7 @@ target_include_directories(sandbox_unit_tests
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/../../sandbox/source
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../modules/configuration/include
 )
 
 # Ensure the dummy plugin shared library is built before the test executable

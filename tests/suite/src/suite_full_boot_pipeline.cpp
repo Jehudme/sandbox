@@ -25,17 +25,20 @@ static IRenderer global_renderer_singleton = { .frame_count = 0 };
 static IAudio    global_audio_singleton    = { .master_volume = 1.0f };
 static IInput    global_input_singleton    = { .is_pressed = false };
 
-SANDBOX_DECLARE_SERVICE(RendererService, IRenderer, &global_renderer_singleton, {
+SANDBOX_DECLARE_SERVICE(RendererService, IRenderer)
+SANDBOX_DEFINE_SERVICE(RendererService, IRenderer, &global_renderer_singleton, {
     .name = "IRenderer", .description = "Renderer interface",
     .architecture = "sandbox::system", .version_major = 1, .version_minor = 0, .init_fn = nullptr,
 })
 
-SANDBOX_DECLARE_SERVICE(AudioService, IAudio, &global_audio_singleton, {
+SANDBOX_DECLARE_SERVICE(AudioService, IAudio)
+SANDBOX_DEFINE_SERVICE(AudioService, IAudio, &global_audio_singleton, {
     .name = "IAudio", .description = "Audio interface",
     .architecture = "sandbox::system", .version_major = 1, .version_minor = 0, .init_fn = nullptr,
 })
 
-SANDBOX_DECLARE_SERVICE(InputService, IInput, &global_input_singleton, {
+SANDBOX_DECLARE_SERVICE(InputService, IInput)
+SANDBOX_DEFINE_SERVICE(InputService, IInput, &global_input_singleton, {
     .name = "IInput", .description = "Input interface",
     .architecture = "sandbox::system", .version_major = 1, .version_minor = 0, .init_fn = nullptr,
 })

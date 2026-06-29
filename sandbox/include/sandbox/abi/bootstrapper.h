@@ -9,42 +9,46 @@
 extern "C" {
 #endif
 
-typedef enum {
+typedef uint32_t sandbox_requirement_kind_t;
+enum {
     SANDBOX_REQUIREMENT_KIND_SERVICE = 0,
     SANDBOX_REQUIREMENT_KIND_MODULE
-} sandbox_requirement_kind_t;
+};
 
-typedef enum {
+typedef uint32_t sandbox_requirement_strictness_t;
+enum {
     SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED = 0,
     SANDBOX_REQUIREMENT_STRICTNESS_EXPECTED
-} sandbox_requirement_strictness_t;
+};
 
 typedef struct {
     sandbox_requirement_kind_t kind;
     sandbox_requirement_strictness_t strictness;
     const char* name;
     const char* architecture;
-    int version_major;
-    int version_minor;
-    int version_patch; // only for module, -1 to set to the highest patch available.
+    int32_t version_major;
+    int32_t version_minor;
+    int32_t version_patch; /* only for module, -1 to set to the highest patch available. */
 } sandbox_requirement_info_t;
 
 typedef struct {
+    uint32_t struct_size;
     const char* name;
     const char* description;
     const char* architecture;
-    int version_major;
-    int version_minor;
+    int32_t version_major;
+    int32_t version_minor;
     void (*init_fn)(ecs_world_t* ecs);
 } sandbox_service_info_t;
 
 typedef struct {
+    uint32_t struct_size;
     const char* name;
     const char* description;
     const char* architecture;
-    int version_major;
-    int version_minor;
-    int version_patch;
+    int32_t version_major;
+    int32_t version_minor;
+    int32_t version_patch;
 
     /* Linked service (Optional, NULL if no service provided) */
     const sandbox_service_info_t* service;
@@ -90,14 +94,15 @@ SANDBOX_API bool sandbox_bootstrapper_boot(sandbox_bootstrapper_t* bootstrapper,
  * SANDBOX_DECLARE_SERVICE
  * Generates the struct, Flecs Component, auto-init function, and stages it.
  */
-#define SANDBOX_DECLARE_SERVICE(ServiceClass, IModuleType, api_ptr, ...) \
+#define SANDBOX_DECLARE_SERVICE(ServiceClass, IModuleType) \
     typedef struct ServiceClass { \
         IModuleType* api; \
         const sandbox_service_info_t* info; \
     } ServiceClass; \
     \
-    ECS_COMPONENT_DECLARE(ServiceClass); \
-    \
+    ECS_COMPONENT_DECLARE(ServiceClass);
+
+#define SANDBOX_DEFINE_SERVICE(ServiceClass, IModuleType, api_ptr, ...) \
     static sandbox_service_info_t ServiceClass##_info = __VA_ARGS__; \
     \
     static void ServiceClass##_init_fn(ecs_world_t* ecs) { \
@@ -109,6 +114,7 @@ SANDBOX_API bool sandbox_bootstrapper_boot(sandbox_bootstrapper_t* bootstrapper,
     } \
     \
     SANDBOX_CONSTRUCTOR(__sandbox_stage_##ServiceClass) { \
+        ServiceClass##_info.struct_size = sizeof(sandbox_service_info_t); \
         ServiceClass##_info.init_fn = ServiceClass##_init_fn; \
         sandbox_stage_service(&ServiceClass##_info); \
     }
@@ -147,6 +153,7 @@ SANDBOX_API bool sandbox_bootstrapper_boot(sandbox_bootstrapper_t* bootstrapper,
     } \
     \
     SANDBOX_CONSTRUCTOR(__sandbox_stage_##ModuleClass) { \
+        ModuleClass##_info.struct_size = sizeof(sandbox_module_info_t); \
         ModuleClass##_info.init_fn = ModuleClass##_init_fn; \
         sandbox_stage_module(&ModuleClass##_info); \
     }

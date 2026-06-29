@@ -4,6 +4,8 @@
 
 #include "bootstrapper.h"
 #include "sandbox/abi/bootstrapper.h"
+#include "sandbox/abi/handle.h"
+#include "sandbox/abi/properties.h"
 #include <iostream>
 
 namespace sandbox::core {
@@ -15,6 +17,12 @@ namespace sandbox::core {
         
         m_arguments = std::make_unique<properties_t>(properties);
         m_bootstrapper = std::make_unique<bootstrapper_t>();
+
+        sandbox_properties_handle_t properties_handle;
+        properties_handle.token = reinterpret_cast<uintptr_t>(m_arguments.get());
+        ecs.entity("::sandbox::configuration::handle").set<uint64_t>(properties_handle.token);
+        std::cout << "[Engine] Created config handle entity: " << ecs.entity("::sandbox::configuration::handle").id() 
+                  << " with uint64_t comp id: " << ecs.component<uint64_t>().id() << std::endl;
 
         save_bootstrapper();
 

@@ -1,12 +1,13 @@
 project(configuration LANGUAGES C CXX)
 
 add_library(configuration MODULE
-    source/configuration.cpp
-        source/configuration.cpp
+    source/library.cpp
 )
 
+set_target_properties(configuration PROPERTIES PREFIX "")
+
 target_include_directories(configuration
-    INTERFACE
+    PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
 )

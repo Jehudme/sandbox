@@ -39,7 +39,7 @@ set(glaze_ENABLE_AVX2 OFF CACHE INTERNAL "Disable AVX2 for Glaze")
 # =============================================================================
 # 2. CORE LIBRARY TARGET
 # =============================================================================
-add_library(sandbox_library STATIC
+add_library(sandbox_library SHARED
         source/core/properties.h
         source/core/properties.cpp
         source/abi/properties.cpp
@@ -62,6 +62,8 @@ add_library(sandbox::library ALIAS sandbox_library)
 
 # target_compile_definitions(sandbox_library PRIVATE SANDBOX_BUILD_SHARED)
 target_compile_features(sandbox_library PUBLIC cxx_std_23)
+
+target_compile_definitions(sandbox_library PRIVATE SANDBOX_BUILD_SHARED)
 
 target_include_directories(sandbox_library
         PUBLIC  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
