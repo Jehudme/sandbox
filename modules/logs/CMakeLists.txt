@@ -2,12 +2,17 @@ project(logs LANGUAGES C CXX)
 
 add_library(logs MODULE
     source/logger.cpp
+    source/library.cpp
 )
 
+set_target_properties(logs PROPERTIES PREFIX "")
+
 target_include_directories(logs
-    INTERFACE
+    PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/../configuration/include
 )
 
 include(FetchContent)

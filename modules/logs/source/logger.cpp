@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <sandbox/sdk/configuration.hpp>
 
 // spdlog includes
 #include <spdlog/spdlog.h>
@@ -12,31 +13,31 @@
 
 namespace sandbox::modules {
 
-    logger::logger(ecs_world_t *ecs) {
+    logger::logger(flecs::world& world) {
         // ==========================================
         // 1. FETCH ALL CONFIGURATION ARGUMENTS
         // ==========================================
 
         // General
-        std::optional<std::string> name_opt         = std::nullopt;
-        std::optional<std::string> level_opt        = std::nullopt;
-        std::optional<std::string> flush_level_opt  = std::nullopt;
-        std::optional<std::string> pattern_opt      = std::nullopt;
+        std::optional<std::string> name_opt         = configuration::get<std::string>(world, "logs/name");
+        std::optional<std::string> level_opt        = configuration::get<std::string>(world, "logs/level");
+        std::optional<std::string> flush_level_opt  = configuration::get<std::string>(world, "logs/flush_level");
+        std::optional<std::string> pattern_opt      = configuration::get<std::string>(world, "logs/pattern");
 
         // Console Sink
-        std::optional<bool> console_opt             = std::nullopt;
+        std::optional<bool> console_opt             = configuration::get<bool>(world, "logs/console/enabled");
 
         // File Sink
-        std::optional<std::string> file_opt         = std::nullopt;
-        std::optional<bool> truncate_opt            = std::nullopt;
-        std::optional<bool> rotating_opt            = std::nullopt;
-        std::optional<int64_t> max_size_opt         = std::nullopt;
-        std::optional<int64_t> max_files_opt        = std::nullopt;
+        std::optional<std::string> file_opt         = configuration::get<std::string>(world, "logs/file/path");
+        std::optional<bool> truncate_opt            = configuration::get<bool>(world, "logs/file/truncate");
+        std::optional<bool> rotating_opt            = configuration::get<bool>(world, "logs/file/rotating");
+        std::optional<int64_t> max_size_opt         = configuration::get<int64_t>(world, "logs/file/max_size");
+        std::optional<int64_t> max_files_opt        = configuration::get<int64_t>(world, "logs/file/max_files");
 
         // Async Configuration
-        std::optional<bool> async_opt               = std::nullopt;
-        std::optional<int64_t> queue_size_opt       = std::nullopt;
-        std::optional<int64_t> thread_count_opt     = std::nullopt;
+        std::optional<bool> async_opt               = configuration::get<bool>(world, "logs/async/enabled");
+        std::optional<int64_t> queue_size_opt       = configuration::get<int64_t>(world, "logs/async/queue_size");
+        std::optional<int64_t> thread_count_opt     = configuration::get<int64_t>(world, "logs/async/thread_count");
 
         // ==========================================
         // 2. CONSTRUCT SINKS

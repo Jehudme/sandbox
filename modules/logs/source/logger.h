@@ -19,8 +19,16 @@ namespace sandbox::modules {
             ERROR
         };
 
-        logger(ecs_world_t* ecs);
+        logger(flecs::world& world);
         ~logger();
+
+        // Make logger move-constructible so it can be stored directly in Flecs
+        logger(logger&&) = default;
+        logger& operator=(logger&&) = default;
+
+        // Prevent copying
+        logger(const logger&) = delete;
+        logger& operator=(const logger&) = delete;
 
         void log(level level, const char* message);
 
