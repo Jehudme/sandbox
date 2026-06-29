@@ -15,7 +15,13 @@ typedef struct {
     void (*error)(ecs_world_t* ecs, const char* msg);
 } sandbox_logs_api_t;
 
-SANDBOX_DECLARE_SERVICE(sandbox_logs_service_t, sandbox_logs_api_t)
+SANDBOX_DECLARE_SERVICE(sandbox_logs_service_t, sandbox_logs_api_t, {
+    .name = "logs",
+    .description = "The logging service",
+    .architecture = "sandbox",
+    .version_major = 1,
+    .version_minor = 0
+})
 
 #ifdef __cplusplus
 }

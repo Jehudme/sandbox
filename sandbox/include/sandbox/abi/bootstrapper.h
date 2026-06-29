@@ -94,17 +94,18 @@ SANDBOX_API bool sandbox_bootstrapper_boot(sandbox_bootstrapper_t* bootstrapper,
  * SANDBOX_DECLARE_SERVICE
  * Generates the struct, Flecs Component, auto-init function, and stages it.
  */
-#define SANDBOX_DECLARE_SERVICE(ServiceClass, IModuleType) \
+#define SANDBOX_DECLARE_SERVICE(ServiceClass, IModuleType, ...) \
     typedef struct ServiceClass { \
         IModuleType* api; \
         const sandbox_service_info_t* info; \
     } ServiceClass; \
     \
-    extern ECS_COMPONENT_DECLARE(ServiceClass);
+    extern ECS_COMPONENT_DECLARE(ServiceClass); \
+    static const sandbox_service_info_t ServiceClass##_info_decl = __VA_ARGS__;
 
-#define SANDBOX_DEFINE_SERVICE(ServiceClass, IModuleType, api_ptr, ...) \
+#define SANDBOX_DEFINE_SERVICE(ServiceClass, IModuleType, api_ptr) \
     ECS_COMPONENT_DECLARE(ServiceClass); \
-    static sandbox_service_info_t ServiceClass##_info = __VA_ARGS__; \
+    static sandbox_service_info_t ServiceClass##_info = ServiceClass##_info_decl; \
     \
     static void ServiceClass##_init_fn(ecs_world_t* ecs) { \
         ECS_COMPONENT_DEFINE(ecs, ServiceClass); \

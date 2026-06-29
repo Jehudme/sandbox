@@ -11,7 +11,13 @@ typedef struct {
 } sandbox_dummy_api_t;
 
 // Declare the external API instance that will be implemented in library.cpp
-SANDBOX_DECLARE_SERVICE(sandbox_dummy_service_t, sandbox_dummy_api_t)
+SANDBOX_DECLARE_SERVICE(sandbox_dummy_service_t, sandbox_dummy_api_t, {
+    .name = "dummy",
+    .description = "The dummy service",
+    .architecture = "sandbox",
+    .version_major = 1,
+    .version_minor = 0
+})
 
 #ifdef __cplusplus
 }

@@ -27,13 +27,7 @@ sandbox_dummy_api_t g_dummy_api = {
     .get_magic_number = dummy_get_magic_number
 };
 
-SANDBOX_DEFINE_SERVICE(sandbox_dummy_service_t, sandbox_dummy_api_t, &g_dummy_api, {
-    .name = "dummy",
-    .description = "A professional dummy service",
-    .architecture = "sandbox",
-    .version_major = 1,
-    .version_minor = 0
-})
+SANDBOX_DEFINE_SERVICE(sandbox_dummy_service_t, sandbox_dummy_api_t, &g_dummy_api)
 
 // --- 2. C++ Module Implementation ---
 namespace sandbox::modules {

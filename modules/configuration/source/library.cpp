@@ -16,13 +16,7 @@ sandbox_configuration_api_t g_configuration_api = {
     .get_properties = config_get_properties
 };
 
-SANDBOX_DEFINE_SERVICE(sandbox_configuration_service_t, sandbox_configuration_api_t, &g_configuration_api, {
-    .name = "configuration",
-    .description = "The configuration service for global properties",
-    .architecture = "sandbox",
-    .version_major = 1,
-    .version_minor = 0
-})
+SANDBOX_DEFINE_SERVICE(sandbox_configuration_service_t, sandbox_configuration_api_t, &g_configuration_api)
 
 namespace sandbox::modules {
     struct configuration_module_t {

@@ -25,13 +25,7 @@ sandbox_logs_api_t g_logs_api = {
     .error = logs_error
 };
 
-SANDBOX_DEFINE_SERVICE(sandbox_logs_service_t, sandbox_logs_api_t, &g_logs_api, {
-    .name = "logs",
-    .description = "The logging service",
-    .architecture = "sandbox",
-    .version_major = 1,
-    .version_minor = 0
-})
+SANDBOX_DEFINE_SERVICE(sandbox_logs_service_t, sandbox_logs_api_t, &g_logs_api)
 
 static void logs_trace(ecs_world_t* ecs, const char* msg) {
     flecs::world world(ecs);
