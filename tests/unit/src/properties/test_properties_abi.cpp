@@ -10,30 +10,27 @@
 TEST_CASE("PropABI: lifecycle (create/destroy)", "[properties][abi][lifecycle]")
 {
     SECTION("create returns non-null") {
-        sandbox_handle_t h{0};
-        sandbox_properties_create(&h);
-        REQUIRE(!SANDBOX_HANDLE_IS_INVALID(h));
+        sandbox_handle_t h = sandbox_properties_create();
+        REQUIRE(!(!SANDBOX_HANDLE_IS_VALID(h)));
         sandbox_properties_destroy(&h);
     }
 
     SECTION("destroy with null is safe") {
-        REQUIRE_NOTHROW(sandbox_properties_destroy(nullptr));
+        sandbox_properties_destroy(nullptr);
     }
 }
 
 TEST_CASE("PropABI: load and dump", "[properties][abi][load_dump]")
 {
     SECTION("valid JSON load returns true") {
-        sandbox_handle_t h{0};
-        sandbox_properties_create(&h);
+        sandbox_handle_t h = sandbox_properties_create();
         const std::string json = R"({"key":"value","count":42})";
         REQUIRE(sandbox_properties_load(h, json.c_str(), json.size(), SANDBOX_FORMAT_JSON) == true);
         sandbox_properties_destroy(&h);
     }
 
     SECTION("malformed JSON load returns false") {
-        sandbox_handle_t h{0};
-        sandbox_properties_create(&h);
+        sandbox_handle_t h = sandbox_properties_create();
         const std::string bad = R"({malformed)";
         REQUIRE(sandbox_properties_load(h, bad.c_str(), bad.size(), SANDBOX_FORMAT_JSON) == false);
         sandbox_properties_destroy(&h);
@@ -45,8 +42,7 @@ TEST_CASE("PropABI: load and dump", "[properties][abi][load_dump]")
     }
 
     SECTION("dump after load returns non-empty string") {
-        sandbox_handle_t h{0};
-        sandbox_properties_create(&h);
+        sandbox_handle_t h = sandbox_properties_create();
         const std::string json = R"({"name":"sandbox"})";
         sandbox_properties_load(h, json.c_str(), json.size(), SANDBOX_FORMAT_JSON);
         char* out = sandbox_properties_dump(h, SANDBOX_FORMAT_JSON);
@@ -68,23 +64,20 @@ TEST_CASE("PropABI: load and dump", "[properties][abi][load_dump]")
 TEST_CASE("PropABI: has and clear", "[properties][abi][has_clear]")
 {
     SECTION("has returns false for missing key") {
-        sandbox_handle_t h{0};
-        sandbox_properties_create(&h);
+        sandbox_handle_t h = sandbox_properties_create();
         REQUIRE(sandbox_properties_has(h, "missing") == false);
         sandbox_properties_destroy(&h);
     }
 
     SECTION("has returns true after set") {
-        sandbox_handle_t h{0};
-        sandbox_properties_create(&h);
+        sandbox_handle_t h = sandbox_properties_create();
         sandbox_properties_set_int64(h, "count", 5);
         REQUIRE(sandbox_properties_has(h, "count") == true);
         sandbox_properties_destroy(&h);
     }
 
     SECTION("clear removes a key") {
-        sandbox_handle_t h{0};
-        sandbox_properties_create(&h);
+        sandbox_handle_t h = sandbox_properties_create();
         sandbox_properties_set_int64(h, "count", 5);
         sandbox_properties_clear(h, "count");
         REQUIRE(sandbox_properties_has(h, "count") == false);
@@ -92,8 +85,7 @@ TEST_CASE("PropABI: has and clear", "[properties][abi][has_clear]")
     }
 
     SECTION("clear with empty path clears root") {
-        sandbox_handle_t h{0};
-        sandbox_properties_create(&h);
+        sandbox_handle_t h = sandbox_properties_create();
         sandbox_properties_set_int64(h, "a", 1);
         sandbox_properties_set_int64(h, "b", 2);
         sandbox_properties_clear(h, "");
@@ -110,8 +102,7 @@ TEST_CASE("PropABI: has and clear", "[properties][abi][has_clear]")
 TEST_CASE("PropABI: keys enumeration", "[properties][abi][keys]")
 {
     SECTION("empty object returns count 0") {
-        sandbox_handle_t h{0};
-        sandbox_properties_create(&h);
+        sandbox_handle_t h = sandbox_properties_create();
         std::vector<std::string> keys;
         sandbox_properties_keys(h, "", [](const char* k, void* ctx) {
             static_cast<std::vector<std::string>*>(ctx)->emplace_back(k);
@@ -121,8 +112,7 @@ TEST_CASE("PropABI: keys enumeration", "[properties][abi][keys]")
     }
 
     SECTION("returns correct keys after setting values") {
-        sandbox_handle_t h{0};
-        sandbox_properties_create(&h);
+        sandbox_handle_t h = sandbox_properties_create();
         sandbox_properties_set_int64(h, "alpha", 1);
         sandbox_properties_set_int64(h, "beta", 2);
         std::vector<std::string> keys;
@@ -140,10 +130,8 @@ TEST_CASE("PropABI: keys enumeration", "[properties][abi][keys]")
 TEST_CASE("PropABI: merge and sub", "[properties][abi][merge_sub]")
 {
     SECTION("merge copies source at given path") {
-        sandbox_handle_t dst{0};
-        sandbox_properties_create(&dst);
-        sandbox_handle_t src{0};
-        sandbox_properties_create(&src);
+        sandbox_handle_t dst = sandbox_properties_create();
+        sandbox_handle_t src = sandbox_properties_create();
         sandbox_properties_set_int64(src, "value", 42);
         sandbox_properties_merge(dst, "section", src);
         REQUIRE(sandbox_properties_has(dst, "section/value") == true);
@@ -152,12 +140,11 @@ TEST_CASE("PropABI: merge and sub", "[properties][abi][merge_sub]")
     }
 
     SECTION("sub extracts a sub-tree") {
-        sandbox_handle_t parent{0};
-        sandbox_properties_create(&parent);
+        sandbox_handle_t parent = sandbox_properties_create();
         sandbox_properties_set_int64(parent, "config/timeout", 30);
         sandbox_handle_t sub{0};
-        REQUIRE(sandbox_properties_sub(parent, "config", &sub) == SANDBOX_STATUS_SUCCESS);
-        REQUIRE(!SANDBOX_HANDLE_IS_INVALID(sub));
+        sub = sandbox_properties_sub(parent, "config");
+        REQUIRE(!(!SANDBOX_HANDLE_IS_VALID(sub)));
         int64_t timeout = 0;
         REQUIRE(sandbox_properties_get_int64(sub, "timeout", &timeout) == true);
         REQUIRE(timeout == 30);
@@ -167,15 +154,15 @@ TEST_CASE("PropABI: merge and sub", "[properties][abi][merge_sub]")
 
     SECTION("sub with null handle returns null") {
         sandbox_handle_t sub{0};
-        REQUIRE(sandbox_properties_sub(sandbox_handle_t{0}, "any", &sub) == SANDBOX_STATUS_ERROR_INVALID);
+        sub = sandbox_properties_sub(sandbox_handle_t{0}, "any");
+        REQUIRE(!SANDBOX_HANDLE_IS_VALID(sub));
     }
 }
 
 TEST_CASE("PropABI: typed getters", "[properties][abi][getters]")
 {
     SECTION("get_int64 returns correct value") {
-        sandbox_handle_t h{0};
-        sandbox_properties_create(&h);
+        sandbox_handle_t h = sandbox_properties_create();
         sandbox_properties_set_int64(h, "score", 100);
         int64_t out = 0;
         REQUIRE(sandbox_properties_get_int64(h, "score", &out) == true);
@@ -184,16 +171,14 @@ TEST_CASE("PropABI: typed getters", "[properties][abi][getters]")
     }
 
     SECTION("get_int64 returns false for missing key") {
-        sandbox_handle_t h{0};
-        sandbox_properties_create(&h);
+        sandbox_handle_t h = sandbox_properties_create();
         int64_t out = 0;
         REQUIRE(sandbox_properties_get_int64(h, "missing", &out) == false);
         sandbox_properties_destroy(&h);
     }
 
     SECTION("get_double returns correct value") {
-        sandbox_handle_t h{0};
-        sandbox_properties_create(&h);
+        sandbox_handle_t h = sandbox_properties_create();
         sandbox_properties_set_double(h, "ratio", 0.75);
         double out = 0.0;
         REQUIRE(sandbox_properties_get_double(h, "ratio", &out) == true);
@@ -202,8 +187,7 @@ TEST_CASE("PropABI: typed getters", "[properties][abi][getters]")
     }
 
     SECTION("get_bool returns correct value") {
-        sandbox_handle_t h{0};
-        sandbox_properties_create(&h);
+        sandbox_handle_t h = sandbox_properties_create();
         sandbox_properties_set_bool(h, "active", true);
         bool out = false;
         REQUIRE(sandbox_properties_get_bool(h, "active", &out) == true);
@@ -212,8 +196,7 @@ TEST_CASE("PropABI: typed getters", "[properties][abi][getters]")
     }
 
     SECTION("read_string returns correct value") {
-        sandbox_handle_t h{0};
-        sandbox_properties_create(&h);
+        sandbox_handle_t h = sandbox_properties_create();
         sandbox_properties_set_string(h, "label", "engine");
         std::string s;
         sandbox_properties_read_string(h, "label", [](const char* val, void* ctx) {
@@ -224,8 +207,7 @@ TEST_CASE("PropABI: typed getters", "[properties][abi][getters]")
     }
 
     SECTION("read_string returns null for missing key") {
-        sandbox_handle_t h{0};
-        sandbox_properties_create(&h);
+        sandbox_handle_t h = sandbox_properties_create();
         bool was_null = false;
         sandbox_properties_read_string(h, "nonexistent", [](const char* val, void* ctx) {
             *static_cast<bool*>(ctx) = (val == nullptr);
@@ -257,8 +239,7 @@ TEST_CASE("PropABI: null safety", "[properties][abi][null_safety]")
     }
 
     SECTION("getters with null out-pointer return false") {
-        sandbox_handle_t h{0};
-        sandbox_properties_create(&h);
+        sandbox_handle_t h = sandbox_properties_create();
         REQUIRE(sandbox_properties_get_int64(h, "k", nullptr)  == false);
         REQUIRE(sandbox_properties_get_double(h, "k", nullptr) == false);
         REQUIRE(sandbox_properties_get_bool(h, "k", nullptr)   == false);
@@ -268,8 +249,7 @@ TEST_CASE("PropABI: null safety", "[properties][abi][null_safety]")
 
 TEST_CASE("PropABI: slash-path navigation", "[properties][abi][path]")
 {
-    sandbox_handle_t h{0};
-        sandbox_properties_create(&h);
+    sandbox_handle_t h = sandbox_properties_create();
     sandbox_properties_set_string(h, "app/name", "sandbox_engine");
     sandbox_properties_set_double(h, "app/version", 1.0);
 

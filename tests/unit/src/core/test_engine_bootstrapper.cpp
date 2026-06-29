@@ -87,8 +87,7 @@ TEST_CASE("Engine C-ABI Wrapper", "[engine][c_abi]") {
         void* ecs = sandbox_engine_get_ecs(engine);
         // Depending on implementation, ECS might be populated but let's test initialization
         
-        sandbox_handle_t props{0};
-        sandbox_properties_create(&props);
+        sandbox_handle_t props = sandbox_properties_create();
         bool success = sandbox_engine_initialize(engine, props);
         REQUIRE(success == true);
         

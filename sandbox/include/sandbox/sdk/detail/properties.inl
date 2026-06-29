@@ -5,7 +5,7 @@
 namespace sandbox {
 
     inline properties::properties() {
-        sandbox_properties_create(&m_handle);
+        m_handle = sandbox_properties_create();
     }
 
     inline properties::~properties() {
@@ -75,8 +75,7 @@ namespace sandbox {
     }
 
     inline properties properties::sub(const std::string& path) const {
-        sandbox_handle_t raw_sub{0};
-        sandbox_properties_sub(m_handle, path.c_str(), &raw_sub);
+        sandbox_handle_t raw_sub = sandbox_properties_sub(m_handle, path.c_str());
         return properties(raw_sub); // Taking ownership
     }
 

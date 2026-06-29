@@ -22,7 +22,7 @@ sandbox_status_t sandbox_handle_create(sandbox_handle_t* out_handle) {
 }
 
 sandbox_status_t sandbox_handle_destroy(sandbox_handle_t* handle) {
-    if (!handle || SANDBOX_HANDLE_IS_INVALID(*handle)) {
+    if (!handle || (!SANDBOX_HANDLE_IS_VALID(*handle))) {
         return SANDBOX_STATUS_ERROR_INVALID;
     }
 
@@ -35,5 +35,5 @@ sandbox_status_t sandbox_handle_destroy(sandbox_handle_t* handle) {
 }
 
 bool sandbox_handle_is_valid(sandbox_handle_t handle) {
-    return !SANDBOX_HANDLE_IS_INVALID(handle);
+    return !(!SANDBOX_HANDLE_IS_VALID(handle));
 }

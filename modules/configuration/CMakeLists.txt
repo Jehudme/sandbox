@@ -2,6 +2,7 @@ project(configuration LANGUAGES C CXX)
 
 add_library(configuration MODULE
     source/configuration.cpp
+        source/configuration.cpp
 )
 
 target_include_directories(configuration

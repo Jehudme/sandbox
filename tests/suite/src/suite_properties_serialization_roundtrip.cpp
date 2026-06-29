@@ -118,8 +118,7 @@ TEST_CASE("Suite: Merge and deep nesting", "[suite][properties][serialization]")
 
 TEST_CASE("Suite: C ABI engine config round-trip", "[suite][properties][abi]")
 {
-    sandbox_handle_t h{0};
-        sandbox_properties_create(&h);
+    sandbox_handle_t h = sandbox_properties_create();
     sandbox_properties_set_string(h, "app/name",      "sandbox_engine");
     sandbox_properties_set_double(h, "app/version",   2.0);
     sandbox_properties_set_bool(h,   "app/debug",     false);
@@ -129,8 +128,7 @@ TEST_CASE("Suite: C ABI engine config round-trip", "[suite][properties][abi]")
     char* json = sandbox_properties_dump(h, SANDBOX_FORMAT_JSON);
     REQUIRE(json != nullptr);
 
-    sandbox_handle_t rt{0};
-        sandbox_properties_create(&rt);
+    sandbox_handle_t rt = sandbox_properties_create();
     bool ok = sandbox_properties_load(rt, json, strlen(json), SANDBOX_FORMAT_JSON);
 
     SECTION("reload from ABI-dumped JSON succeeds") {

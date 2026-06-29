@@ -29,8 +29,7 @@ sandbox_handle_t sandbox::launcher::parse_cli(int argc, char **argv) {
         return sandbox_handle_t{0};
     }
 
-    sandbox_handle_t engine_properties{0};
-    sandbox_properties_create(&engine_properties);
+    sandbox_handle_t engine_properties = sandbox_properties_create();
 
     // --- Step 1: Load Base Configuration (File) ---
     if (!config_file_path.empty()) {

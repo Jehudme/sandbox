@@ -21,8 +21,8 @@ typedef enum {
 /* LIFECYCLE & PARSING                                                        */
 /* ========================================================================== */
 
-sandbox_status_t sandbox_properties_create(sandbox_handle_t* out_props);
-sandbox_status_t sandbox_properties_destroy(sandbox_handle_t* props);
+sandbox_handle_t sandbox_properties_create(void);
+void sandbox_properties_destroy(sandbox_handle_t* props);
 
 /* Returns true on success, false if parsing fails (exception caught internally) */
 bool sandbox_properties_load(sandbox_handle_t props, const char* data, size_t data_length, sandbox_properties_format_t format);
@@ -44,7 +44,7 @@ void sandbox_properties_keys(sandbox_handle_t props, const char* path_str, void 
 void sandbox_properties_merge(sandbox_handle_t props, const char* path_str, sandbox_handle_t other);
 
 /* Returns a newly allocated properties handle containing the sub-tree. Must be destroyed. */
-sandbox_status_t sandbox_properties_sub(sandbox_handle_t props, const char* path_str, sandbox_handle_t* out_sub);
+sandbox_handle_t sandbox_properties_sub(sandbox_handle_t props, const char* path_str);
 
 /* ========================================================================== */
 /* GETTERS (Returns true if key exists and type matches)                      */

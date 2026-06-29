@@ -32,7 +32,7 @@ TEST_CASE("CLI Parser Suite: Configuration Projects", "[cli_parser][config][suit
         std::vector<const char*> args = {"sandbox_launcher", "--config", config_arg.c_str()};
         
         sandbox_handle_t props = sandbox::launcher::parse_cli(args.size(), const_cast<char**>(args.data()));
-        REQUIRE(!SANDBOX_HANDLE_IS_INVALID(props));
+        REQUIRE(!(!SANDBOX_HANDLE_IS_VALID(props)));
 
 
 
@@ -55,7 +55,7 @@ TEST_CASE("CLI Parser Suite: Configuration Projects", "[cli_parser][config][suit
         std::vector<const char*> args = {"sandbox_launcher", "--config", config_arg.c_str(), "-l", "cli_plugin.so"};
         
         sandbox_handle_t props = sandbox::launcher::parse_cli(args.size(), const_cast<char**>(args.data()));
-        REQUIRE(!SANDBOX_HANDLE_IS_INVALID(props));
+        REQUIRE(!(!SANDBOX_HANDLE_IS_VALID(props)));
 
         struct flags { bool l; bool m; } f = {false, false};
         sandbox_properties_keys(props, "engine", [](const char* k, void* ctx) {
@@ -74,7 +74,7 @@ TEST_CASE("CLI Parser Suite: Configuration Projects", "[cli_parser][config][suit
         std::vector<const char*> args = {"sandbox_launcher", "-l", "dummy.so", "-m", "test-mod@1.0.0"};
         
         sandbox_handle_t props = sandbox::launcher::parse_cli(args.size(), const_cast<char**>(args.data()));
-        REQUIRE(!SANDBOX_HANDLE_IS_INVALID(props));
+        REQUIRE(!(!SANDBOX_HANDLE_IS_VALID(props)));
 
         struct flags { bool l; bool m; } f = {false, false};
         sandbox_properties_keys(props, "engine", [](const char* k, void* ctx) {
