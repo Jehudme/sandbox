@@ -55,6 +55,9 @@ add_library(sandbox_library STATIC
         include/sandbox/abi/engine.h
         source/core/library_loader.cpp
         source/core/library_loader.h
+        include/sandbox/abi/handle.h
+        source/abi/handle.cpp
+        include/sandbox/sdk/handle.h
 )
 
 add_library(sandbox::library ALIAS sandbox_library)
