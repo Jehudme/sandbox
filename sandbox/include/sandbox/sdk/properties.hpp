@@ -18,7 +18,7 @@ namespace sandbox {
         properties(properties&& other) noexcept;
         properties& operator=(properties&& other) noexcept;
 
-        explicit properties(sandbox_properties_t* raw);
+        explicit properties(sandbox_handle_t raw);
 
         bool load(const std::string& data, Format format = Format::JSON);
         std::string dump(Format format = Format::JSON) const;
@@ -45,10 +45,10 @@ namespace sandbox {
         template <typename T>
         void set_array(const std::string& path, const std::vector<T>& values);
 
-        sandbox_properties_t* get_raw() const { return m_props; }
+        sandbox_handle_t get_raw() const { return m_handle; }
         
     private:
-        sandbox_properties_t* m_props;
+        sandbox_handle_t m_handle;
     };
 }
 

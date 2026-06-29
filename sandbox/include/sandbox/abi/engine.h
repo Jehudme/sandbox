@@ -16,7 +16,7 @@ sandbox_engine_t* sandbox_engine_create(void);
 void sandbox_engine_destroy(sandbox_engine_t* engine);
 
 /* Initializes the engine with the provided properties. Returns true on success. */
-bool sandbox_engine_initialize(sandbox_engine_t* engine, sandbox_properties_t* properties);
+bool sandbox_engine_initialize(sandbox_engine_t* engine, sandbox_handle_t properties);
 
 /* Returns the ECS world managed by the engine, or NULL if not initialized/available */
 void* sandbox_engine_get_ecs(sandbox_engine_t* engine);

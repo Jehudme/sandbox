@@ -15,8 +15,8 @@ TEST_CASE("properties SDK Wrapper: Lifecycle", "[properties][sdk]") {
         props.set("key", "value");
 
         properties props2(std::move(props));
-        REQUIRE(props.get_raw() == nullptr);
-        REQUIRE(props2.get_raw() != nullptr);
+        REQUIRE(props.get_raw().token == 0);
+        REQUIRE(props2.get_raw().token != 0);
 
         std::string val;
         REQUIRE(props2.get("key", val));
@@ -24,8 +24,8 @@ TEST_CASE("properties SDK Wrapper: Lifecycle", "[properties][sdk]") {
 
         properties props3;
         props3 = std::move(props2);
-        REQUIRE(props2.get_raw() == nullptr);
-        REQUIRE(props3.get_raw() != nullptr);
+        REQUIRE(props2.get_raw().token == 0);
+        REQUIRE(props3.get_raw().token != 0);
         
         REQUIRE(props3.get("key", val));
         REQUIRE(val == "value");

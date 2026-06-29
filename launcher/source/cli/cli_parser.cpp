@@ -8,7 +8,7 @@
 
 #include "../../../sandbox/include/sandbox/abi/properties.h"
 
-sandbox_properties_t* sandbox::launcher::parse_cli(int argc, char **argv) {
+sandbox_handle_t sandbox::launcher::parse_cli(int argc, char **argv) {
     CLI::App cli_app{"Sandbox Engine Launcher"};
 
     // --- Command Line Options Definition ---
@@ -26,10 +26,11 @@ sandbox_properties_t* sandbox::launcher::parse_cli(int argc, char **argv) {
         cli_app.parse(argc, argv);
     } catch (const CLI::ParseError& parse_error) {
         cli_app.exit(parse_error);
-        return nullptr;
+        return sandbox_handle_t{0};
     }
 
-    sandbox_properties_t* engine_properties = sandbox_properties_create();
+    sandbox_handle_t engine_properties{0};
+    sandbox_properties_create(&engine_properties);
 
     // --- Step 1: Load Base Configuration (File) ---
     if (!config_file_path.empty()) {

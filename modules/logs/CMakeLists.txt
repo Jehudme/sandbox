@@ -1,29 +1,22 @@
 project(logs LANGUAGES C CXX)
 
-# 1. Include the CMake FetchContent module
-include(FetchContent)
-
-# 2. Declare the spdlog dependency
-FetchContent_Declare(
-        spdlog
-        GIT_REPOSITORY https://github.com/gabime/spdlog.git
-        GIT_TAG        v1.15.3
-)
-
-# 3. Make the spdlog targets available to your project
-FetchContent_MakeAvailable(spdlog)
-
 add_library(logs MODULE
-        source/logger.cpp
-        source/logger.h)
+    source/logger.cpp
+)
 
 target_include_directories(logs
-        PUBLIC include
+    INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
 )
 
-# 4. Link spdlog::spdlog privately to your module
-target_link_libraries(logs
-        PRIVATE
-        sandbox::library
-        spdlog::spdlog
+include(FetchContent)
+FetchContent_Declare(
+    spdlog
+    GIT_REPOSITORY https://github.com/gabime/spdlog.git
+    GIT_TAG v1.15.3
+    GIT_SHALLOW TRUE
 )
+FetchContent_MakeAvailable(spdlog)
+
+target_link_libraries(logs PRIVATE sandbox::library spdlog::spdlog)
