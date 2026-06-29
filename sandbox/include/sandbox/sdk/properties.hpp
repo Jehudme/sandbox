@@ -20,6 +20,9 @@ namespace sandbox {
 
         explicit properties(sandbox_properties_handle_t raw);
 
+        void release() { m_handle.token = 0; }
+        bool is_valid() const { return m_handle.token != 0; }
+
         bool load(const std::string& data, Format format = Format::JSON);
         std::string dump(Format format = Format::JSON) const;
 

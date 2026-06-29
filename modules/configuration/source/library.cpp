@@ -4,18 +4,13 @@
 #include <flecs.h>
 #include <iostream>
 
-#if defined(_WIN32) || defined(_WIN64)
-#define CONFIG_EXPORT __declspec(dllexport)
-#else
-#define CONFIG_EXPORT __attribute__((visibility("default")))
-#endif
-
-// We need an owned handle that persists for the lifetime of the plugin.
-static sandbox_properties_handle_t g_properties_handle = {0};
-
-static sandbox_properties_handle_t config_get_properties() {
-    return g_properties_handle;
+// We need a forward declaration of the module
+namespace sandbox::modules {
+    struct configuration_module_t;
 }
+typedef sandbox::modules::configuration_module_t sandbox_configuration_module_t;
+
+static sandbox_properties_handle_t config_get_properties(ecs_world_t* ecs);
 
 sandbox_configuration_api_t g_configuration_api = {
     .get_properties = config_get_properties
@@ -34,8 +29,9 @@ namespace sandbox::modules {
         explicit configuration_module_t(flecs::world& world) {
             std::cout << "[Configuration Module] Initializing..." << std::endl;
             
-            // Create our own properties handle to store the config safely
-            g_properties_handle = sandbox_properties_create();
+            // Register properties as a component on the world itself
+            world.set<sandbox::properties>(sandbox::properties());
+            sandbox::properties& props = world.get_mut<sandbox::properties>();
 
             std::cout << "[Configuration Module] Lookup entity: " << world.entity("::sandbox::configuration::handle").id() 
                       << " with uint64_t comp id: " << world.component<uint64_t>().id() << std::endl;
@@ -44,22 +40,24 @@ namespace sandbox::modules {
                 sandbox_properties_handle_t engine_props_handle = { .token = token };
                 if (SANDBOX_HANDLE_IS_VALID(engine_props_handle)) {
                     std::cout << "[Configuration Module] Found engine properties. Merging..." << std::endl;
-                    sandbox_properties_merge(g_properties_handle, "", engine_props_handle);
+                    sandbox_properties_merge(props.get_raw(), "", engine_props_handle);
                 }
             } else {
                 std::cout << "[Configuration Module] Entity doesn't have uint64_t component!" << std::endl;
             }
         }
-        
-        ~configuration_module_t() {
-            if (SANDBOX_HANDLE_IS_VALID(g_properties_handle)) {
-                sandbox_properties_destroy(&g_properties_handle);
-            }
-        }
     };
 }
 
-typedef sandbox::modules::configuration_module_t sandbox_configuration_module_t;
+static sandbox_properties_handle_t config_get_properties(ecs_world_t* ecs) {
+    if (!ecs) return {0};
+    flecs::world world(ecs);
+    if (world.has<sandbox::properties>()) {
+        sandbox::properties& props = world.get_mut<sandbox::properties>();
+        return props.get_raw();
+    }
+    return {0};
+}
 
 SANDBOX_DECLARE_MODULE(sandbox_configuration_module_t, {
     .name = "configuration",

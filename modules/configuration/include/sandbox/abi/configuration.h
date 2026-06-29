@@ -9,7 +9,7 @@ extern "C" {
 
 // The API for the configuration service
 typedef struct {
-    sandbox_properties_handle_t (*get_properties)(void);
+    sandbox_properties_handle_t (*get_properties)(ecs_world_t* ecs);
 } sandbox_configuration_api_t;
 
 SANDBOX_DECLARE_SERVICE(sandbox_configuration_service_t, sandbox_configuration_api_t)
