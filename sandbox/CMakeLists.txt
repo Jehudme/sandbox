@@ -56,7 +56,6 @@ add_library(sandbox_library STATIC
         source/core/library_loader.cpp
         source/core/library_loader.h
         include/sandbox/abi/handle.h
-        source/abi/handle.cpp
         include/sandbox/sdk/handle.h
 )
 

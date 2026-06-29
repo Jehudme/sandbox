@@ -87,7 +87,7 @@ TEST_CASE("Engine C-ABI Wrapper", "[engine][c_abi]") {
         void* ecs = sandbox_engine_get_ecs(engine);
         // Depending on implementation, ECS might be populated but let's test initialization
         
-        sandbox_handle_t props = sandbox_properties_create();
+        sandbox_properties_handle_t props = sandbox_properties_create();
         bool success = sandbox_engine_initialize(engine, props);
         REQUIRE(success == true);
         
@@ -99,7 +99,7 @@ TEST_CASE("Engine C-ABI Wrapper", "[engine][c_abi]") {
     }
     
     SECTION("handles null pointers gracefully") {
-        REQUIRE(sandbox_engine_initialize(nullptr, sandbox_handle_t{0}) == false);
+        REQUIRE(sandbox_engine_initialize(nullptr, sandbox_properties_handle_t{0}) == false);
         REQUIRE(sandbox_engine_get_ecs(nullptr) == nullptr);
         REQUIRE_NOTHROW(sandbox_engine_destroy(nullptr));
     }

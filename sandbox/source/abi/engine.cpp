@@ -15,7 +15,7 @@ void sandbox_engine_destroy(sandbox_engine_t* engine) {
     }
 }
 
-bool sandbox_engine_initialize(sandbox_engine_t* engine, sandbox_handle_t properties) {
+bool sandbox_engine_initialize(sandbox_engine_t* engine, sandbox_properties_handle_t properties) {
     if (!engine || (!SANDBOX_HANDLE_IS_VALID(properties))) return false;
     
     auto* e = reinterpret_cast<sandbox::core::engine_t*>(engine);

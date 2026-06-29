@@ -3,7 +3,7 @@
 #include <iostream>
 
 int main(int argc, char* argv[]) {
-    sandbox_handle_t props = sandbox::launcher::parse_cli(argc, argv);
+    sandbox_properties_handle_t props = sandbox::launcher::parse_cli(argc, argv);
     if ((!SANDBOX_HANDLE_IS_VALID(props))) {
         return 1; // CLI parsing failed or requested exit (e.g. --help)
     }

@@ -5,5 +5,5 @@
 
 namespace sandbox::launcher {
 
-    sandbox_handle_t parse_cli(int argc, char** argv);
+    sandbox_properties_handle_t parse_cli(int argc, char** argv);
 }

@@ -14,7 +14,6 @@ extern "C" {
  * accidentally passes the wrong handle type to a function.
  */
 #define SANDBOX_DEFINE_HANDLE(name) typedef struct { uintptr_t token; } name
-SANDBOX_DEFINE_HANDLE(sandbox_handle_t);
 
 /**
  * @brief Standard status codes for operations that modify data.

@@ -25,7 +25,7 @@ namespace sandbox {
         return *this;
     }
 
-    inline properties::properties(sandbox_handle_t raw) : m_handle(raw) {}
+    inline properties::properties(sandbox_properties_handle_t raw) : m_handle(raw) {}
 
     inline bool properties::load(const std::string& data, Format format) {
         sandbox_properties_format_t fmt = SANDBOX_FORMAT_JSON;
@@ -75,7 +75,7 @@ namespace sandbox {
     }
 
     inline properties properties::sub(const std::string& path) const {
-        sandbox_handle_t raw_sub = sandbox_properties_sub(m_handle, path.c_str());
+        sandbox_properties_handle_t raw_sub = sandbox_properties_sub(m_handle, path.c_str());
         return properties(raw_sub); // Taking ownership
     }
 
