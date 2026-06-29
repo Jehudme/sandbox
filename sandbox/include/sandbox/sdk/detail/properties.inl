@@ -79,67 +79,135 @@ namespace sandbox {
         return properties(raw_sub); // Taking ownership
     }
 
-    inline bool properties::get_int64(const std::string& path, int64_t& out_val) const {
-        return sandbox_properties_get_int64(m_props, path.c_str(), &out_val);
-    }
-
-    inline bool properties::get_double(const std::string& path, double& out_val) const {
-        return sandbox_properties_get_double(m_props, path.c_str(), &out_val);
-    }
-
-    inline bool properties::get_bool(const std::string& path, bool& out_val) const {
-        return sandbox_properties_get_bool(m_props, path.c_str(), &out_val);
-    }
-
-    inline bool properties::get_string(const std::string& path, std::string& out_val) const {
-        bool found = false;
-        struct Ctx { std::string* str; bool* found; } ctx = { &out_val, &found };
-        
-        sandbox_properties_read_string(m_props, path.c_str(), [](const char* value, void* user_data) {
-            auto* c = static_cast<Ctx*>(user_data);
-            if (value) {
-                *c->str = value;
-                *c->found = true;
+    template <typename T>
+    inline bool properties::get(const std::string& path, T& out_val) const {
+        if constexpr (std::is_same_v<T, std::string>) {
+            bool found = false;
+            struct Ctx { std::string* str; bool* found; } ctx = { &out_val, &found };
+            sandbox_properties_read_string(m_props, path.c_str(), [](const char* value, void* user_data) {
+                auto* c = static_cast<Ctx*>(user_data);
+                if (value) { *c->str = value; *c->found = true; }
+            }, &ctx);
+            return found;
+        } else if constexpr (std::is_same_v<T, bool>) {
+            return sandbox_properties_get_bool(m_props, path.c_str(), &out_val);
+        } else if constexpr (std::is_floating_point_v<T>) {
+            double val;
+            if (sandbox_properties_get_double(m_props, path.c_str(), &val)) {
+                out_val = static_cast<T>(val);
+                return true;
             }
-        }, &ctx);
-        return found;
+            return false;
+        } else if constexpr (std::is_integral_v<T>) {
+            if constexpr (std::is_signed_v<T>) {
+                int64_t val;
+                if (sandbox_properties_get_int64(m_props, path.c_str(), &val)) {
+                    out_val = static_cast<T>(val);
+                    return true;
+                }
+            } else {
+                uint64_t val;
+                if (sandbox_properties_get_uint64(m_props, path.c_str(), &val)) {
+                    out_val = static_cast<T>(val);
+                    return true;
+                }
+            }
+            return false;
+        } else {
+            static_assert(sizeof(T) == 0, "Unsupported type for properties::get");
+        }
     }
 
-    inline bool properties::get_string_array(const std::string& path, std::vector<std::string>& out_val) const {
+    template <typename T>
+    inline std::optional<T> properties::get(const std::string& path) const {
+        T val;
+        if (get(path, val)) return val;
+        return std::nullopt;
+    }
+
+    template <typename T>
+    inline bool properties::get_array(const std::string& path, std::vector<T>& out_val) const {
         out_val.clear();
-        bool found = false; // We set found to true if the array exists, even if empty
-        // We can check if it exists first
         if (!sandbox_properties_has(m_props, path.c_str())) return false;
-        sandbox_properties_read_string_array(m_props, path.c_str(), [](const char* value, void* user_data) {
-            auto* vec = static_cast<std::vector<std::string>*>(user_data);
-            if (value) vec->emplace_back(value);
-        }, &out_val);
+
+        if constexpr (std::is_same_v<T, std::string>) {
+            sandbox_properties_read_string_array(m_props, path.c_str(), [](const char* value, void* user_data) {
+                auto* vec = static_cast<std::vector<std::string>*>(user_data);
+                if (value) vec->emplace_back(value);
+            }, &out_val);
+        } else if constexpr (std::is_same_v<T, bool>) {
+            sandbox_properties_read_bool_array(m_props, path.c_str(), [](bool value, void* user_data) {
+                static_cast<std::vector<bool>*>(user_data)->push_back(value);
+            }, &out_val);
+        } else if constexpr (std::is_floating_point_v<T>) {
+            sandbox_properties_read_double_array(m_props, path.c_str(), [](double value, void* user_data) {
+                static_cast<std::vector<T>*>(user_data)->push_back(static_cast<T>(value));
+            }, &out_val);
+        } else if constexpr (std::is_integral_v<T>) {
+            if constexpr (std::is_signed_v<T>) {
+                sandbox_properties_read_int64_array(m_props, path.c_str(), [](int64_t value, void* user_data) {
+                    static_cast<std::vector<T>*>(user_data)->push_back(static_cast<T>(value));
+                }, &out_val);
+            } else {
+                sandbox_properties_read_uint64_array(m_props, path.c_str(), [](uint64_t value, void* user_data) {
+                    static_cast<std::vector<T>*>(user_data)->push_back(static_cast<T>(value));
+                }, &out_val);
+            }
+        } else {
+            static_assert(sizeof(T) == 0, "Unsupported type for properties::get_array");
+        }
         return true;
     }
 
-    inline void properties::set_int64(const std::string& path, int64_t val) {
-        sandbox_properties_set_int64(m_props, path.c_str(), val);
-    }
-
-    inline void properties::set_double(const std::string& path, double val) {
-        sandbox_properties_set_double(m_props, path.c_str(), val);
-    }
-
-    inline void properties::set_bool(const std::string& path, bool val) {
-        sandbox_properties_set_bool(m_props, path.c_str(), val);
-    }
-
-    inline void properties::set_string(const std::string& path, const std::string& val) {
-        sandbox_properties_set_string(m_props, path.c_str(), val.c_str());
-    }
-
-    inline void properties::set_string_array(const std::string& path, const std::vector<std::string>& values) {
-        std::vector<const char*> c_vals;
-        c_vals.reserve(values.size());
-        for (const auto& v : values) {
-            c_vals.push_back(v.c_str());
+    template <typename T>
+    inline void properties::set(const std::string& path, const T& val) {
+        if constexpr (std::is_same_v<T, std::string>) {
+            sandbox_properties_set_string(m_props, path.c_str(), val.c_str());
+        } else if constexpr (std::is_convertible_v<T, const char*>) {
+            sandbox_properties_set_string(m_props, path.c_str(), static_cast<const char*>(val));
+        } else if constexpr (std::is_same_v<T, bool>) {
+            sandbox_properties_set_bool(m_props, path.c_str(), val);
+        } else if constexpr (std::is_floating_point_v<T>) {
+            sandbox_properties_set_double(m_props, path.c_str(), static_cast<double>(val));
+        } else if constexpr (std::is_integral_v<T>) {
+            if constexpr (std::is_signed_v<T>) {
+                sandbox_properties_set_int64(m_props, path.c_str(), static_cast<int64_t>(val));
+            } else {
+                sandbox_properties_set_uint64(m_props, path.c_str(), static_cast<uint64_t>(val));
+            }
+        } else {
+            static_assert(sizeof(T) == 0, "Unsupported type for properties::set");
         }
-        sandbox_properties_set_string_array(m_props, path.c_str(), c_vals.data(), c_vals.size());
+    }
+
+    template <typename T>
+    inline void properties::set_array(const std::string& path, const std::vector<T>& values) {
+        if constexpr (std::is_same_v<T, std::string>) {
+            std::vector<const char*> c_vals;
+            c_vals.reserve(values.size());
+            for (const auto& v : values) c_vals.push_back(v.c_str());
+            sandbox_properties_set_string_array(m_props, path.c_str(), c_vals.data(), c_vals.size());
+        } else if constexpr (std::is_same_v<T, bool>) {
+            std::vector<bool> bools(values.begin(), values.end());
+            // std::vector<bool> is specialized, so we might need a workaround for C array
+            bool* arr = new bool[bools.size()];
+            for (size_t i = 0; i < bools.size(); ++i) arr[i] = bools[i];
+            sandbox_properties_set_bool_array(m_props, path.c_str(), arr, bools.size());
+            delete[] arr;
+        } else if constexpr (std::is_floating_point_v<T>) {
+            std::vector<double> arr(values.begin(), values.end());
+            sandbox_properties_set_double_array(m_props, path.c_str(), arr.data(), arr.size());
+        } else if constexpr (std::is_integral_v<T>) {
+            if constexpr (std::is_signed_v<T>) {
+                std::vector<int64_t> arr(values.begin(), values.end());
+                sandbox_properties_set_int64_array(m_props, path.c_str(), arr.data(), arr.size());
+            } else {
+                std::vector<uint64_t> arr(values.begin(), values.end());
+                sandbox_properties_set_uint64_array(m_props, path.c_str(), arr.data(), arr.size());
+            }
+        } else {
+            static_assert(sizeof(T) == 0, "Unsupported type for properties::set_array");
+        }
     }
 
 }

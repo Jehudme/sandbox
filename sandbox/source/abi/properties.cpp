@@ -3,6 +3,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <exception>
+#include <iostream>
 
 using namespace sandbox::core;
 
@@ -128,6 +129,15 @@ extern "C" {
         return false;
     }
 
+    bool sandbox_properties_get_uint64(const sandbox_properties_t* props, const char* path_str, uint64_t* out_val) {
+        if (!props || !out_val) return false;
+        if (auto val = cast(props)->get<uint64_t>(parse_path(path_str))) {
+            *out_val = *val;
+            return true;
+        }
+        return false;
+    }
+
     bool sandbox_properties_get_double(const sandbox_properties_t* props, const char* path_str, double* out_val) {
         if (!props || !out_val) return false;
         if (auto val = cast(props)->get<double>(parse_path(path_str))) {
@@ -159,9 +169,36 @@ extern "C" {
         }
     }
 
+    void sandbox_properties_read_int64_array(const sandbox_properties_t* props, const char* path_str, void (*callback)(int64_t value, void* user_data), void* user_data) {
+        if (!callback || !props) return;
+        if (auto arr = cast(props)->get<std::vector<int64_t>>(parse_path(path_str))) {
+            for (const auto& val : *arr) callback(val, user_data);
+        }
+    }
+
+    void sandbox_properties_read_uint64_array(const sandbox_properties_t* props, const char* path_str, void (*callback)(uint64_t value, void* user_data), void* user_data) {
+        if (!callback || !props) return;
+        if (auto arr = cast(props)->get<std::vector<uint64_t>>(parse_path(path_str))) {
+            for (const auto& val : *arr) callback(val, user_data);
+        }
+    }
+
+    void sandbox_properties_read_double_array(const sandbox_properties_t* props, const char* path_str, void (*callback)(double value, void* user_data), void* user_data) {
+        if (!callback || !props) return;
+        if (auto arr = cast(props)->get<std::vector<double>>(parse_path(path_str))) {
+            for (const auto& val : *arr) callback(val, user_data);
+        }
+    }
+
+    void sandbox_properties_read_bool_array(const sandbox_properties_t* props, const char* path_str, void (*callback)(bool value, void* user_data), void* user_data) {
+        if (!callback || !props) return;
+        if (auto arr = cast(props)->get<std::vector<bool>>(parse_path(path_str))) {
+            for (auto val : *arr) callback(val, user_data);
+        }
+    }
+
     void sandbox_properties_read_string_array(const sandbox_properties_t* props, const char* path_str, void (*callback)(const char* value, void* user_data), void* user_data) {
-        if (!callback) return;
-        if (!props) return;
+        if (!callback || !props) return;
         if (auto arr = cast(props)->get<std::vector<std::string>>(parse_path(path_str))) {
             for (const auto& val : *arr) {
                 callback(val.c_str(), user_data);
@@ -175,6 +212,10 @@ extern "C" {
         if (props) cast(props)->set<int64_t>(parse_path(path_str), val);
     }
 
+    void sandbox_properties_set_uint64(sandbox_properties_t* props, const char* path_str, uint64_t val) {
+        if (props) cast(props)->set<uint64_t>(parse_path(path_str), val);
+    }
+
     void sandbox_properties_set_double(sandbox_properties_t* props, const char* path_str, double val) {
         if (props) cast(props)->set<double>(parse_path(path_str), val);
     }
@@ -186,6 +227,30 @@ extern "C" {
     void sandbox_properties_set_string(sandbox_properties_t* props, const char* path_str, const char* val) {
         if (!props || !val) return;
         cast(props)->set<std::string>(parse_path(path_str), std::string(val));
+    }
+
+    void sandbox_properties_set_int64_array(sandbox_properties_t* props, const char* path_str, const int64_t* values, size_t count) {
+        if (!props || (!values && count > 0)) return;
+        std::vector<int64_t> arr(values, values + count);
+        cast(props)->set<std::vector<int64_t>>(parse_path(path_str), std::move(arr));
+    }
+
+    void sandbox_properties_set_uint64_array(sandbox_properties_t* props, const char* path_str, const uint64_t* values, size_t count) {
+        if (!props || (!values && count > 0)) return;
+        std::vector<uint64_t> arr(values, values + count);
+        cast(props)->set<std::vector<uint64_t>>(parse_path(path_str), std::move(arr));
+    }
+
+    void sandbox_properties_set_double_array(sandbox_properties_t* props, const char* path_str, const double* values, size_t count) {
+        if (!props || (!values && count > 0)) return;
+        std::vector<double> arr(values, values + count);
+        cast(props)->set<std::vector<double>>(parse_path(path_str), std::move(arr));
+    }
+
+    void sandbox_properties_set_bool_array(sandbox_properties_t* props, const char* path_str, const bool* values, size_t count) {
+        if (!props || (!values && count > 0)) return;
+        std::vector<bool> arr(values, values + count);
+        cast(props)->set<std::vector<bool>>(parse_path(path_str), std::move(arr));
     }
 
     void sandbox_properties_set_string_array(sandbox_properties_t* props, const char* path_str, const char** values, size_t count) {

@@ -136,9 +136,11 @@ TEST_CASE("Suite: C ABI engine config round-trip", "[suite][properties][abi]")
     }
 
     SECTION("app/name correct after ABI round-trip") {
-        const char* name = sandbox_properties_get_string(rt, "app/name");
-        REQUIRE(name != nullptr);
-        REQUIRE(std::string(name) == "sandbox_engine");
+        std::string name;
+        sandbox_properties_read_string(rt, "app/name", [](const char* val, void* ctx) {
+            if (val) *static_cast<std::string*>(ctx) = val;
+        }, &name);
+        REQUIRE(name == "sandbox_engine");
     }
 
     SECTION("window/width correct after ABI round-trip") {

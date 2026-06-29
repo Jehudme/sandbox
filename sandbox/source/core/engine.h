@@ -16,7 +16,6 @@ namespace sandbox::core {
         flecs::world ecs;
 
     private:
-        void save_arguments();
         void save_bootstrapper();
 
         void boot();

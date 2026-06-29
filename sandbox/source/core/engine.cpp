@@ -3,7 +3,6 @@
 #include <flecs/addons/cpp/flecs.hpp>
 
 #include "bootstrapper.h"
-#include "sandbox/abi/argument.h"
 #include "sandbox/abi/bootstrapper.h"
 #include <iostream>
 
@@ -17,18 +16,12 @@ namespace sandbox::core {
         m_arguments = std::make_unique<properties_t>(properties);
         m_bootstrapper = std::make_unique<bootstrapper_t>();
 
-        save_arguments();
         save_bootstrapper();
 
         boot();
     }
 
-    void engine_t::save_arguments() {
-        ECS_COMPONENT_DEFINE(ecs.c_ptr(), sandbox_argument_t);
-        sandbox_argument_t arg_comp;
-        arg_comp.internal_properties = reinterpret_cast<sandbox_properties_t*>(m_arguments.get());
-        ecs_set_id(ecs.c_ptr(), ecs_id(sandbox_argument_t), ecs_id(sandbox_argument_t), sizeof(sandbox_argument_t), &arg_comp);
-    }
+
 
     void engine_t::save_bootstrapper() {
         ECS_COMPONENT_DEFINE(ecs.c_ptr(), sandbox_bootstrapper_component_t);

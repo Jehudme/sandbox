@@ -34,12 +34,8 @@ TEST_CASE("CLI Parser Suite: Configuration Projects", "[cli_parser][config][suit
         sandbox_properties_t* props = sandbox::launcher::parse_cli(args.size(), const_cast<char**>(args.data()));
         REQUIRE(props != nullptr);
 
-        bool found_libs = false, found_mods = false;
-        sandbox_properties_keys(props, "engine", [](const char* k, void* ctx) {
-            if (std::string(k) == "libraries") ((bool*)ctx)[0] = true;
-            if (std::string(k) == "sandbox") ((bool*)ctx)[1] = true;
-        }, &found_libs); // using array memory layout trick
-        
+
+
         // Let's use a struct to be perfectly safe across C API
         struct flags { bool l; bool m; } f = {false, false};
         sandbox_properties_keys(props, "engine", [](const char* k, void* ctx) {

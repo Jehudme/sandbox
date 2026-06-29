@@ -41,12 +41,14 @@ sandbox_properties_t* sandbox::launcher::parse_cli(int argc, char **argv) {
                 std::istreambuf_iterator<char>()
             );
 
-            sandbox_properties_load(
+            if (!sandbox_properties_load(
                 engine_properties,
                 config_content.c_str(),
                 config_content.size(),
                 SANDBOX_FORMAT_JSON
-            );
+            )) {
+                std::cerr << "[Launcher] Failed to load json properties. Config content:\n" << config_content << "\n";
+            }
         } else {
             std::cerr << "[Launcher] Failed to open configuration file: " << config_file_path << "\n";
         }

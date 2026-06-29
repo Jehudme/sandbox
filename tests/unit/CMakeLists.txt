@@ -25,10 +25,8 @@ set(SANDBOX_UNIT_TEST_SOURCES
 
     # Core systems feature group
     src/core/test_library_loader.cpp
-    src/core/test_argument.cpp
     src/core/test_cli_parser.cpp
     src/core/test_engine_bootstrapper.cpp
-    src/core/test_argument_sdk.cpp
     src/core/test_engine_sdk.cpp
     ../../launcher/source/cli/cli_parser.cpp
 )

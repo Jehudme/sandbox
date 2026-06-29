@@ -26,7 +26,7 @@ TEST_CASE("engine SDK Wrapper", "[engine][sdk]") {
 
     SECTION("Initialization triggers logic") {
         properties props;
-        props.set_int64("engine/version", 1);
+        props.set("engine/version", 1LL);
         
         engine engine;
         REQUIRE(engine.initialize(props));

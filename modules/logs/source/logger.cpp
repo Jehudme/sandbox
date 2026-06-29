@@ -1,5 +1,4 @@
 #include "logger.h"
-#include "sandbox/sdk/argument.hpp"
 
 #include <string>
 #include <vector>
@@ -19,25 +18,25 @@ namespace sandbox::modules {
         // ==========================================
 
         // General
-        auto name_opt         = argument::get<std::string>(ecs, "logs/name");
-        auto level_opt        = argument::get<std::string>(ecs, "logs/level");
-        auto flush_level_opt  = argument::get<std::string>(ecs, "logs/flush_level");
-        auto pattern_opt      = argument::get<std::string>(ecs, "logs/pattern");
+        std::optional<std::string> name_opt         = std::nullopt;
+        std::optional<std::string> level_opt        = std::nullopt;
+        std::optional<std::string> flush_level_opt  = std::nullopt;
+        std::optional<std::string> pattern_opt      = std::nullopt;
 
         // Console Sink
-        auto console_opt      = argument::get<bool>(ecs, "logs/console");
+        std::optional<bool> console_opt             = std::nullopt;
 
         // File Sink
-        auto file_opt         = argument::get<std::string>(ecs, "logs/file");
-        auto truncate_opt     = argument::get<bool>(ecs, "logs/file_truncate");
-        auto rotating_opt     = argument::get<bool>(ecs, "logs/file_rotating");
-        auto max_size_opt     = argument::get<int64_t>(ecs, "logs/file_max_size");
-        auto max_files_opt    = argument::get<int64_t>(ecs, "logs/file_max_files");
+        std::optional<std::string> file_opt         = std::nullopt;
+        std::optional<bool> truncate_opt            = std::nullopt;
+        std::optional<bool> rotating_opt            = std::nullopt;
+        std::optional<int64_t> max_size_opt         = std::nullopt;
+        std::optional<int64_t> max_files_opt        = std::nullopt;
 
         // Async Configuration
-        auto async_opt        = argument::get<bool>(ecs, "logs/async");
-        auto queue_size_opt   = argument::get<int64_t>(ecs, "logs/async_queue_size");
-        auto thread_count_opt = argument::get<int64_t>(ecs, "logs/async_threads");
+        std::optional<bool> async_opt               = std::nullopt;
+        std::optional<int64_t> queue_size_opt       = std::nullopt;
+        std::optional<int64_t> thread_count_opt     = std::nullopt;
 
         // ==========================================
         // 2. CONSTRUCT SINKS

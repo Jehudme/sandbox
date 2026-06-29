@@ -22,6 +22,6 @@ namespace sandbox::modules {
 
     template<typename Type>
     std::optional<Type> configuration::get(const std::string &key) const {
-        m_properties
+        return m_properties.get<Type>(key);
     }
 }

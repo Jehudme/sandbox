@@ -30,23 +30,20 @@ namespace sandbox {
         void merge(const std::string& path, const properties& other);
         properties sub(const std::string& path) const;
 
-        bool get_int64(const std::string& path, int64_t& out_val) const;
-        bool get_double(const std::string& path, double& out_val) const;
-        bool get_bool(const std::string& path, bool& out_val) const;
-        bool get_string(const std::string& path, std::string& out_val) const;
-        bool get_string_array(const std::string& path, std::vector<std::string>& out_val) const;
+        template <typename T>
+        bool get(const std::string& path, T& out_val) const;
 
-        void set_int64(const std::string& path, int64_t val);
-        void set_double(const std::string& path, double val);
-        void set_bool(const std::string& path, bool val);
-        void set_string(const std::string& path, const std::string& val);
-        void set_string_array(const std::string& path, const std::vector<std::string>& values);
+        template <typename T>
+        std::optional<T> get(const std::string& path) const;
 
-        template <typename Type>
-        std::optional<Type> get(const std::string& path) const;
+        template <typename T>
+        bool get_array(const std::string& path, std::vector<T>& out_val) const;
 
-        template <typename Type>
-        void set(const std::string& path, const Type& value);
+        template <typename T>
+        void set(const std::string& path, const T& value);
+
+        template <typename T>
+        void set_array(const std::string& path, const std::vector<T>& values);
 
         sandbox_properties_t* get_raw() const { return m_props; }
         
