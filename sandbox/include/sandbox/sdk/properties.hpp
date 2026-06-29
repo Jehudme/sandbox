@@ -2,6 +2,7 @@
 #include "sandbox/abi/properties.h"
 #include <string>
 #include <vector>
+#include <optional>
 
 namespace sandbox {
     class properties {
@@ -40,6 +41,12 @@ namespace sandbox {
         void set_bool(const std::string& path, bool val);
         void set_string(const std::string& path, const std::string& val);
         void set_string_array(const std::string& path, const std::vector<std::string>& values);
+
+        template <typename Type>
+        std::optional<Type> get(const std::string& path) const;
+
+        template <typename Type>
+        void set(const std::string& path, const Type& value);
 
         sandbox_properties_t* get_raw() const { return m_props; }
         

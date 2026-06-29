@@ -1,6 +1,8 @@
 project(configuration LANGUAGES C CXX)
 
-add_library(configuration MODULE source/library.cpp)
+add_library(configuration MODULE
+        source/configuration.cpp
+        source/configuration.h)
 
 target_include_directories(configuration
     PUBLIC include
