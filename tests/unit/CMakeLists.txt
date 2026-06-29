@@ -53,8 +53,8 @@ target_include_directories(sandbox_unit_tests
         ${CMAKE_CURRENT_SOURCE_DIR}/../../modules/logs/include
 )
 
-# Ensure the dummy plugin shared library is built before the test executable
-add_dependencies(sandbox_unit_tests dummy_plugin)
+# Ensure the shared libraries are built before the test executable
+add_dependencies(sandbox_unit_tests dummy_plugin configuration logs)
 
 # Register tests with CTest
 catch_discover_tests(sandbox_unit_tests)

@@ -27,7 +27,7 @@ target_include_directories(sandbox_suite_tests
         ${CMAKE_CURRENT_SOURCE_DIR}/../../sandbox/source
 )
 
-# Ensure the dummy plugin shared library is built before the test executable
-add_dependencies(sandbox_suite_tests dummy_plugin)
+# Ensure the shared libraries are built before the test executable
+add_dependencies(sandbox_suite_tests dummy_plugin configuration logs)
 
 catch_discover_tests(sandbox_suite_tests)

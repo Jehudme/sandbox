@@ -11,9 +11,14 @@
 namespace sandbox::core {
 
     void bootstrapper_t::reset() {
-        m_services.clear();
-        m_modules.clear();
-        m_loader = library_loader_t{};
+        // We only clear mock/test modules from the registry. Real modules (arch "sandbox") 
+        // loaded via .so files cannot be safely unloaded and re-staged in the same process
+        // since dlclose is merely a hint and global constructors won't re-run.
+        m_services.erase(std::remove_if(m_services.begin(), m_services.end(), 
+            [](const service_info_t& s) { return std::string_view(s.architecture) != "sandbox"; }), m_services.end());
+            
+        m_modules.erase(std::remove_if(m_modules.begin(), m_modules.end(), 
+            [](const module_info_t& m) { return std::string_view(m.architecture) != "sandbox"; }), m_modules.end());
     }
 
     void bootstrapper_t::index_library(const std::filesystem::path &library_path) {
