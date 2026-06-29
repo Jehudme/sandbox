@@ -3,6 +3,7 @@
 #include "properties.hpp"
 #include <string>
 #include <vector>
+#include <optional>
 
 namespace sandbox {
     class argument {
@@ -16,6 +17,9 @@ namespace sandbox {
         
         static std::vector<std::string> keys(ecs_world_t* ecs, const std::string& path);
         static properties get_subtree(ecs_world_t* ecs, const std::string& path);
+
+        template <typename Type>
+        static std::optional<Type> get(ecs_world_t *ecs, const std::string &path);
     };
 }
 

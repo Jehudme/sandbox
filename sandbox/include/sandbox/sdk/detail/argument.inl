@@ -47,4 +47,44 @@ namespace sandbox {
         return properties(raw_sub);
     }
 
+    template <typename Type>
+    inline std::optional<Type> argument::get(ecs_world_t *ecs, const std::string &path) {
+        // 1. Strings
+        if constexpr (std::is_same_v<Type, std::string>) {
+            std::string val;
+            if (get_string(ecs, path, val)) return val;
+        }
+        // 2. Booleans (Must be checked before is_integral_v, as bool is technically an integral type)
+        else if constexpr (std::is_same_v<Type, bool>) {
+            bool val;
+            if (get_bool(ecs, path, val)) return val;
+        }
+        // 3. Integers (Matches int64_t, int32_t, uint32_t, size_t, etc.)
+        else if constexpr (std::is_integral_v<Type>) {
+            int64_t val;
+            if (get_int64(ecs, path, val)) return static_cast<Type>(val);
+        }
+        // 4. Floating Point (Matches double, float)
+        else if constexpr (std::is_floating_point_v<Type>) {
+            double val;
+            if (get_double(ecs, path, val)) return static_cast<Type>(val);
+        }
+        // 5. Custom Subtrees
+        else if constexpr (std::is_same_v<Type, properties>) {
+            // Since get_subtree doesn't return a success boolean, we verify existence first
+            if (has(ecs, path)) {
+                return get_subtree(ecs, path);
+            }
+        }
+        // 6. Unsupported Types
+        else {
+            // The !sizeof(Type*) delays the evaluation so this static_assert
+            // only fires if the template is instantiated with a bad type.
+            static_assert(!sizeof(Type*), "Unsupported type passed to sandbox::argument::get");
+        }
+
+        // Fallback for failure scenarios
+        return std::nullopt;
+    }
+
 }
