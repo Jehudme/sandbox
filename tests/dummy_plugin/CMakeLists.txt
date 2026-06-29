@@ -13,3 +13,5 @@ set_target_properties(dummy_plugin PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
+
+target_link_libraries(dummy_plugin PRIVATE sandbox_library)

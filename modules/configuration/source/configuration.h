@@ -5,7 +5,10 @@
 #include <string>
 #include <unordered_map>
 
+#include "sandbox/abi/bootstrapper.h"
 #include "sandbox/sdk/properties.hpp"
+
+
 
 namespace sandbox::modules {
     class configuration {

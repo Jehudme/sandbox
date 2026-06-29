@@ -1,21 +1,13 @@
 #include "configuration.h"
-
-
+#include "sandbox/abi/bootstrapper.h"
+#include "sandbox/abi/handle.h"
 
 namespace sandbox::modules {
 
     configuration::configuration(ecs_world_t* ecs) {
-        flecs::world world(ecs);
-        flecs::entity properties_handle_entity = world.entity("sandbox::configuration::handle");
-
-        auto properties_handle = properties_handle_entity.get<>();
-
-
-
+        // Unfinished user code...
     }
 
-    configuration::~configuration() {
-        // Destructor logic if needed
-    }
+    configuration::~configuration() = default;
 
-}
+};
