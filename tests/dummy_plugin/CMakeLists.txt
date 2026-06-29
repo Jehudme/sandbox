@@ -4,7 +4,13 @@ project(dummy_plugin LANGUAGES CXX)
 # Build a minimal shared library used by library_loader tests.
 # Output ends up in the same bin/ directory as the test executables so tests
 # can reference it via a relative path from the executable location.
-add_library(dummy_plugin SHARED dummy_plugin.cpp)
+add_library(dummy_plugin SHARED source/library.cpp)
+
+target_include_directories(dummy_plugin
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+)
 
 target_compile_features(dummy_plugin PUBLIC cxx_std_23)
 

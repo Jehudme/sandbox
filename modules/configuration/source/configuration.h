@@ -22,6 +22,7 @@ namespace sandbox::modules {
     private:
         properties m_properties;
     };
+    
 
     template<typename Type>
     std::optional<Type> configuration::get(const std::string &key) const {
