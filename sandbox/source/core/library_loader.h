@@ -27,7 +27,7 @@ namespace sandbox::core {
         void unload(flecs::world& ecs, const std::string& library_name);
 
     private:
-        std::unordered_map<std::string, dylib::library> m_libraries;
+        std::unordered_map<std::string, std::shared_ptr<dylib::library>> m_libraries;
     };
 
 }

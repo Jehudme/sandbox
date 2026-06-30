@@ -51,14 +51,11 @@ target_include_directories(sandbox_unit_tests
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/../../sandbox/source
-        ${CMAKE_CURRENT_SOURCE_DIR}/../../modules/configuration/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/../../modules/logs/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/../../modules/runtime/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/../../modules/filesystem/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../modules/core/include
 )
 
 # Ensure the shared libraries are built before the test executable
-add_dependencies(sandbox_unit_tests dummy_plugin configuration logs runtime filesystem)
+add_dependencies(sandbox_unit_tests dummy_plugin core_plugin)
 
 # Register tests with CTest
 catch_discover_tests(sandbox_unit_tests)

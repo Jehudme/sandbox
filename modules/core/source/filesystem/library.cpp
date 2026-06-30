@@ -29,7 +29,7 @@ namespace sandbox::modules {
         .struct_size = 0,
         .name = "filesystem",
         .description = "Filesystem module",
-        .architecture = "sandbox::core",
+        .architecture = "sandbox",
         .version_major = 1,
         .version_minor = 0,
         .version_patch = 0,

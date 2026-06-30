@@ -1,7 +1,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include "core/engine.h"
+#include "core/bootstrapper.h"
 #include <sandbox/sdk/properties.hpp>
 #include <sandbox/sdk/configuration.hpp>
+#include <iostream>
 
 using namespace sandbox;
 using namespace sandbox::core;
@@ -13,16 +15,16 @@ TEST_CASE("Configuration module initializes and provides SDK access", "[configur
     engine_props.set<int64_t>({"test_key"}, 42);
     engine_props.set<std::string>({"test_str"}, "hello");
     engine_props.set<double>({"test_float"}, 3.14);
+    engine_props.set<bool>({"logs", "console", "enabled"}, true);
+    engine_props.set<std::string>({"logs", "level"}, "trace");
     
     // Tell engine to load our module dynamically
-    std::vector<std::string> libs = {"./configuration.so"};
-    std::vector<std::string> mods = {"sandbox-configuration@1.0.0"};
+    std::vector<std::string> libs = {"./core_plugin.so"};
+    std::vector<std::string> mods = {"sandbox-logs@1.0.0", "sandbox-configuration@1.0.0"};
     engine_props.set<std::vector<std::string>>({"engine", "libraries"}, libs);
     engine_props.set<std::vector<std::string>>({"engine", "sandbox"}, mods);
 
     // 2. Initialize engine
-    // Engine will index libraries, activate the configuration module,
-    // push properties to Flecs, and then boot.
     engine_t engine;
     engine.initialize(engine_props);
 

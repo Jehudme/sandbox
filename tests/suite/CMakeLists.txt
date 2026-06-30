@@ -28,6 +28,6 @@ target_include_directories(sandbox_suite_tests
 )
 
 # Ensure the shared libraries are built before the test executable
-add_dependencies(sandbox_suite_tests dummy_plugin configuration logs)
+add_dependencies(sandbox_suite_tests dummy_plugin core_plugin)
 
 catch_discover_tests(sandbox_suite_tests)

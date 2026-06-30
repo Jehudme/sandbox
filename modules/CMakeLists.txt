@@ -1,4 +1,1 @@
-add_subdirectory(configuration)
-add_subdirectory(filesystem)
-add_subdirectory(logs)
-add_subdirectory(runtime)
+add_subdirectory(core)

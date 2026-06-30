@@ -8,6 +8,7 @@
 #include "sandbox/abi/properties.h"
 #include "exceptions.h"
 #include <sandbox/sdk/logs.hpp>
+#include <iostream>
 
 namespace sandbox::core {
     engine_t::engine_t() = default;
@@ -62,8 +63,10 @@ namespace sandbox::core {
                     try {
                         m_bootstrapper->activate(ecs, mod);
                     } catch (const module_activation_error& e) {
+                        std::cerr << "Failed to activate module '" << mod << "': " << e.what() << "\n";
                         sandbox::modules::logs::warn(ecs, "Failed to activate module '{}': {}", mod, e.what());
                     } catch (const std::exception& e) {
+                        std::cerr << "Unexpected error activating module '" << mod << "': " << e.what() << "\n";
                         sandbox::modules::logs::error(ecs, "Unexpected error activating module '{}': {}", mod, e.what());
                     }
                 }

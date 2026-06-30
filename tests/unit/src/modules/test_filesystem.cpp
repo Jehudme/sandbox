@@ -22,8 +22,8 @@ TEST_CASE("Filesystem Module", "[filesystem]") {
 
     // 1. Setup properties with mounts
     properties_t engine_props;
-    engine_props.set<std::vector<std::string>>({"engine", "libraries"}, {"./configuration.so", "./logs.so", "./filesystem.so"});
-    engine_props.set<std::vector<std::string>>({"engine", "sandbox"}, {"sandbox::core-configuration@1.0.0", "sandbox::core-logs@1.0.0", "sandbox::core-filesystem@1.0.0"});
+    engine_props.set<std::vector<std::string>>({"engine", "libraries"}, {"./core_plugin.so"});
+    engine_props.set<std::vector<std::string>>({"engine", "sandbox"}, {"sandbox-configuration@1.0.0", "sandbox-logs@1.0.0", "sandbox-filesystem@1.0.0", "sandbox-runtime@1.0.0"});
     
     // Add filesystem mount config
     engine_props.set<std::string>({"filesystem", "mounts", "test_mount", "physical"}, "./");

@@ -71,7 +71,7 @@ target_include_directories(sandbox_library
         $<INSTALL_INTERFACE:include>
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/source
-        ${CMAKE_CURRENT_SOURCE_DIR}/../modules/logs/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/../modules/core/include
 )
 
 target_link_libraries(sandbox_library PUBLIC
