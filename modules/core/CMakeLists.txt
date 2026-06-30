@@ -21,6 +21,7 @@ set(HEADERS
     include/sandbox/abi/configuration.h
     include/sandbox/abi/filesystem.h
     include/sandbox/abi/logs.h
+    include/sandbox/abi/runtime.h
     include/sandbox/sdk/configuration.hpp
     include/sandbox/sdk/filesystem.hpp
     include/sandbox/sdk/logs.hpp
