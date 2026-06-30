@@ -108,6 +108,7 @@ SANDBOX_API bool sandbox_bootstrapper_boot(sandbox_bootstrapper_t* bootstrapper,
     static sandbox_service_info_t ServiceClass##_info = ServiceClass##_info_decl; \
     \
     static void ServiceClass##_init_fn(ecs_world_t* ecs) { \
+        ecs_id(ServiceClass) = 0; \
         ECS_COMPONENT_DEFINE(ecs, ServiceClass); \
         ServiceClass inst; \
         inst.api = (api_ptr); \

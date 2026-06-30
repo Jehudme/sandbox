@@ -1,7 +1,7 @@
 #pragma once
 
 #include <sandbox/abi/logs.h>
-#include <flecs/addons/cpp/flecs.hpp>
+#include <flecs.h>
 #include <format>
 #include <string>
 #include <utility>
