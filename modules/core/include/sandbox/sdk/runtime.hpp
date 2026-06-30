@@ -4,44 +4,67 @@
 #include <flecs.h>
 
 namespace sandbox::modules {
+    /**
+     * @brief High-level C++ SDK for interacting with the runtime module.
+     */
     class runtime {
     public:
-        static void run(flecs::world& world) {
-            if (const auto* svc = SANDBOX_GET_SERVICE(world, sandbox_runtime_service_t)) {
-                if (svc->api && svc->api->run) {
-                    svc->api->run(world.c_ptr());
+        /**
+         * @brief Runs the engine loop synchronously on the current thread.
+         * @param entity_world The flecs world.
+         */
+        static void run(flecs::world& entity_world) {
+            if (const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_runtime_service_t)) {
+                if (service->api && service->api->run) {
+                    service->api->run(entity_world.c_ptr());
                 }
             }
         }
 
-        static void start(flecs::world& world) {
-            if (const auto* svc = SANDBOX_GET_SERVICE(world, sandbox_runtime_service_t)) {
-                if (svc->api && svc->api->start) {
-                    svc->api->start(world.c_ptr());
+        /**
+         * @brief Starts the engine loop asynchronously in a background thread.
+         * @param entity_world The flecs world.
+         */
+        static void start(flecs::world& entity_world) {
+            if (const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_runtime_service_t)) {
+                if (service->api && service->api->start) {
+                    service->api->start(entity_world.c_ptr());
                 }
             }
         }
 
-        static void stop(flecs::world& world) {
-            if (const auto* svc = SANDBOX_GET_SERVICE(world, sandbox_runtime_service_t)) {
-                if (svc->api && svc->api->stop) {
-                    svc->api->stop(world.c_ptr());
+        /**
+         * @brief Stops the engine loop.
+         * @param entity_world The flecs world.
+         */
+        static void stop(flecs::world& entity_world) {
+            if (const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_runtime_service_t)) {
+                if (service->api && service->api->stop) {
+                    service->api->stop(entity_world.c_ptr());
                 }
             }
         }
 
-        static void pause(flecs::world& world) {
-            if (const auto* svc = SANDBOX_GET_SERVICE(world, sandbox_runtime_service_t)) {
-                if (svc->api && svc->api->pause) {
-                    svc->api->pause(world.c_ptr());
+        /**
+         * @brief Pauses the engine loop.
+         * @param entity_world The flecs world.
+         */
+        static void pause(flecs::world& entity_world) {
+            if (const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_runtime_service_t)) {
+                if (service->api && service->api->pause) {
+                    service->api->pause(entity_world.c_ptr());
                 }
             }
         }
 
-        static void resume(flecs::world& world) {
-            if (const auto* svc = SANDBOX_GET_SERVICE(world, sandbox_runtime_service_t)) {
-                if (svc->api && svc->api->resume) {
-                    svc->api->resume(world.c_ptr());
+        /**
+         * @brief Resumes the engine loop.
+         * @param entity_world The flecs world.
+         */
+        static void resume(flecs::world& entity_world) {
+            if (const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_runtime_service_t)) {
+                if (service->api && service->api->resume) {
+                    service->api->resume(entity_world.c_ptr());
                 }
             }
         }

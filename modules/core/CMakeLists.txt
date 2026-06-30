@@ -9,7 +9,6 @@ set(SOURCES
     source/configuration/configuration.cpp
     source/filesystem/filesystem.cpp
     source/logs/logger.cpp
-    source/runtime/library.cpp
     source/runtime/runtime.cpp
 )
 

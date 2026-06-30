@@ -7,18 +7,44 @@
 #include <atomic>
 
 namespace sandbox::modules {
+    /**
+     * @brief A global module that manages the engine's runtime loop execution.
+     */
     struct runtime_t {
+        /**
+         * @brief Constructs a new runtime instance.
+         */
         runtime_t() = default;
+        /**
+         * @brief Destroys the runtime instance and joins any running threads.
+         */
         ~runtime_t();
 
-        void run(flecs::world& world);
-        void start(flecs::world& world);
+        /**
+         * @brief Runs the engine loop synchronously on the current thread.
+         * @param entity_world The flecs world.
+         */
+        void run(flecs::world& entity_world);
+        /**
+         * @brief Starts the engine loop asynchronously in a background thread.
+         * @param entity_world The flecs world.
+         */
+        void start(flecs::world& entity_world);
+        /**
+         * @brief Stops the engine loop.
+         */
         void stop();
+        /**
+         * @brief Pauses the engine loop.
+         */
         void pause();
+        /**
+         * @brief Resumes the engine loop.
+         */
         void resume();
 
     private:
-        void main_loop(flecs::world& world);
+        void main_loop(flecs::world& entity_world);
 
         std::shared_ptr<std::thread> m_thread;
         std::shared_ptr<std::mutex> m_mutex = std::make_shared<std::mutex>();
