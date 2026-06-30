@@ -10,21 +10,69 @@ namespace sandbox::core {
     using service_info_t = sandbox_service_info_t;
     using module_info_t = sandbox_module_info_t;
 
+    /**
+     * @brief Bootstrapper class responsible for staging, activating, and booting ABI modules.
+     */
     class bootstrapper_t {
 
     public:
+        /**
+         * @brief Constructs a new bootstrapper instance.
+         */
         bootstrapper_t() = default;
+
+        /**
+         * @brief Destroys the bootstrapper instance.
+         */
         ~bootstrapper_t() = default;
 
-        static void stage_service(const service_info_t& info);
-        static void stage_module(const module_info_t& info);
+        /**
+         * @brief Stages a service into the global registry.
+         * @param service_info The ABI struct containing the service information.
+         */
+        static void stage_service(const service_info_t& service_info);
+
+        /**
+         * @brief Stages a module into the global registry.
+         * @param module_info The ABI struct containing the module information.
+         */
+        static void stage_module(const module_info_t& module_info);
+
+        /**
+         * @brief Resets the global registry by clearing test and mock modules.
+         */
         static void reset();
 
-        static void index_library(flecs::world& ecs, const std::filesystem::path& library_path);
+        /**
+         * @brief Indexes a dynamic library by loading it and executing its staged constructors.
+         * @param entity_world The flecs world used for logging.
+         * @param library_path The filesystem path to the dynamic library.
+         */
+        static void index_library(flecs::world& entity_world, const std::filesystem::path& library_path);
 
-        void activate(flecs::world& ecs, std::string_view architecture, std::string_view name, int version_major, int version_minor, int version_patch = -1);
-        void activate(flecs::world& ecs, std::string_view module_str);
-        void boot(flecs::world& ecs);
+        /**
+         * @brief Activates a module by its explicit architecture, name, and version.
+         * @param entity_world The flecs world.
+         * @param architecture The module architecture (e.g. 'sandbox').
+         * @param name The module name.
+         * @param version_major The major version.
+         * @param version_minor The minor version.
+         * @param version_patch The patch version (-1 for any).
+         */
+        void activate(flecs::world& entity_world, std::string_view architecture, std::string_view name, int version_major, int version_minor, int version_patch = -1);
+
+        /**
+         * @brief Activates a module by parsing its Unified Resource Name (URN).
+         * @param entity_world The flecs world.
+         * @param module_urn The module string in the format 'architecture-name@major.minor.patch'.
+         */
+        void activate(flecs::world& entity_world, std::string_view module_urn);
+
+        /**
+         * @brief Boots all activated modules.
+         * @param entity_world The flecs world.
+         */
+        void boot(flecs::world& entity_world);
 
     private:
         std::vector<module_info_t> m_active_modules;

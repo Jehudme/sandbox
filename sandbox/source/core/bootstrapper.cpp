@@ -23,8 +23,8 @@ namespace sandbox::core {
             [](const module_info_t& m) { return std::string_view(m.architecture) != "sandbox"; }), m_modules.end());
     }
 
-    void bootstrapper_t::index_library(flecs::world& ecs, const std::filesystem::path &library_path) {
-        m_loader.load(ecs, library_path);
+    void bootstrapper_t::index_library(flecs::world& entity_world, const std::filesystem::path &library_path) {
+        m_loader.load(entity_world, library_path);
     }
 
     void bootstrapper_t::stage_service(const service_info_t& info) {
@@ -50,107 +50,107 @@ namespace sandbox::core {
         }
     }
 
-    static const module_info_t* find_best_module(std::string_view name, std::string_view arch, int v_maj, int v_min, int v_patch, bool exact_patch, const std::vector<module_info_t>& modules) {
-        const module_info_t* best = nullptr;
-        for (const auto& mod : modules) {
-            if (std::string_view(mod.name) != name) continue;
-            if (std::string_view(mod.architecture) != arch) continue;
-            if (v_maj > 0 && mod.version_major != v_maj) continue;
-            if (v_min >= 0 && mod.version_minor < v_min) continue;
-            if (exact_patch && mod.version_patch != v_patch) continue;
+    static const module_info_t* find_best_module(std::string_view name, std::string_view architecture, int version_major, int version_minor, int version_patch, bool exact_patch, const std::vector<module_info_t>& modules) {
+        const module_info_t* best_match = nullptr;
+        for (const auto& module_info : modules) {
+            if (std::string_view(module_info.name) != name) continue;
+            if (std::string_view(module_info.architecture) != architecture) continue;
+            if (version_major > 0 && module_info.version_major != version_major) continue;
+            if (version_minor >= 0 && module_info.version_minor < version_minor) continue;
+            if (exact_patch && module_info.version_patch != version_patch) continue;
             
-            if (!best) {
-                best = &mod;
+            if (!best_match) {
+                best_match = &module_info;
             } else {
-                if (mod.version_major != best->version_major) {
-                    if (mod.version_major > best->version_major) best = &mod;
-                } else if (mod.version_minor != best->version_minor) {
-                    if (mod.version_minor > best->version_minor) best = &mod;
-                } else if (mod.version_patch != best->version_patch) {
-                    if (mod.version_patch > best->version_patch) best = &mod;
-                } else if (std::string_view(mod.name) < std::string_view(best->name)) {
-                    best = &mod;
+                if (module_info.version_major != best_match->version_major) {
+                    if (module_info.version_major > best_match->version_major) best_match = &module_info;
+                } else if (module_info.version_minor != best_match->version_minor) {
+                    if (module_info.version_minor > best_match->version_minor) best_match = &module_info;
+                } else if (module_info.version_patch != best_match->version_patch) {
+                    if (module_info.version_patch > best_match->version_patch) best_match = &module_info;
+                } else if (std::string_view(module_info.name) < std::string_view(best_match->name)) {
+                    best_match = &module_info;
                 }
             }
         }
-        return best;
+        return best_match;
     }
 
-    static const module_info_t* find_best_service_provider(std::string_view srv_name, std::string_view arch, int v_maj, int v_min, const std::vector<module_info_t>& modules) {
-        const module_info_t* best = nullptr;
-        for (const auto& mod : modules) {
-            if (!mod.service) continue;
-            if (std::string_view(mod.service->name) != srv_name) continue;
-            if (std::string_view(mod.architecture) != arch) continue;
-            if (v_maj > 0 && mod.service->version_major != v_maj) continue;
-            if (v_min >= 0 && mod.service->version_minor < v_min) continue;
+    static const module_info_t* find_best_service_provider(std::string_view service_name, std::string_view architecture, int version_major, int version_minor, const std::vector<module_info_t>& modules) {
+        const module_info_t* best_match = nullptr;
+        for (const auto& module_info : modules) {
+            if (!module_info.service) continue;
+            if (std::string_view(module_info.service->name) != service_name) continue;
+            if (std::string_view(module_info.architecture) != architecture) continue;
+            if (version_major > 0 && module_info.service->version_major != version_major) continue;
+            if (version_minor >= 0 && module_info.service->version_minor < version_minor) continue;
             
-            if (!best) {
-                best = &mod;
+            if (!best_match) {
+                best_match = &module_info;
             } else {
-                if (mod.service->version_major != best->service->version_major) {
-                    if (mod.service->version_major > best->service->version_major) best = &mod;
-                } else if (mod.service->version_minor != best->service->version_minor) {
-                    if (mod.service->version_minor > best->service->version_minor) best = &mod;
-                } else if (mod.version_major != best->version_major) {
-                    if (mod.version_major > best->version_major) best = &mod;
-                } else if (mod.version_minor != best->version_minor) {
-                    if (mod.version_minor > best->version_minor) best = &mod;
-                } else if (mod.version_patch != best->version_patch) {
-                    if (mod.version_patch > best->version_patch) best = &mod;
-                } else if (std::string_view(mod.name) < std::string_view(best->name)) {
-                    best = &mod;
+                if (module_info.service->version_major != best_match->service->version_major) {
+                    if (module_info.service->version_major > best_match->service->version_major) best_match = &module_info;
+                } else if (module_info.service->version_minor != best_match->service->version_minor) {
+                    if (module_info.service->version_minor > best_match->service->version_minor) best_match = &module_info;
+                } else if (module_info.version_major != best_match->version_major) {
+                    if (module_info.version_major > best_match->version_major) best_match = &module_info;
+                } else if (module_info.version_minor != best_match->version_minor) {
+                    if (module_info.version_minor > best_match->version_minor) best_match = &module_info;
+                } else if (module_info.version_patch != best_match->version_patch) {
+                    if (module_info.version_patch > best_match->version_patch) best_match = &module_info;
+                } else if (std::string_view(module_info.name) < std::string_view(best_match->name)) {
+                    best_match = &module_info;
                 }
             }
         }
-        return best;
+        return best_match;
     }
 
-    void bootstrapper_t::activate(flecs::world& ecs, std::string_view module_str) {
-        size_t at_pos = module_str.find('@');
-        if (at_pos == std::string_view::npos) {
-            throw module_activation_error(std::format("Invalid module string format (missing @): {}", module_str));
+    void bootstrapper_t::activate(flecs::world& entity_world, std::string_view module_urn) {
+        size_t at_position = module_urn.find('@');
+        if (at_position == std::string_view::npos) {
+            throw module_activation_error(std::format("Invalid module string format (missing @): {}", module_urn));
         }
         
-        std::string_view full_name = module_str.substr(0, at_pos);
-        std::string_view version_str = module_str.substr(at_pos + 1);
+        std::string_view full_name = module_urn.substr(0, at_position);
+        std::string_view version_str = module_urn.substr(at_position + 1);
         
-        size_t dash_pos = full_name.find('-');
-        if (dash_pos == std::string_view::npos) {
-            throw module_activation_error(std::format("Invalid module string format (missing architecture-name separator): {}", module_str));
+        size_t dash_position = full_name.find('-');
+        if (dash_position == std::string_view::npos) {
+            throw module_activation_error(std::format("Invalid module string format (missing architecture-name separator): {}", module_urn));
         }
         
-        std::string_view architecture = full_name.substr(0, dash_pos);
-        std::string_view name = full_name.substr(dash_pos + 1);
+        std::string_view architecture = full_name.substr(0, dash_position);
+        std::string_view name = full_name.substr(dash_position + 1);
         
-        int v_major = 0, v_minor = 0, v_patch = -1;
+        int version_major = 0, version_minor = 0, version_patch = -1;
         
-        auto parse_int = [](std::string_view str, int default_val) {
-            if (str == "*" || str.empty()) return default_val;
-            int v = 0;
-            auto result = std::from_chars(str.data(), str.data() + str.size(), v);
+        auto parse_integer = [](std::string_view str, int default_value) {
+            if (str == "*" || str.empty()) return default_value;
+            int value = 0;
+            auto result = std::from_chars(str.data(), str.data() + str.size(), value);
             if (result.ec != std::errc()) throw module_activation_error(std::format("Invalid version number: {}", str));
-            return v;
+            return value;
         };
         
-        size_t dot1 = version_str.find('.');
-        if (dot1 != std::string_view::npos) {
-            v_major = parse_int(version_str.substr(0, dot1), 0);
-            size_t dot2 = version_str.find('.', dot1 + 1);
-            if (dot2 != std::string_view::npos) {
-                v_minor = parse_int(version_str.substr(dot1 + 1, dot2 - dot1 - 1), 0);
-                v_patch = parse_int(version_str.substr(dot2 + 1), -1);
+        size_t dot_first = version_str.find('.');
+        if (dot_first != std::string_view::npos) {
+            version_major = parse_integer(version_str.substr(0, dot_first), 0);
+            size_t dot_second = version_str.find('.', dot_first + 1);
+            if (dot_second != std::string_view::npos) {
+                version_minor = parse_integer(version_str.substr(dot_first + 1, dot_second - dot_first - 1), 0);
+                version_patch = parse_integer(version_str.substr(dot_second + 1), -1);
             } else {
-                v_minor = parse_int(version_str.substr(dot1 + 1), 0);
+                version_minor = parse_integer(version_str.substr(dot_first + 1), 0);
             }
         } else {
-            v_major = parse_int(version_str, 0);
+            version_major = parse_integer(version_str, 0);
         }
         
-        activate(ecs, architecture, name, v_major, v_minor, v_patch);
+        activate(entity_world, architecture, name, version_major, version_minor, version_patch);
     }
 
-    void bootstrapper_t::activate(flecs::world& ecs, std::string_view architecture, std::string_view name, int version_major, int version_minor, int version_patch) {
+    void bootstrapper_t::activate(flecs::world& entity_world, std::string_view architecture, std::string_view name, int version_major, int version_minor, int version_patch) {
         bool exact_patch = (version_patch >= 0);
         const module_info_t* best = find_best_module(name, architecture, version_major, version_minor, version_patch, exact_patch, m_modules);
         if (best) {
@@ -163,14 +163,14 @@ namespace sandbox::core {
             
             if (it == m_active_modules.end() && booted_it == m_booted_modules.end()) {
                 m_active_modules.push_back(*best);
-                sandbox::modules::logs::trace(ecs, "Module staged for activation: {} v{}.{} (arch: {})", name, version_major, version_minor, architecture);
+                sandbox::modules::logs::trace(entity_world, "Module staged for activation: {} v{}.{} (arch: {})", name, version_major, version_minor, architecture);
             }
         } else {
             throw module_activation_error(std::format("No matching module found to activate: {} v{}.{} (arch: {})", name, version_major, version_minor, architecture));
         }
     }
 
-    void bootstrapper_t::boot(flecs::world &ecs) {
+    void bootstrapper_t::boot(flecs::world &entity_world) {
         std::unordered_map<std::string_view, int> service_version_locks;
         
         for (const auto& booted : m_booted_modules) {
@@ -185,60 +185,60 @@ namespace sandbox::core {
             const module_info_t& current = m_active_modules[processed_index++];
             
             for (size_t i = 0; i < current.requirement_count; ++i) {
-                const auto& req = current.requirements[i];
-                if (req.strictness != SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED) continue;
+                const auto& requirement = current.requirements[i];
+                if (requirement.strictness != SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED) continue;
                 
-                if (req.kind == SANDBOX_REQUIREMENT_KIND_SERVICE) {
-                    if (req.version_major > 0) {
-                        auto lock_it = service_version_locks.find(req.name);
-                        if (lock_it != service_version_locks.end() && lock_it->second != req.version_major) {
-                            throw std::runtime_error(std::format("Fatal Major Version Collision for service: {}", req.name));
+                if (requirement.kind == SANDBOX_REQUIREMENT_KIND_SERVICE) {
+                    if (requirement.version_major > 0) {
+                        auto lock_it = service_version_locks.find(requirement.name);
+                        if (lock_it != service_version_locks.end() && lock_it->second != requirement.version_major) {
+                            throw std::runtime_error(std::format("Fatal Major Version Collision for service: {}", requirement.name));
                         }
-                        service_version_locks[req.name] = req.version_major;
+                        service_version_locks[requirement.name] = requirement.version_major;
                     }
                     
                     bool fulfilled = false;
                     for (const auto& active : m_active_modules) {
-                        if (active.service && std::string_view(active.service->name) == req.name) {
+                        if (active.service && std::string_view(active.service->name) == requirement.name) {
                             fulfilled = true; break;
                         }
                     }
                     if (!fulfilled) {
                         for (const auto& booted : m_booted_modules) {
-                            if (booted.service && std::string_view(booted.service->name) == req.name) {
+                            if (booted.service && std::string_view(booted.service->name) == requirement.name) {
                                 fulfilled = true; break;
                             }
                         }
                     }
                     if (!fulfilled) {
-                        const module_info_t* provider = find_best_service_provider(req.name, req.architecture, req.version_major, req.version_minor, m_modules);
+                        const module_info_t* provider = find_best_service_provider(requirement.name, requirement.architecture, requirement.version_major, requirement.version_minor, m_modules);
                         if (!provider) {
-                            throw module_dependency_error(std::format("Required service not found: {}", req.name));
+                            throw module_dependency_error(std::format("Required service not found: {}", requirement.name));
                         }
-                        sandbox::modules::logs::trace(ecs, "Auto-pulled provider '{}' for required service: {}", provider->name, req.name);
+                        sandbox::modules::logs::trace(entity_world, "Auto-pulled provider '{}' for required service: {}", provider->name, requirement.name);
                         m_active_modules.push_back(*provider);
                     }
-                } else if (req.kind == SANDBOX_REQUIREMENT_KIND_MODULE) {
+                } else if (requirement.kind == SANDBOX_REQUIREMENT_KIND_MODULE) {
                     bool fulfilled = false;
                     for (const auto& active : m_active_modules) {
-                        if (std::string_view(active.name) == req.name) {
+                        if (std::string_view(active.name) == requirement.name) {
                             fulfilled = true; break;
                         }
                     }
                     if (!fulfilled) {
                         for (const auto& booted : m_booted_modules) {
-                            if (std::string_view(booted.name) == req.name) {
+                            if (std::string_view(booted.name) == requirement.name) {
                                 fulfilled = true; break;
                             }
                         }
                     }
                     if (!fulfilled) {
-                        bool exact = (req.version_patch >= 0);
-                        const module_info_t* provider = find_best_module(req.name, req.architecture, req.version_major, req.version_minor, req.version_patch, exact, m_modules);
+                        bool exact = (requirement.version_patch >= 0);
+                        const module_info_t* provider = find_best_module(requirement.name, requirement.architecture, requirement.version_major, requirement.version_minor, requirement.version_patch, exact, m_modules);
                         if (!provider) {
-                            throw module_dependency_error(std::format("Required module not found: {}", req.name));
+                            throw module_dependency_error(std::format("Required module not found: {}", requirement.name));
                         }
-                        sandbox::modules::logs::trace(ecs, "Auto-pulled module '{}' to satisfy dependency for: {}", provider->name, current.name);
+                        sandbox::modules::logs::trace(entity_world, "Auto-pulled module '{}' to satisfy dependency for: {}", provider->name, current.name);
                         m_active_modules.push_back(*provider);
                     }
                 }
@@ -250,54 +250,54 @@ namespace sandbox::core {
         while (processed_index < m_active_modules.size()) {
             const module_info_t& current = m_active_modules[processed_index++];
             for (size_t i = 0; i < current.requirement_count; ++i) {
-                const auto& req = current.requirements[i];
-                if (req.strictness != SANDBOX_REQUIREMENT_STRICTNESS_EXPECTED) continue;
+                const auto& requirement = current.requirements[i];
+                if (requirement.strictness != SANDBOX_REQUIREMENT_STRICTNESS_EXPECTED) continue;
                 
-                if (req.kind == SANDBOX_REQUIREMENT_KIND_SERVICE) {
-                    if (req.version_major > 0) {
-                        auto lock_it = service_version_locks.find(req.name);
-                        if (lock_it != service_version_locks.end() && lock_it->second != req.version_major) {
-                            throw service_collision_error(std::format("Fatal Major Version Collision for service: {}", req.name));
+                if (requirement.kind == SANDBOX_REQUIREMENT_KIND_SERVICE) {
+                    if (requirement.version_major > 0) {
+                        auto lock_it = service_version_locks.find(requirement.name);
+                        if (lock_it != service_version_locks.end() && lock_it->second != requirement.version_major) {
+                            throw service_collision_error(std::format("Fatal Major Version Collision for service: {}", requirement.name));
                         }
-                        service_version_locks[req.name] = req.version_major;
+                        service_version_locks[requirement.name] = requirement.version_major;
                     }
                     
                     bool fulfilled = false;
                     for (const auto& active : m_active_modules) {
-                        if (active.service && std::string_view(active.service->name) == req.name) {
+                        if (active.service && std::string_view(active.service->name) == requirement.name) {
                             fulfilled = true; break;
                         }
                     }
                     if (!fulfilled) {
                         for (const auto& booted : m_booted_modules) {
-                            if (booted.service && std::string_view(booted.service->name) == req.name) {
+                            if (booted.service && std::string_view(booted.service->name) == requirement.name) {
                                 fulfilled = true; break;
                             }
                         }
                     }
                     if (!fulfilled) {
-                        const module_info_t* provider = find_best_service_provider(req.name, req.architecture, req.version_major, req.version_minor, m_modules);
+                        const module_info_t* provider = find_best_service_provider(requirement.name, requirement.architecture, requirement.version_major, requirement.version_minor, m_modules);
                         if (provider) {
                             m_active_modules.push_back(*provider);
                         }
                     }
-                } else if (req.kind == SANDBOX_REQUIREMENT_KIND_MODULE) {
+                } else if (requirement.kind == SANDBOX_REQUIREMENT_KIND_MODULE) {
                     bool fulfilled = false;
                     for (const auto& active : m_active_modules) {
-                        if (std::string_view(active.name) == req.name) {
+                        if (std::string_view(active.name) == requirement.name) {
                             fulfilled = true; break;
                         }
                     }
                     if (!fulfilled) {
                         for (const auto& booted : m_booted_modules) {
-                            if (std::string_view(booted.name) == req.name) {
+                            if (std::string_view(booted.name) == requirement.name) {
                                 fulfilled = true; break;
                             }
                         }
                     }
                     if (!fulfilled) {
-                        bool exact = (req.version_patch >= 0);
-                        const module_info_t* provider = find_best_module(req.name, req.architecture, req.version_major, req.version_minor, req.version_patch, exact, m_modules);
+                        bool exact = (requirement.version_patch >= 0);
+                        const module_info_t* provider = find_best_module(requirement.name, requirement.architecture, requirement.version_major, requirement.version_minor, requirement.version_patch, exact, m_modules);
                         if (provider) {
                             m_active_modules.push_back(*provider);
                         }
@@ -341,7 +341,7 @@ namespace sandbox::core {
         
         std::sort(to_evict.begin(), to_evict.end(), std::greater<size_t>());
         for (size_t idx : to_evict) {
-            sandbox::modules::logs::warn(ecs, "ECS registration suppressed for module '{}' due to service collision on '{}'", 
+            sandbox::modules::logs::warn(entity_world, "ECS registration suppressed for module '{}' due to service collision on '{}'", 
                                      m_active_modules[idx].name, m_active_modules[idx].service->name);
             m_active_modules.erase(m_active_modules.begin() + idx);
         }
@@ -353,19 +353,19 @@ namespace sandbox::core {
         for (size_t a = 0; a < m_active_modules.size(); ++a) {
             const module_info_t& mod_a = m_active_modules[a];
             for (size_t i = 0; i < mod_a.requirement_count; ++i) {
-                const auto& req = mod_a.requirements[i];
+                const auto& requirement = mod_a.requirements[i];
                 
                 size_t b = m_active_modules.size();
-                if (req.kind == SANDBOX_REQUIREMENT_KIND_SERVICE) {
+                if (requirement.kind == SANDBOX_REQUIREMENT_KIND_SERVICE) {
                     for (size_t j = 0; j < m_active_modules.size(); ++j) {
-                        if (m_active_modules[j].service && std::string_view(m_active_modules[j].service->name) == req.name) {
+                        if (m_active_modules[j].service && std::string_view(m_active_modules[j].service->name) == requirement.name) {
                             b = j;
                             break;
                         }
                     }
-                } else if (req.kind == SANDBOX_REQUIREMENT_KIND_MODULE) {
+                } else if (requirement.kind == SANDBOX_REQUIREMENT_KIND_MODULE) {
                     for (size_t j = 0; j < m_active_modules.size(); ++j) {
-                        if (std::string_view(m_active_modules[j].name) == req.name) {
+                        if (std::string_view(m_active_modules[j].name) == requirement.name) {
                             b = j;
                             break;
                         }
@@ -392,7 +392,7 @@ namespace sandbox::core {
             q.pop();
             
             if (m_active_modules[curr].init_fn) {
-                m_active_modules[curr].init_fn(ecs.c_ptr());
+                m_active_modules[curr].init_fn(entity_world.c_ptr());
             }
             m_booted_modules.push_back(m_active_modules[curr]);
             
