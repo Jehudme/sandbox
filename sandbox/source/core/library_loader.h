@@ -37,6 +37,13 @@ namespace sandbox::core {
         void load(flecs::world& entity_world, const std::filesystem::path& path);
 
         /**
+         * @brief Loads a dynamic library from memory by caching it to disk and then loading it.
+         * @param entity_world The flecs world used for logging.
+         * @param library_data The memory buffer containing the library.
+         */
+        void load_from_memory(flecs::world& entity_world, const std::vector<uint8_t>& library_data);
+
+        /**
          * @brief Explicitly unloads a library by name.
          * @param entity_world The flecs world used for logging.
          * @param library_name The name of the library to unload.

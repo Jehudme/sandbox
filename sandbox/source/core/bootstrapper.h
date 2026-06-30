@@ -74,6 +74,12 @@ namespace sandbox::core {
          */
         void boot(flecs::world& entity_world);
 
+        /**
+         * @brief Gets the global library loader instance.
+         * @return The library loader.
+         */
+        static library_loader_t& get_loader() { return m_loader; }
+
     private:
         std::vector<module_info_t> m_active_modules;
         std::vector<module_info_t> m_booted_modules;
