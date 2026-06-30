@@ -8,36 +8,53 @@
 #include <type_traits>
 
 namespace sandbox::modules {
+    /**
+     * @brief High-level C++ SDK for interacting with the configuration module.
+     */
     class configuration {
     public:
-        // C++ wrapper static method to get a temporary properties object
-        // Note: The caller should NOT hold onto this beyond the immediate scope, 
-        // as we release the handle to prevent destruction of the underlying C handle.
-        static sandbox::properties get_properties(flecs::world& world) {
-            const sandbox_configuration_service_t* svc = SANDBOX_GET_SERVICE(world, sandbox_configuration_service_t);
-            if (svc && svc->api) {
-                return sandbox::properties(svc->api->get_properties(world.c_ptr()));
+        /**
+         * @brief Retrieves a temporary properties object containing the configuration.
+         * @param entity_world The flecs world.
+         * @return The properties object representing the configuration.
+         */
+        static sandbox::properties get_properties(flecs::world& entity_world) {
+            const sandbox_configuration_service_t* service = SANDBOX_GET_SERVICE(entity_world, sandbox_configuration_service_t);
+            if (service && service->api) {
+                return sandbox::properties(service->api->get_properties(entity_world.c_ptr()));
             }
             sandbox_properties_handle_t invalid = {0};
             return sandbox::properties(invalid);
         }
 
-        // C++ SDK template to safely get configuration values
-        template <typename T>
-        static std::optional<T> get(flecs::world& world, const std::string& path) {
-            sandbox::properties temp = get_properties(world);
+        /**
+         * @brief Retrieves a configuration value at the given path.
+         * @tparam Type The expected value type.
+         * @param entity_world The flecs world.
+         * @param path The key path (e.g. "logs/level").
+         * @return An optional containing the value if found, or nullopt.
+         */
+        template <typename Type>
+        static std::optional<Type> get(flecs::world& entity_world, const std::string& path) {
+            sandbox::properties temp = get_properties(entity_world);
             if (!temp.is_valid()) return std::nullopt;
-            auto res = temp.get<T>(path);
+            auto result = temp.get<Type>(path);
             temp.release(); // Do not destroy the module's handle
-            return res;
+            return result;
         }
 
-        // C++ SDK template to safely set configuration values
-        template <typename T>
-        static void set(flecs::world& world, const std::string& path, const T& value) {
-            sandbox::properties temp = get_properties(world);
+        /**
+         * @brief Sets a configuration value at the given path.
+         * @tparam Type The value type.
+         * @param entity_world The flecs world.
+         * @param path The key path.
+         * @param value The value to set.
+         */
+        template <typename Type>
+        static void set(flecs::world& entity_world, const std::string& path, const Type& value) {
+            sandbox::properties temp = get_properties(entity_world);
             if (!temp.is_valid()) return;
-            temp.set<T>(path, value);
+            temp.set<Type>(path, value);
             temp.release();
         }
     };
