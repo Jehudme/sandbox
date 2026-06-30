@@ -23,6 +23,7 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/richgel999/miniz.git
     GIT_TAG 3.0.2
     GIT_SHALLOW TRUE
+    PATCH_COMMAND sed -i "s/cmake_minimum_required(VERSION 3.0)/cmake_minimum_required(VERSION 3.5)/g" CMakeLists.txt
 )
 FetchContent_MakeAvailable(miniz)
 
