@@ -13,31 +13,31 @@
 
 namespace sandbox::modules {
 
-    logger::logger(flecs::world& world) {
+    logger_t::logger_t(flecs::world& entity_world) {
         // ==========================================
         // 1. FETCH ALL CONFIGURATION ARGUMENTS
         // ==========================================
 
         // General
-        std::optional<std::string> name_opt         = configuration::get<std::string>(world, "logs/name");
-        std::optional<std::string> level_opt        = configuration::get<std::string>(world, "logs/level");
-        std::optional<std::string> flush_level_opt  = configuration::get<std::string>(world, "logs/flush_level");
-        std::optional<std::string> pattern_opt      = configuration::get<std::string>(world, "logs/pattern");
+        std::optional<std::string> name_opt         = configuration::get<std::string>(entity_world, "logs/name");
+        std::optional<std::string> level_opt        = configuration::get<std::string>(entity_world, "logs/level");
+        std::optional<std::string> flush_level_opt  = configuration::get<std::string>(entity_world, "logs/flush_level");
+        std::optional<std::string> pattern_opt      = configuration::get<std::string>(entity_world, "logs/pattern");
 
         // Console Sink
-        std::optional<bool> console_opt             = configuration::get<bool>(world, "logs/console/enabled");
+        std::optional<bool> console_opt             = configuration::get<bool>(entity_world, "logs/console/enabled");
 
         // File Sink
-        std::optional<std::string> file_opt         = configuration::get<std::string>(world, "logs/file/path");
-        std::optional<bool> truncate_opt            = configuration::get<bool>(world, "logs/file/truncate");
-        std::optional<bool> rotating_opt            = configuration::get<bool>(world, "logs/file/rotating");
-        std::optional<int64_t> max_size_opt         = configuration::get<int64_t>(world, "logs/file/max_size");
-        std::optional<int64_t> max_files_opt        = configuration::get<int64_t>(world, "logs/file/max_files");
+        std::optional<std::string> file_opt         = configuration::get<std::string>(entity_world, "logs/file/path");
+        std::optional<bool> truncate_opt            = configuration::get<bool>(entity_world, "logs/file/truncate");
+        std::optional<bool> rotating_opt            = configuration::get<bool>(entity_world, "logs/file/rotating");
+        std::optional<int64_t> max_size_opt         = configuration::get<int64_t>(entity_world, "logs/file/max_size");
+        std::optional<int64_t> max_files_opt        = configuration::get<int64_t>(entity_world, "logs/file/max_files");
 
         // Async Configuration
-        std::optional<bool> async_opt               = configuration::get<bool>(world, "logs/async/enabled");
-        std::optional<int64_t> queue_size_opt       = configuration::get<int64_t>(world, "logs/async/queue_size");
-        std::optional<int64_t> thread_count_opt     = configuration::get<int64_t>(world, "logs/async/thread_count");
+        std::optional<bool> async_opt               = configuration::get<bool>(entity_world, "logs/async/enabled");
+        std::optional<int64_t> queue_size_opt       = configuration::get<int64_t>(entity_world, "logs/async/queue_size");
+        std::optional<int64_t> thread_count_opt     = configuration::get<int64_t>(entity_world, "logs/async/thread_count");
 
         // ==========================================
         // 2. CONSTRUCT SINKS
@@ -114,26 +114,106 @@ namespace sandbox::modules {
         m_logger->flush_on(flush_lvl);
     }
 
-    logger::~logger() {
+    logger_t::~logger_t() {
         if (m_logger) {
             m_logger->flush();
         }
     }
 
-    void logger::log(level lvl, const char* message) {
+    void logger_t::log(level_t log_level, const char* message) {
         if (!m_logger) return;
 
-        spdlog::level::level_enum spd_lvl;
-        switch (lvl) {
-            case level::TRACE: spd_lvl = spdlog::level::trace; break;
-            case level::DEBUG: spd_lvl = spdlog::level::debug; break;
-            case level::INFO:  spd_lvl = spdlog::level::info;  break;
-            case level::WARN:  spd_lvl = spdlog::level::warn;  break;
-            case level::ERROR: spd_lvl = spdlog::level::err;   break;
-            default:           spd_lvl = spdlog::level::info;  break;
+        spdlog::level::level_enum spdlog_level;
+        switch (log_level) {
+            case level_t::TRACE: spdlog_level = spdlog::level::trace; break;
+            case level_t::DEBUG: spdlog_level = spdlog::level::debug; break;
+            case level_t::INFO:  spdlog_level = spdlog::level::info;  break;
+            case level_t::WARN:  spdlog_level = spdlog::level::warn;  break;
+            case level_t::ERROR: spdlog_level = spdlog::level::err;   break;
+            default:             spdlog_level = spdlog::level::info;  break;
         }
 
-        m_logger->log(spd_lvl, message);
+        m_logger->log(spdlog_level, message);
     }
 
+}
+
+// ==========================================
+// C-ABI Endpoints
+// ==========================================
+#include <sandbox/abi/logs.h>
+
+// Forward declaration
+namespace sandbox::modules {
+    struct logs_module_t;
+}
+typedef sandbox::modules::logs_module_t sandbox_logs_module_t;
+
+// API Implementations
+static void logs_trace(ecs_world_t* entity_world, const char* msg);
+static void logs_debug(ecs_world_t* entity_world, const char* msg);
+static void logs_info(ecs_world_t* entity_world, const char* msg);
+static void logs_warn(ecs_world_t* entity_world, const char* msg);
+static void logs_error(ecs_world_t* entity_world, const char* msg);
+
+sandbox_logs_api_t g_logs_api = {
+    .trace = logs_trace,
+    .debug = logs_debug,
+    .info = logs_info,
+    .warn = logs_warn,
+    .error = logs_error
+};
+
+SANDBOX_DEFINE_SERVICE(sandbox_logs_service_t, sandbox_logs_api_t, &g_logs_api)
+
+static void logs_trace(ecs_world_t* entity_world, const char* msg) {
+    flecs::world flecs_world(entity_world);
+    auto* log = flecs_world.try_get_mut<sandbox::modules::logger_t>();
+    if (log) log->log(sandbox::modules::logger_t::level_t::TRACE, msg);
+}
+static void logs_debug(ecs_world_t* entity_world, const char* msg) {
+    flecs::world flecs_world(entity_world);
+    auto* log = flecs_world.try_get_mut<sandbox::modules::logger_t>();
+    if (log) log->log(sandbox::modules::logger_t::level_t::DEBUG, msg);
+}
+static void logs_info(ecs_world_t* entity_world, const char* msg) {
+    flecs::world flecs_world(entity_world);
+    auto* log = flecs_world.try_get_mut<sandbox::modules::logger_t>();
+    if (log) log->log(sandbox::modules::logger_t::level_t::INFO, msg);
+}
+static void logs_warn(ecs_world_t* entity_world, const char* msg) {
+    flecs::world flecs_world(entity_world);
+    auto* log = flecs_world.try_get_mut<sandbox::modules::logger_t>();
+    if (log) log->log(sandbox::modules::logger_t::level_t::WARN, msg);
+}
+static void logs_error(ecs_world_t* entity_world, const char* msg) {
+    flecs::world flecs_world(entity_world);
+    auto* log = flecs_world.try_get_mut<sandbox::modules::logger_t>();
+    if (log) log->log(sandbox::modules::logger_t::level_t::ERROR, msg);
+}
+
+static sandbox_requirement_info_t logs_requirements[] = {
+    {
+        .kind = SANDBOX_REQUIREMENT_KIND_SERVICE,
+        .strictness = SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED,
+        .name = "configuration",
+        .architecture = "sandbox",
+        .version_major = 1,
+        .version_minor = 0,
+        .version_patch = -1
+    }
+};
+
+namespace sandbox::modules {
+    SANDBOX_DECLARE_MODULE(logger_t, {
+    .name = "logs",
+    .description = "Global logging module",
+    .architecture = "sandbox",
+    .version_major = 1,
+    .version_minor = 0,
+    .version_patch = 0,
+    .service = &sandbox_logs_service_t_info,
+    .requirements = logs_requirements,
+    .requirement_count = 1
+})
 }

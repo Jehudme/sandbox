@@ -7,54 +7,92 @@
 #include <utility>
 
 namespace sandbox::modules {
+    /**
+     * @brief High-level C++ SDK for interacting with the logging module.
+     */
     class logs {
     public:
+        /**
+         * @brief Logs a trace message.
+         * @tparam Args Format argument types.
+         * @param entity_world The flecs world.
+         * @param fmt The format string.
+         * @param args The format arguments.
+         */
         template <typename... Args>
-        static void trace(flecs::world& world, std::format_string<Args...> fmt, Args&&... args) {
-            if (const auto* svc = SANDBOX_GET_SERVICE(world, sandbox_logs_service_t)) {
-                if (svc->api) {
-                    std::string msg = std::format(fmt, std::forward<Args>(args)...);
-                    svc->api->trace(world.c_ptr(), msg.c_str());
+        static void trace(flecs::world& entity_world, std::format_string<Args...> fmt, Args&&... args) {
+            if (const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_logs_service_t)) {
+                if (service->api) {
+                    std::string message = std::format(fmt, std::forward<Args>(args)...);
+                    service->api->trace(entity_world.c_ptr(), message.c_str());
                 }
             }
         }
 
+        /**
+         * @brief Logs a debug message.
+         * @tparam Args Format argument types.
+         * @param entity_world The flecs world.
+         * @param fmt The format string.
+         * @param args The format arguments.
+         */
         template <typename... Args>
-        static void debug(flecs::world& world, std::format_string<Args...> fmt, Args&&... args) {
-            if (const auto* svc = SANDBOX_GET_SERVICE(world, sandbox_logs_service_t)) {
-                if (svc->api) {
-                    std::string msg = std::format(fmt, std::forward<Args>(args)...);
-                    svc->api->debug(world.c_ptr(), msg.c_str());
+        static void debug(flecs::world& entity_world, std::format_string<Args...> fmt, Args&&... args) {
+            if (const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_logs_service_t)) {
+                if (service->api) {
+                    std::string message = std::format(fmt, std::forward<Args>(args)...);
+                    service->api->debug(entity_world.c_ptr(), message.c_str());
                 }
             }
         }
 
+        /**
+         * @brief Logs an informational message.
+         * @tparam Args Format argument types.
+         * @param entity_world The flecs world.
+         * @param fmt The format string.
+         * @param args The format arguments.
+         */
         template <typename... Args>
-        static void info(flecs::world& world, std::format_string<Args...> fmt, Args&&... args) {
-            if (const auto* svc = SANDBOX_GET_SERVICE(world, sandbox_logs_service_t)) {
-                if (svc->api) {
-                    std::string msg = std::format(fmt, std::forward<Args>(args)...);
-                    svc->api->info(world.c_ptr(), msg.c_str());
+        static void info(flecs::world& entity_world, std::format_string<Args...> fmt, Args&&... args) {
+            if (const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_logs_service_t)) {
+                if (service->api) {
+                    std::string message = std::format(fmt, std::forward<Args>(args)...);
+                    service->api->info(entity_world.c_ptr(), message.c_str());
                 }
             }
         }
 
+        /**
+         * @brief Logs a warning message.
+         * @tparam Args Format argument types.
+         * @param entity_world The flecs world.
+         * @param fmt The format string.
+         * @param args The format arguments.
+         */
         template <typename... Args>
-        static void warn(flecs::world& world, std::format_string<Args...> fmt, Args&&... args) {
-            if (const auto* svc = SANDBOX_GET_SERVICE(world, sandbox_logs_service_t)) {
-                if (svc->api) {
-                    std::string msg = std::format(fmt, std::forward<Args>(args)...);
-                    svc->api->warn(world.c_ptr(), msg.c_str());
+        static void warn(flecs::world& entity_world, std::format_string<Args...> fmt, Args&&... args) {
+            if (const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_logs_service_t)) {
+                if (service->api) {
+                    std::string message = std::format(fmt, std::forward<Args>(args)...);
+                    service->api->warn(entity_world.c_ptr(), message.c_str());
                 }
             }
         }
 
+        /**
+         * @brief Logs an error message.
+         * @tparam Args Format argument types.
+         * @param entity_world The flecs world.
+         * @param fmt The format string.
+         * @param args The format arguments.
+         */
         template <typename... Args>
-        static void error(flecs::world& world, std::format_string<Args...> fmt, Args&&... args) {
-            if (const auto* svc = SANDBOX_GET_SERVICE(world, sandbox_logs_service_t)) {
-                if (svc->api) {
-                    std::string msg = std::format(fmt, std::forward<Args>(args)...);
-                    svc->api->error(world.c_ptr(), msg.c_str());
+        static void error(flecs::world& entity_world, std::format_string<Args...> fmt, Args&&... args) {
+            if (const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_logs_service_t)) {
+                if (service->api) {
+                    std::string message = std::format(fmt, std::forward<Args>(args)...);
+                    service->api->error(entity_world.c_ptr(), message.c_str());
                 }
             }
         }

@@ -9,9 +9,15 @@ namespace spdlog {
 }
 
 namespace sandbox::modules {
-    class logger {
+    /**
+     * @brief A global logger module that wraps spdlog and stores its state in the flecs world.
+     */
+    class logger_t {
     public:
-        enum class level : uint8_t {
+        /**
+         * @brief Defines the severity level of a log message.
+         */
+        enum class level_t : uint8_t {
             TRACE,
             DEBUG,
             INFO,
@@ -19,18 +25,31 @@ namespace sandbox::modules {
             ERROR
         };
 
-        logger(flecs::world& world);
-        ~logger();
+        /**
+         * @brief Constructs a new logger and initializes it from the configuration.
+         * @param entity_world The flecs world used to query configuration properties.
+         */
+        logger_t(flecs::world& entity_world);
+
+        /**
+         * @brief Destroys the logger instance.
+         */
+        ~logger_t();
 
         // Make logger move-constructible so it can be stored directly in Flecs
-        logger(logger&&) = default;
-        logger& operator=(logger&&) = default;
+        logger_t(logger_t&&) = default;
+        logger_t& operator=(logger_t&&) = default;
 
         // Prevent copying
-        logger(const logger&) = delete;
-        logger& operator=(const logger&) = delete;
+        logger_t(const logger_t&) = delete;
+        logger_t& operator=(const logger_t&) = delete;
 
-        void log(level level, const char* message);
+        /**
+         * @brief Submits a log message at the specified severity level.
+         * @param log_level The severity level.
+         * @param message The log message payload.
+         */
+        void log(level_t log_level, const char* message);
 
     private:
         std::unique_ptr<spdlog::logger> m_logger;
