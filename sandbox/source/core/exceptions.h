@@ -35,4 +35,9 @@ namespace sandbox::core {
         explicit property_format_error(const std::string& msg) : sandbox_error(msg) {}
     };
 
+    class filesystem_error : public sandbox_error {
+    public:
+        explicit filesystem_error(const std::string& msg) : sandbox_error(msg) {}
+    };
+
 }
