@@ -31,62 +31,35 @@ TEST_CASE("CLI Parser Suite: Configuration Projects", "[cli_parser][config][suit
         std::string config_arg = p1.string();
         std::vector<const char*> args = {"sandbox_launcher", "--config", config_arg.c_str()};
         
-        sandbox_properties_handle_t props = sandbox::launcher::parse_cli(args.size(), const_cast<char**>(args.data()));
-        REQUIRE(!(!SANDBOX_HANDLE_IS_VALID(props)));
+        auto props = sandbox::launcher::parse_cli(args.size(), const_cast<char**>(args.data()));
+        REQUIRE(props.has_value());
 
-
-
-        // Let's use a struct to be perfectly safe across C API
-        struct flags { bool l; bool m; } f = {false, false};
-        sandbox_properties_keys(props, "engine", [](const char* k, void* ctx) {
-            auto* p = static_cast<flags*>(ctx);
-            if (std::string(k) == "libraries") p->l = true;
-            if (std::string(k) == "sandbox") p->m = true;
-        }, &f);
-
-        REQUIRE(f.l == true);
-        REQUIRE(f.m == true);
-        
-        sandbox_properties_destroy(&props);
+        auto keys = props->keys("engine");
+        REQUIRE(std::find(keys.begin(), keys.end(), "libraries") != keys.end());
+        REQUIRE(std::find(keys.begin(), keys.end(), "sandbox") != keys.end());
     }
     
     SECTION("Loads dummy project 2 correctly and merges with CLI args") {
         std::string config_arg = p2.string();
         std::vector<const char*> args = {"sandbox_launcher", "--config", config_arg.c_str(), "-l", "cli_plugin.so"};
         
-        sandbox_properties_handle_t props = sandbox::launcher::parse_cli(args.size(), const_cast<char**>(args.data()));
-        REQUIRE(!(!SANDBOX_HANDLE_IS_VALID(props)));
+        auto props = sandbox::launcher::parse_cli(args.size(), const_cast<char**>(args.data()));
+        REQUIRE(props.has_value());
 
-        struct flags { bool l; bool m; } f = {false, false};
-        sandbox_properties_keys(props, "engine", [](const char* k, void* ctx) {
-            auto* p = static_cast<flags*>(ctx);
-            if (std::string(k) == "libraries") p->l = true;
-            if (std::string(k) == "sandbox") p->m = true;
-        }, &f);
-
-        REQUIRE(f.l == true);
-        REQUIRE(f.m == true);
-        
-        sandbox_properties_destroy(&props);
+        auto keys = props->keys("engine");
+        REQUIRE(std::find(keys.begin(), keys.end(), "libraries") != keys.end());
+        REQUIRE(std::find(keys.begin(), keys.end(), "sandbox") != keys.end());
     }
 
     SECTION("Parses CLI arguments directly without config") {
         std::vector<const char*> args = {"sandbox_launcher", "-l", "dummy.so", "-m", "test-mod@1.0.0"};
         
-        sandbox_properties_handle_t props = sandbox::launcher::parse_cli(args.size(), const_cast<char**>(args.data()));
-        REQUIRE(!(!SANDBOX_HANDLE_IS_VALID(props)));
+        auto props = sandbox::launcher::parse_cli(args.size(), const_cast<char**>(args.data()));
+        REQUIRE(props.has_value());
 
-        struct flags { bool l; bool m; } f = {false, false};
-        sandbox_properties_keys(props, "engine", [](const char* k, void* ctx) {
-            auto* p = static_cast<flags*>(ctx);
-            if (std::string(k) == "libraries") p->l = true;
-            if (std::string(k) == "sandbox") p->m = true;
-        }, &f);
-
-        REQUIRE(f.l == true);
-        REQUIRE(f.m == true);
-        
-        sandbox_properties_destroy(&props);
+        auto keys = props->keys("engine");
+        REQUIRE(std::find(keys.begin(), keys.end(), "libraries") != keys.end());
+        REQUIRE(std::find(keys.begin(), keys.end(), "sandbox") != keys.end());
     }
 
     fs::remove(p1);

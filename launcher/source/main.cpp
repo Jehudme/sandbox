@@ -1,26 +1,35 @@
 #include "cli/cli_parser.h"
-#include "../../sandbox/include/sandbox/abi/engine.h"
+#include <sandbox/sdk/engine.hpp>
 #include <iostream>
+#include <exception>
 
 int main(int argc, char* argv[]) {
-    sandbox_properties_handle_t props = sandbox::launcher::parse_cli(argc, argv);
-    if ((!SANDBOX_HANDLE_IS_VALID(props))) {
-        return 1; // CLI parsing failed or requested exit (e.g. --help)
-    }
+    try {
+        std::optional<sandbox::properties> props = sandbox::launcher::parse_cli(argc, argv);
+        
+        // If parsing failed or exit requested (e.g., --help), props will be nullopt
+        if (!props) {
+            return 1;
+        }
 
-    sandbox_engine_t* engine = sandbox_engine_create();
-    
-    if (!sandbox_engine_initialize(engine, props)) {
-        std::cerr << "Failed to initialize engine.\n";
-        sandbox_properties_destroy(&props);
-        sandbox_engine_destroy(engine);
+        sandbox::engine engine;
+        
+        if (!engine.initialize(*props)) {
+            std::cerr << "[Launcher] Failed to initialize engine.\n";
+            return 1;
+        }
+        
+        std::cout << "[Launcher] Engine initialized successfully!\n";
+        
+        // The engine and its properties will be safely cleaned up 
+        // when the objects go out of scope.
+        return 0;
+        
+    } catch (const std::exception& e) {
+        std::cerr << "[Launcher] Fatal error: " << e.what() << "\n";
+        return 1;
+    } catch (...) {
+        std::cerr << "[Launcher] Fatal error: Unknown exception occurred.\n";
         return 1;
     }
-    
-    std::cout << "Engine initialized successfully!\n";
-    
-    sandbox_properties_destroy(&props);
-    sandbox_engine_destroy(engine);
-    
-    return 0;
 }
