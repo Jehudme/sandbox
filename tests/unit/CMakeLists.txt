@@ -32,7 +32,6 @@ set(SANDBOX_UNIT_TEST_SOURCES
     src/modules/test_logs.cpp
     src/modules/test_runtime.cpp
     src/modules/test_filesystem.cpp
-    src/modules/test_events.cpp
     ../../launcher/source/cli/cli_parser.cpp
 )
 
@@ -56,11 +55,10 @@ target_include_directories(sandbox_unit_tests
         ${CMAKE_CURRENT_SOURCE_DIR}/../../modules/logs/include
         ${CMAKE_CURRENT_SOURCE_DIR}/../../modules/runtime/include
         ${CMAKE_CURRENT_SOURCE_DIR}/../../modules/filesystem/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/../../modules/events/include
 )
 
 # Ensure the shared libraries are built before the test executable
-add_dependencies(sandbox_unit_tests dummy_plugin configuration logs runtime filesystem events)
+add_dependencies(sandbox_unit_tests dummy_plugin configuration logs runtime filesystem)
 
 # Register tests with CTest
 catch_discover_tests(sandbox_unit_tests)
