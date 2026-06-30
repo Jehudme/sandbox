@@ -3,8 +3,8 @@
 //
 // The "success" path requires a real shared library on disk.
 // The dummy_plugin target (tests/dummy_plugin/) is built alongside these tests
-// and placed in the same bin/ directory as the test executable.
-// We locate it at runtime via the executable's own directory.
+// and placed in the same bin/ include as the test executable.
+// We locate it at runtime via the executable's own include.
 
 #include <catch2/catch_all.hpp>
 #include "core/library_loader.h"

@@ -19,8 +19,7 @@ SANDBOX_DECLARE_SERVICE(sandbox_events_service_t, sandbox_events_api_t, {
     .description = "Global event pub/sub module",
     .architecture = "sandbox::core",
     .version_major = 1,
-    .version_minor = 0,
-    .init_fn = NULL
+    .version_minor = 0
 });
 
 #ifdef __cplusplus

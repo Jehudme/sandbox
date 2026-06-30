@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 project(dummy_plugin LANGUAGES CXX)
 
 # Build a minimal shared library used by library_loader tests.
-# Output ends up in the same bin/ directory as the test executables so tests
+# Output ends up in the same bin/ include as the test executables so tests
 # can reference it via a relative path from the executable location.
 add_library(dummy_plugin SHARED source/library.cpp)
 

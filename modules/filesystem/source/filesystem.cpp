@@ -55,7 +55,7 @@ namespace sandbox::modules {
             
             mz_zip_reader_end(&zip_archive);
         } else {
-            sandbox::modules::logs::info(m_ecs, "Mounting physical directory '{}' to '{}' (readonly: {})", physical_path, virtual_mount_point, read_only);
+            sandbox::modules::logs::info(m_ecs, "Mounting physical include '{}' to '{}' (readonly: {})", physical_path, virtual_mount_point, read_only);
         }
 
         m_physical_mounts[virtual_mount_point] = physical_path;

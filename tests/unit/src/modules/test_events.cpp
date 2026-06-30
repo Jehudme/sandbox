@@ -27,23 +27,19 @@ TEST_CASE("Events Module", "[events]") {
 
     flecs::world& world = engine.ecs;
 
-    // Use SDK
-    sandbox::modules::events evt(world);
-
     int received_damage = 0;
     
-    // Subscribe
-    flecs::entity sub = evt.subscribe(world.component<TestDamageEvent>().id(), [](const void* event_data, void* user_data) {
-        const auto* e = static_cast<const TestDamageEvent*>(event_data);
+    // Subscribe using the clean C++ SDK
+    flecs::entity sub = events::subscribe<TestDamageEvent>(world, [](const TestDamageEvent* e, void* user_data) {
         int* out = static_cast<int*>(user_data);
         *out = e->damage;
     }, &received_damage);
     
     REQUIRE(sub.is_valid());
 
-    // Publish
+    // Publish using the clean C++ SDK
     TestDamageEvent damage = {42};
-    evt.publish(world.component<TestDamageEvent>().id(), &damage);
+    events::publish(world, &damage);
     
     REQUIRE(received_damage == 42);
     
@@ -52,7 +48,7 @@ TEST_CASE("Events Module", "[events]") {
     
     // Publish again, shouldn't receive
     TestDamageEvent damage2 = {100};
-    evt.publish(world.component<TestDamageEvent>().id(), &damage2);
+    events::publish(world, &damage2);
     
     REQUIRE(received_damage == 42);
 
