@@ -233,4 +233,4 @@ namespace sandbox::modules {
         std::unordered_map<std::string, std::string> m_physical_mounts;
     };
 
-} // namespace sandbox::modules
+} // namespace sandbox::plugins

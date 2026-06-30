@@ -14,11 +14,13 @@ set(SANDBOX_SUITE_TEST_SOURCES
 # EXECUTABLE
 # =============================================================================
 add_executable(sandbox_suite_tests ${SANDBOX_SUITE_TEST_SOURCES})
+set_target_properties(sandbox_suite_tests PROPERTIES ENABLE_EXPORTS ON)
 
 target_link_libraries(sandbox_suite_tests
     PRIVATE
         sandbox::library
         Catch2::Catch2WithMain
+        -Wl,--whole-archive $<TARGET_FILE:flecs_static> -Wl,--no-whole-archive
 )
 
 target_include_directories(sandbox_suite_tests

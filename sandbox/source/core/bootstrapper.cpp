@@ -15,7 +15,7 @@ namespace sandbox::core {
 
 
     void bootstrapper_t::reset() {
-        // We only clear mock/test modules from the registry. Real modules (arch "sandbox") 
+        // We only clear mock/test plugins from the registry. Real plugins (arch "sandbox")
         // loaded via .so files cannot be safely unloaded and re-staged in the same process
         // since dlclose is merely a hint and global constructors won't re-run.
         m_services.erase(std::remove_if(m_services.begin(), m_services.end(), 

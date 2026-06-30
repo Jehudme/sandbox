@@ -12,12 +12,17 @@ FetchContent_MakeAvailable(cli11)
 
 add_executable(sandbox_launcher source/main.cpp
         source/cli/cli_parser.cpp
-        source/cli/cli_parser.h)
+        source/cli/cli_parser.h
+        source/application/application.cpp
+        source/application/application.h)
 add_executable(sandbox::launcher ALIAS sandbox_launcher)
+
+set_target_properties(sandbox_launcher PROPERTIES ENABLE_EXPORTS ON)
 
 target_link_libraries(sandbox_launcher PRIVATE
         sandbox::library
         CLI11::CLI11
+        -Wl,--whole-archive $<TARGET_FILE:flecs_static> -Wl,--no-whole-archive
 )
 
 target_precompile_headers(sandbox_launcher PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_SOURCE_DIR}/sandbox/source/pch.h>")

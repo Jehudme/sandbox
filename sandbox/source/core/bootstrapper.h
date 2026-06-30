@@ -11,7 +11,7 @@ namespace sandbox::core {
     using module_info_t = sandbox_module_info_t;
 
     /**
-     * @brief Bootstrapper class responsible for staging, activating, and booting ABI modules.
+     * @brief Bootstrapper class responsible for staging, activating, and booting ABI plugins.
      */
     class bootstrapper_t {
 
@@ -39,7 +39,7 @@ namespace sandbox::core {
         static void stage_module(const module_info_t& module_info);
 
         /**
-         * @brief Resets the global registry by clearing test and mock modules.
+         * @brief Resets the global registry by clearing test and mock plugins.
          */
         static void reset();
 
@@ -69,7 +69,7 @@ namespace sandbox::core {
         void activate(flecs::world& entity_world, std::string_view module_urn);
 
         /**
-         * @brief Boots all activated modules.
+         * @brief Boots all activated plugins.
          * @param entity_world The flecs world.
          */
         void boot(flecs::world& entity_world);

@@ -32,12 +32,12 @@ namespace sandbox::core {
 
     private:
         /**
-         * @brief Saves the bootstrapper into the entity world for modules to access.
+         * @brief Saves the bootstrapper into the entity world for plugins to access.
          */
         void save_bootstrapper();
 
         /**
-         * @brief Boots the engine by indexing libraries and activating modules.
+         * @brief Boots the engine by indexing libraries and activating plugins.
          */
         void boot();
 

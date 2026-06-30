@@ -22,7 +22,7 @@ TEST_CASE("Logs module end-to-end", "[logs][module]") {
     engine_props.set<std::string>({"logs", "file", "path"}, "test_log_output.txt");
     engine_props.set<bool>({"logs", "file", "truncate"}, true);
     
-    // Tell engine to load our modules dynamically
+    // Tell engine to load our plugins dynamically
     std::vector<std::string> libs = {"./core_plugin.so"};
     std::vector<std::string> mods = {"sandbox-configuration@1.0.0", "sandbox-logs@1.0.0"};
     engine_props.set<std::vector<std::string>>({"engine", "libraries"}, libs);

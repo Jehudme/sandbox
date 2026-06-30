@@ -12,6 +12,8 @@ namespace sandbox {
         properties();
         ~properties();
 
+        properties(std::string& content, Format format = Format::JSON);
+
         properties(const properties&) = delete;
         properties& operator=(const properties&) = delete;
 

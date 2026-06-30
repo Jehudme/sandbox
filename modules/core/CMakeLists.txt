@@ -32,12 +32,15 @@ set(HEADERS
 add_library(core_plugin MODULE ${SOURCES} ${HEADERS})
 set_target_properties(core_plugin PROPERTIES
     PREFIX ""
+    CXX_VISIBILITY_PRESET hidden
+    VISIBILITY_INLINES_HIDDEN ON
 )
 
 # Includes
 target_include_directories(core_plugin PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/source
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/sandbox/include
 )
 
 target_include_directories(core_plugin PUBLIC
@@ -65,7 +68,7 @@ FetchContent_MakeAvailable(miniz)
 
 # Link against core engine and deps
 target_link_libraries(core_plugin PRIVATE 
-    sandbox::library
+    flecs_headers
     spdlog::spdlog
     miniz
 )

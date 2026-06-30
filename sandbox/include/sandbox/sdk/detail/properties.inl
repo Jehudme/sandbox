@@ -12,6 +12,10 @@ namespace sandbox {
         sandbox_properties_destroy(&m_handle);
     }
 
+    inline properties::properties(std::string &content, Format format) {
+        load(content, format);
+    }
+
     inline properties::properties(properties&& other) noexcept : m_handle(other.m_handle) {
         other.m_handle.token = 0;
     }

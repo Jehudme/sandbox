@@ -92,7 +92,7 @@ SANDBOX_API bool sandbox_stage_service(const sandbox_service_info_t* info);
 SANDBOX_API bool sandbox_stage_module(const sandbox_module_info_t* info);
 
 /**
- * @brief Indexes a dynamic library for modules.
+ * @brief Indexes a dynamic library for plugins.
  * @param ecs The entity component system world.
  * @param library_path The path to the library.
  */
@@ -138,7 +138,7 @@ SANDBOX_API bool sandbox_bootstrapper_activate(sandbox_bootstrapper_t* bootstrap
  */
 SANDBOX_API bool sandbox_bootstrapper_activate_string(sandbox_bootstrapper_t* bootstrapper, ecs_world_t* ecs, const char* module_str);
 /**
- * @brief Boots all activated modules.
+ * @brief Boots all activated plugins.
  * @param bootstrapper The bootstrapper instance.
  * @param ecs The entity component system world.
  * @return True on success.
