@@ -28,7 +28,7 @@ TEST_CASE("Configuration module initializes and provides SDK access", "[configur
     engine_t engine;
     engine.initialize(engine_props);
 
-    flecs::world& world = engine.ecs;
+    flecs::world& world = engine.entity_world;
     
     // Wait, by the time boot() completes, the configuration module has loaded its Flecs C++ module,
     // picked up the handle from Flecs, and initialized itself!

@@ -36,7 +36,7 @@ bool sandbox_engine_initialize(sandbox_engine_t* engine, sandbox_properties_hand
 void* sandbox_engine_get_ecs(sandbox_engine_t* engine) {
     if (!engine) return nullptr;
     auto* e = reinterpret_cast<sandbox::core::engine_t*>(engine);
-    return e->ecs.c_ptr();
+    return e->entity_world.c_ptr();
 }
 
 }

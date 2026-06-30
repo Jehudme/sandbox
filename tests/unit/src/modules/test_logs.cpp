@@ -33,7 +33,7 @@ TEST_CASE("Logs module end-to-end", "[logs][module]") {
         engine_t engine;
         engine.initialize(engine_props);
 
-        flecs::world& world = engine.ecs;
+        flecs::world& world = engine.entity_world;
         
         // 3. Test SDK logs
         logs::trace(world, "Test trace message");

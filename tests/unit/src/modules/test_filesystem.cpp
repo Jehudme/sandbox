@@ -33,7 +33,7 @@ TEST_CASE("Filesystem Module", "[filesystem]") {
     engine_t engine;
     REQUIRE_NOTHROW(engine.initialize(engine_props));
 
-    flecs::world& world = engine.ecs;
+    flecs::world& world = engine.entity_world;
 
     // 3. Retrieve service and manually call mount to test API
     const sandbox_filesystem_service_t* svc = SANDBOX_GET_SERVICE(world, sandbox_filesystem_service_t);

@@ -16,7 +16,7 @@ TEST_CASE("Engine Bootstrapper C API", "[engine][bootstrapper]") {
     engine_t engine;
     engine.initialize(props);
     
-    ecs_world_t* ecs = engine.ecs.c_ptr();
+    ecs_world_t* ecs = engine.entity_world.c_ptr();
 
     SECTION("sandbox_get_bootstrapper returns valid pointer") {
         sandbox_bootstrapper_t* b = sandbox_get_bootstrapper(ecs);
