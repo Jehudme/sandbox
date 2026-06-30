@@ -66,9 +66,12 @@ target_compile_features(sandbox_library PUBLIC cxx_std_23)
 target_compile_definitions(sandbox_library PRIVATE SANDBOX_BUILD_SHARED)
 
 target_include_directories(sandbox_library
-        PUBLIC  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
-        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/source
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/source
+        ${CMAKE_CURRENT_SOURCE_DIR}/../modules/logs/include
 )
 
 target_link_libraries(sandbox_library PUBLIC

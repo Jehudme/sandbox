@@ -44,9 +44,9 @@ TEST_CASE("Suite: Service collision — winner selection", "[suite][collision]")
         bootstrapper_t::stage_module(v1);
         bootstrapper_t::stage_module(v2);
         bootstrapper_t b;
-        b.activate("sandbox::system", "BulletPhysicsV1", 1, 0, 0);
-        b.activate("sandbox::system", "BulletPhysicsV2", 2, 0, 0);
         flecs::world w;
+        b.activate(w, "sandbox::system", "BulletPhysicsV1", 1, 0, 0);
+        b.activate(w, "sandbox::system", "BulletPhysicsV2", 2, 0, 0);
         REQUIRE_NOTHROW(b.boot(w));
         REQUIRE(winner == 1);
         REQUIRE(loser  == 0);
@@ -65,10 +65,10 @@ TEST_CASE("Suite: Service collision — winner selection", "[suite][collision]")
         bootstrapper_t::stage_module(openal);
         bootstrapper_t::stage_module(xaudio);
         bootstrapper_t b;
-        b.activate("sandbox::system", "FMODAudio", 1, 0, 0);
-        b.activate("sandbox::system", "OpenAL",    2, 0, 0);
-        b.activate("sandbox::system", "XAudio2",   1, 5, 0);
         flecs::world w;
+        b.activate(w, "sandbox::system", "FMODAudio", 1, 0, 0);
+        b.activate(w, "sandbox::system", "OpenAL",    2, 0, 0);
+        b.activate(w, "sandbox::system", "XAudio2",   1, 5, 0);
         REQUIRE_NOTHROW(b.boot(w));
         REQUIRE(calls[0] + calls[1] + calls[2] == 1);  // exactly one winner
         REQUIRE(calls[1] == 1);                          // OpenAL v2 wins
@@ -97,9 +97,9 @@ TEST_CASE("Suite: Service collision — winner selection", "[suite][collision]")
         bootstrapper_t::stage_module(low);
         bootstrapper_t::stage_module(consumer);
         bootstrapper_t b;
-        b.activate("sandbox::system", "NetworkV2",        2, 0, 0);
-        b.activate("sandbox::system", "GameNetworkLayer", 1, 0, 0);
         flecs::world w;
+        b.activate(w, "sandbox::system", "NetworkV2",        2, 0, 0);
+        b.activate(w, "sandbox::system", "GameNetworkLayer", 1, 0, 0);
         REQUIRE_NOTHROW(b.boot(w));
         REQUIRE(explicit_calls + auto_calls == 1);
         REQUIRE(explicit_calls == 1);
@@ -122,9 +122,9 @@ TEST_CASE("Suite: No collision between different services", "[suite][collision]"
     bootstrapper_t::stage_module(rend);
     bootstrapper_t::stage_module(aud);
     bootstrapper_t b;
-    b.activate("sandbox::system", "OpenGLRenderer", 1, 0, 0);
-    b.activate("sandbox::system", "FMODAudio",      1, 0, 0);
     flecs::world w;
+    b.activate(w, "sandbox::system", "OpenGLRenderer", 1, 0, 0);
+    b.activate(w, "sandbox::system", "FMODAudio",      1, 0, 0);
     REQUIRE_NOTHROW(b.boot(w));
 
     SECTION("renderer initialized despite audio being present") {

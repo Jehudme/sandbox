@@ -100,9 +100,8 @@ TEST_CASE("Suite: Boot via top-level module auto-pulls providers", "[suite][full
     restage_all();
 
     bootstrapper_t b;
-    b.activate("sandbox::system", "GameLayerModule", 1, 0, 0);
-
     flecs::world w;
+    b.activate(w, "sandbox::system", "GameLayerModule", 1, 0, 0);
     REQUIRE_NOTHROW(b.boot(w));
 
     SECTION("all three services are present in Flecs world") {
@@ -131,12 +130,11 @@ TEST_CASE("Suite: Explicit activate of all providers is valid", "[suite][full_bo
     restage_all();
 
     bootstrapper_t b;
-    b.activate("sandbox::system", "OpenGLRendererModule", 1, 0, -1);
-    b.activate("sandbox::system", "FMODAudioModule",      1, 0, -1);
-    b.activate("sandbox::system", "RawInputModule",       1, 0, -1);
-    b.activate("sandbox::system", "GameLayerModule",      1, 0,  0);
-
     flecs::world w;
+    b.activate(w, "sandbox::system", "OpenGLRendererModule", 1, 0, -1);
+    b.activate(w, "sandbox::system", "FMODAudioModule",      1, 0, -1);
+    b.activate(w, "sandbox::system", "RawInputModule",       1, 0, -1);
+    b.activate(w, "sandbox::system", "GameLayerModule",      1, 0,  0);
     REQUIRE_NOTHROW(b.boot(w));
 
     SECTION("all three services reachable after explicit activation") {

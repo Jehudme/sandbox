@@ -31,7 +31,7 @@ TEST_CASE("Engine Bootstrapper C API", "[engine][bootstrapper]") {
         m1.version_major = 1; m1.version_minor = 0; m1.version_patch = 0;
         bootstrapper_t::stage_module(m1);
 
-        REQUIRE_NOTHROW(sandbox_bootstrapper_activate(b, "test::sys", "TestMod", 1, 0, 0));
+        REQUIRE_NOTHROW(sandbox_bootstrapper_activate(b, ecs, "test::sys", "TestMod", 1, 0, 0));
     }
 
     SECTION("sandbox_bootstrapper_activate_string with valid string does not crash") {
@@ -42,7 +42,7 @@ TEST_CASE("Engine Bootstrapper C API", "[engine][bootstrapper]") {
         m1.version_major = 1; m1.version_minor = 0; m1.version_patch = 0;
         bootstrapper_t::stage_module(m1);
 
-        REQUIRE_NOTHROW(sandbox_bootstrapper_activate_string(b, "test::sys-TestModString@1.0.*"));
+        REQUIRE_NOTHROW(sandbox_bootstrapper_activate_string(b, ecs, "test::sys-TestModString@1.0.*"));
     }
 
     SECTION("sandbox_bootstrapper_boot does not crash") {

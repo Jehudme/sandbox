@@ -1,10 +1,12 @@
 #include <catch2/catch_all.hpp>
 #include "core/bootstrapper.h"
+#include "core/exceptions.h"
 
 using namespace sandbox::core;
 
 TEST_CASE("Bootstrapper string activation parsing", "[bootstrapper][activation]") {
     bootstrapper_t::reset();
+    flecs::world ecs;
 
     // Setup some fake sandbox for activate to resolve against
     sandbox_module_info_t m1{};
@@ -20,23 +22,23 @@ TEST_CASE("Bootstrapper string activation parsing", "[bootstrapper][activation]"
     bootstrapper_t bootstrapper;
 
     SECTION("Parses full version correctly") {
-        REQUIRE_NOTHROW(bootstrapper.activate("sandbox::system-Renderer@1.2.3"));
+        REQUIRE_NOTHROW(bootstrapper.activate(ecs, "sandbox::system-Renderer@1.2.3"));
     }
 
     SECTION("Parses missing patch with wildcard") {
-        REQUIRE_NOTHROW(bootstrapper.activate("sandbox::system-Renderer@1.2.*"));
+        REQUIRE_NOTHROW(bootstrapper.activate(ecs, "sandbox::system-Renderer@1.2.*"));
     }
 
     SECTION("Parses missing minor and patch") {
-        REQUIRE_NOTHROW(bootstrapper.activate("sandbox::system-Physics@2"));
+        REQUIRE_NOTHROW(bootstrapper.activate(ecs, "sandbox::system-Physics@2"));
     }
 
     SECTION("Throws on invalid string (no @)") {
-        REQUIRE_THROWS_AS(bootstrapper.activate("sandbox::system-Renderer"), std::invalid_argument);
+        REQUIRE_THROWS_AS(bootstrapper.activate(ecs, "sandbox::system-Renderer"), sandbox::core::module_activation_error);
     }
 
     SECTION("Throws on invalid string (no dash)") {
-        REQUIRE_THROWS_AS(bootstrapper.activate("sandbox::system_Renderer@1.2.3"), std::invalid_argument);
+        REQUIRE_THROWS_AS(bootstrapper.activate(ecs, "sandbox::system_Renderer@1.2.3"), sandbox::core::module_activation_error);
     }
 
     bootstrapper_t::reset();

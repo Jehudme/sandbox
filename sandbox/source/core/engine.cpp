@@ -6,7 +6,8 @@
 #include "sandbox/abi/bootstrapper.h"
 #include "sandbox/abi/handle.h"
 #include "sandbox/abi/properties.h"
-#include <iostream>
+#include "exceptions.h"
+#include <sandbox/sdk/logs.hpp>
 
 namespace sandbox::core {
     engine_t::engine_t() = default;
@@ -21,8 +22,7 @@ namespace sandbox::core {
         sandbox_properties_handle_t properties_handle;
         properties_handle.token = reinterpret_cast<uintptr_t>(m_arguments.get());
         ecs.entity("::sandbox::configuration::handle").set<uint64_t>(properties_handle.token);
-        std::cout << "[Engine] Created config handle entity: " << ecs.entity("::sandbox::configuration::handle").id() 
-                  << " with uint64_t comp id: " << ecs.component<uint64_t>().id() << std::endl;
+        sandbox::modules::logs::trace(ecs, "Created config handle entity");
 
         save_bootstrapper();
 
@@ -46,9 +46,11 @@ namespace sandbox::core {
             if (auto libs = m_arguments->get<std::vector<std::string>>({"engine", "libraries"})) {
                 for (const auto& lib : *libs) {
                     try {
-                        bootstrapper_t::index_library(lib);
+                        bootstrapper_t::index_library(ecs, lib);
+                    } catch (const library_load_error& e) {
+                        sandbox::modules::logs::warn(ecs, "Library load error skipped: {}", e.what());
                     } catch (const std::exception& e) {
-                        // Logging is handled by loader or bootstrapper usually, but we could log here if needed
+                        sandbox::modules::logs::error(ecs, "Unexpected error indexing library '{}': {}", lib, e.what());
                     }
                 }
             }
@@ -59,9 +61,11 @@ namespace sandbox::core {
             if (auto mods = m_arguments->get<std::vector<std::string>>({"engine", "sandbox"})) {
                 for (const auto& mod : *mods) {
                     try {
-                        m_bootstrapper->activate(mod);
+                        m_bootstrapper->activate(ecs, mod);
+                    } catch (const module_activation_error& e) {
+                        sandbox::modules::logs::warn(ecs, "Failed to activate module '{}': {}", mod, e.what());
                     } catch (const std::exception& e) {
-                        std::cerr << "[Engine] Failed to activate module: " << e.what() << "\n";
+                        sandbox::modules::logs::error(ecs, "Unexpected error activating module '{}': {}", mod, e.what());
                     }
                 }
             }

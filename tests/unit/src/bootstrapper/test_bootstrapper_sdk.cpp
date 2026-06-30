@@ -17,7 +17,7 @@ TEST_CASE("bootstrapper SDK Wrapper", "[bootstrapper][sdk]") {
         REQUIRE(b.get_raw() != nullptr);
         
         // Boot execution
-        REQUIRE_NOTHROW(b.boot(ecs));
+        REQUIRE_NOTHROW(b.boot());
         
         // Activating unknown strings logs but doesn't throw across ABI (caught internally or ignored)
         REQUIRE_NOTHROW(b.activate("test::sys-Unknown@1.0.0"));

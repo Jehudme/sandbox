@@ -8,7 +8,7 @@
 
 #include <catch2/catch_all.hpp>
 #include "core/library_loader.h"
-
+#include "core/exceptions.h"
 #include <filesystem>
 #include <string>
 
@@ -68,34 +68,35 @@ TEST_CASE("LibraryLoader: lifecycle", "[library_loader][lifecycle]")
 TEST_CASE("LibraryLoader: loading non-existent library is silent", "[library_loader][error]")
 {
     library_loader_t loader;
+    flecs::world ecs;
 
-    SECTION("load on non-existent path does not throw") {
-        // Exceptions are caught internally and logged — must never propagate
-        REQUIRE_NOTHROW(loader.load(nonexistent_path()));
+    SECTION("load on non-existent path throws") {
+        REQUIRE_THROWS_AS(loader.load(ecs, nonexistent_path()), sandbox::core::library_load_error);
     }
 
-    SECTION("multiple load calls on non-existent path do not throw") {
-        REQUIRE_NOTHROW(loader.load(nonexistent_path()));
-        REQUIRE_NOTHROW(loader.load(nonexistent_path()));
-        REQUIRE_NOTHROW(loader.load(nonexistent_path()));
+    SECTION("multiple load calls on non-existent path throw") {
+        REQUIRE_THROWS_AS(loader.load(ecs, nonexistent_path()), sandbox::core::library_load_error);
+        REQUIRE_THROWS_AS(loader.load(ecs, nonexistent_path()), sandbox::core::library_load_error);
+        REQUIRE_THROWS_AS(loader.load(ecs, nonexistent_path()), sandbox::core::library_load_error);
     }
 }
 
 TEST_CASE("LibraryLoader: unload is always safe", "[library_loader][unload]")
 {
     library_loader_t loader;
+    flecs::world ecs;
 
     SECTION("unload on empty loader does not throw") {
-        REQUIRE_NOTHROW(loader.unload("dummy_plugin"));
+        REQUIRE_NOTHROW(loader.unload(ecs, "dummy_plugin"));
     }
 
     SECTION("unload on unknown name does not throw") {
-        REQUIRE_NOTHROW(loader.unload("totally_unknown_lib"));
+        REQUIRE_NOTHROW(loader.unload(ecs, "totally_unknown_lib"));
     }
 
     SECTION("unload can be called multiple times on the same missing name") {
-        REQUIRE_NOTHROW(loader.unload("missing"));
-        REQUIRE_NOTHROW(loader.unload("missing"));
+        REQUIRE_NOTHROW(loader.unload(ecs, "missing"));
+        REQUIRE_NOTHROW(loader.unload(ecs, "missing"));
     }
 }
 
@@ -105,10 +106,11 @@ TEST_CASE("LibraryLoader: duplicate load guard", "[library_loader][duplicate]")
     // a successful load has already been recorded.  We test that the loader
     // does not crash when asked to load the same (non-existent) stem twice.
     library_loader_t loader;
+    flecs::world ecs;
 
-    SECTION("calling load twice on the same path does not crash") {
-        REQUIRE_NOTHROW(loader.load(nonexistent_path()));
-        REQUIRE_NOTHROW(loader.load(nonexistent_path()));
+    SECTION("calling load twice on the same path throws both times") {
+        REQUIRE_THROWS_AS(loader.load(ecs, nonexistent_path()), sandbox::core::library_load_error);
+        REQUIRE_THROWS_AS(loader.load(ecs, nonexistent_path()), sandbox::core::library_load_error);
     }
 }
 
@@ -124,24 +126,25 @@ TEST_CASE("LibraryLoader: successful load and unload", "[library_loader][load][i
     }
 
     library_loader_t loader;
+    flecs::world ecs;
 
     SECTION("load of a valid shared library does not throw") {
-        REQUIRE_NOTHROW(loader.load(plugin));
+        REQUIRE_NOTHROW(loader.load(ecs, plugin));
     }
 
     SECTION("duplicate load of the same library does not throw") {
-        loader.load(plugin);
-        REQUIRE_NOTHROW(loader.load(plugin));  // second call hits the guard path
+        loader.load(ecs, plugin);
+        REQUIRE_NOTHROW(loader.load(ecs, plugin));  // second call hits the guard path
     }
 
     SECTION("unload after successful load does not throw") {
-        loader.load(plugin);
-        REQUIRE_NOTHROW(loader.unload("dummy_plugin"));
+        loader.load(ecs, plugin);
+        REQUIRE_NOTHROW(loader.unload(ecs, "dummy_plugin"));
     }
 
     SECTION("unload then reload is safe") {
-        loader.load(plugin);
-        loader.unload("dummy_plugin");
-        REQUIRE_NOTHROW(loader.load(plugin));
+        loader.load(ecs, plugin);
+        loader.unload(ecs, "dummy_plugin");
+        REQUIRE_NOTHROW(loader.load(ecs, plugin));
     }
 }

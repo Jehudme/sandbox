@@ -20,14 +20,15 @@ namespace sandbox::core {
         static void stage_module(const module_info_t& info);
         static void reset();
 
-        static void index_library(const std::filesystem::path& library_path);
+        static void index_library(flecs::world& ecs, const std::filesystem::path& library_path);
 
-        void activate(std::string_view architecture, std::string_view name, int version_major, int version_minor, int version_patch = -1);
-        void activate(std::string_view module_str);
+        void activate(flecs::world& ecs, std::string_view architecture, std::string_view name, int version_major, int version_minor, int version_patch = -1);
+        void activate(flecs::world& ecs, std::string_view module_str);
         void boot(flecs::world& ecs);
 
     private:
         std::vector<module_info_t> m_active_modules;
+        std::vector<module_info_t> m_booted_modules;
 
         static inline std::vector<service_info_t> m_services;
         static inline std::vector<module_info_t> m_modules;

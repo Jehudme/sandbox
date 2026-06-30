@@ -3,6 +3,7 @@
 
 #include <catch2/catch_all.hpp>
 #include "core/bootstrapper.h"
+#include "core/exceptions.h"
 
 using sandbox::core::bootstrapper_t;
 using sandbox::core::module_info_t;
@@ -20,11 +21,12 @@ static module_info_t make_module(const char* name, const char* arch,
 
 TEST_CASE("Boot: activate() version resolution", "[bootstrapper][activate]")
 {
+    flecs::world ecs;
     SECTION("exact patch match succeeds") {
         bootstrapper_t::reset();
         bootstrapper_t::stage_module(make_module("Renderer", "sandbox::system", 1, 0, 0));
         bootstrapper_t b;
-        REQUIRE_NOTHROW(b.activate("sandbox::system", "Renderer", 1, 0, 0));
+        REQUIRE_NOTHROW(b.activate(ecs, "sandbox::system", "Renderer", 1, 0, 0));
         bootstrapper_t::reset();
     }
 
@@ -34,7 +36,7 @@ TEST_CASE("Boot: activate() version resolution", "[bootstrapper][activate]")
         bootstrapper_t::stage_module(make_module("Renderer", "sandbox::system", 1, 0, 3));
         bootstrapper_t::stage_module(make_module("Renderer", "sandbox::system", 1, 0, 0));
         bootstrapper_t b;
-        REQUIRE_NOTHROW(b.activate("sandbox::system", "Renderer", 1, 0, -1));
+        REQUIRE_NOTHROW(b.activate(ecs, "sandbox::system", "Renderer", 1, 0, -1));
         bootstrapper_t::reset();
     }
 
@@ -49,7 +51,7 @@ TEST_CASE("Boot: activate() version resolution", "[bootstrapper][activate]")
         bootstrapper_t::stage_module(m110);
         bootstrapper_t::stage_module(m150);
         bootstrapper_t b;
-        b.activate("sandbox::system", "Service", 1, 0, -1);
+        b.activate(ecs, "sandbox::system", "Service", 1, 0, -1);
         flecs::world w;
         b.boot(w);
         REQUIRE(chosen == 5);
@@ -64,8 +66,8 @@ TEST_CASE("Boot: activate() version resolution", "[bootstrapper][activate]")
         m.init_fn = [](ecs_world_t*) { calls++; };
         bootstrapper_t::stage_module(m);
         bootstrapper_t b;
-        b.activate("sandbox::system", "Counter", 1, 0, 0);
-        b.activate("sandbox::system", "Counter", 1, 0, 0);
+        b.activate(ecs, "sandbox::system", "Counter", 1, 0, 0);
+        b.activate(ecs, "sandbox::system", "Counter", 1, 0, 0);
         flecs::world w;
         b.boot(w);
         REQUIRE(calls == 1);
@@ -75,12 +77,13 @@ TEST_CASE("Boot: activate() version resolution", "[bootstrapper][activate]")
 
 TEST_CASE("Boot: activate() error cases", "[bootstrapper][activate]")
 {
+    flecs::world ecs;
     SECTION("unknown module name throws") {
         bootstrapper_t::reset();
         bootstrapper_t b;
         REQUIRE_THROWS_AS(
-            b.activate("sandbox::system", "NonExistent", 1, 0, 0),
-            std::invalid_argument
+            b.activate(ecs, "sandbox::system", "NonExistent", 1, 0, 0),
+            sandbox::core::module_activation_error
         );
         bootstrapper_t::reset();
     }
@@ -90,8 +93,8 @@ TEST_CASE("Boot: activate() error cases", "[bootstrapper][activate]")
         bootstrapper_t::stage_module(make_module("Physics", "arm64", 1, 0, 0));
         bootstrapper_t b;
         REQUIRE_THROWS_AS(
-            b.activate("sandbox::system", "Physics", 1, 0, 0),
-            std::invalid_argument
+            b.activate(ecs, "sandbox::system", "Physics", 1, 0, 0),
+            sandbox::core::module_activation_error
         );
         bootstrapper_t::reset();
     }
@@ -101,8 +104,8 @@ TEST_CASE("Boot: activate() error cases", "[bootstrapper][activate]")
         bootstrapper_t::stage_module(make_module("Engine", "sandbox::system", 2, 0, 0));
         bootstrapper_t b;
         REQUIRE_THROWS_AS(
-            b.activate("sandbox::system", "Engine", 3, 0, -1),
-            std::invalid_argument
+            b.activate(ecs, "sandbox::system", "Engine", 3, 0, -1),
+            sandbox::core::module_activation_error
         );
         bootstrapper_t::reset();
     }

@@ -75,8 +75,8 @@ TEST_CASE("Suite: Diamond dependency — correct order, no duplicates", "[suite]
     bootstrapper_t::stage_module(world);
 
     bootstrapper_t b;
-    b.activate("sandbox::system", "GameWorld", 1, 0, 0);
     flecs::world w;
+    b.activate(w, "sandbox::system", "GameWorld", 1, 0, 0);
     REQUIRE_NOTHROW(b.boot(w));
 
     SECTION("all 5 sandbox were initialized") {
@@ -135,8 +135,8 @@ TEST_CASE("Suite: Optional dependency — present and absent", "[suite][complex_
         bootstrapper_t::stage_module(debug_mod);
         bootstrapper_t::stage_module(app_mod);
         bootstrapper_t b;
-        b.activate("sandbox::system", "AppModule", 1, 0, 0);
         flecs::world w;
+        b.activate(w, "sandbox::system", "AppModule", 1, 0, 0);
         REQUIRE_NOTHROW(b.boot(w));
         REQUIRE(g_init_order.size() == 3);
         REQUIRE(std::find(g_init_order.begin(), g_init_order.end(), "DebugModule") != g_init_order.end());
@@ -150,8 +150,8 @@ TEST_CASE("Suite: Optional dependency — present and absent", "[suite][complex_
         // DebugModule NOT staged
         bootstrapper_t::stage_module(app_mod);
         bootstrapper_t b;
-        b.activate("sandbox::system", "AppModule", 1, 0, 0);
         flecs::world w;
+        b.activate(w, "sandbox::system", "AppModule", 1, 0, 0);
         REQUIRE_NOTHROW(b.boot(w));
         REQUIRE(g_init_order.size() == 2);
         REQUIRE(std::find(g_init_order.begin(), g_init_order.end(), "DebugModule") == g_init_order.end());

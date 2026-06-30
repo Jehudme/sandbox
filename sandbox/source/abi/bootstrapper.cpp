@@ -1,6 +1,7 @@
 #include "sandbox/abi/bootstrapper.h"
 #include "core/bootstrapper.h"
 #include <exception>
+#include <flecs/addons/cpp/flecs.hpp>
 
 ECS_COMPONENT_DECLARE(sandbox_bootstrapper_component_t);
 
@@ -24,9 +25,14 @@ bool sandbox_stage_module(const sandbox_module_info_t* info) {
     }
 }
 
-void sandbox_index_library(const char* library_path) {
-    if (library_path) {
-        sandbox::core::bootstrapper_t::index_library(library_path);
+void sandbox_index_library(ecs_world_t* ecs, const char* library_path) {
+    if (ecs && library_path) {
+        try {
+            flecs::world world(ecs);
+            sandbox::core::bootstrapper_t::index_library(world, library_path);
+        } catch (...) {
+            // ABI boundary safely swallows exceptions
+        }
     }
 }
 
@@ -37,10 +43,11 @@ sandbox_bootstrapper_t* sandbox_get_bootstrapper(ecs_world_t* ecs) {
     return comp->internal_bootstrapper;
 }
 
-bool sandbox_bootstrapper_activate(sandbox_bootstrapper_t* bootstrapper, const char* architecture, const char* name, int version_major, int version_minor, int version_patch) {
-    if (!bootstrapper || !architecture || !name) return false;
+bool sandbox_bootstrapper_activate(sandbox_bootstrapper_t* bootstrapper, ecs_world_t* ecs, const char* architecture, const char* name, int version_major, int version_minor, int version_patch) {
+    if (!bootstrapper || !ecs || !architecture || !name) return false;
     try {
-        reinterpret_cast<sandbox::core::bootstrapper_t*>(bootstrapper)->activate(architecture, name, version_major, version_minor, version_patch);
+        flecs::world world(ecs);
+        reinterpret_cast<sandbox::core::bootstrapper_t*>(bootstrapper)->activate(world, architecture, name, version_major, version_minor, version_patch);
         return true;
     } catch (...) {
         // ABI boundary safely swallows exceptions to prevent C-plugin crashes
@@ -48,10 +55,11 @@ bool sandbox_bootstrapper_activate(sandbox_bootstrapper_t* bootstrapper, const c
     }
 }
 
-bool sandbox_bootstrapper_activate_string(sandbox_bootstrapper_t* bootstrapper, const char* module_str) {
-    if (!bootstrapper || !module_str) return false;
+bool sandbox_bootstrapper_activate_string(sandbox_bootstrapper_t* bootstrapper, ecs_world_t* ecs, const char* module_str) {
+    if (!bootstrapper || !ecs || !module_str) return false;
     try {
-        reinterpret_cast<sandbox::core::bootstrapper_t*>(bootstrapper)->activate(module_str);
+        flecs::world world(ecs);
+        reinterpret_cast<sandbox::core::bootstrapper_t*>(bootstrapper)->activate(world, module_str);
         return true;
     } catch (...) {
         // Catch exceptions across ABI

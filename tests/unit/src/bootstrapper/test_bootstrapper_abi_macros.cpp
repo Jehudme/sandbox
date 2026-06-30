@@ -65,6 +65,7 @@ ECS_COMPONENT_DECLARE(CounterServiceComponent);
 
 TEST_CASE("BootABI: C staging functions", "[bootstrapper][abi][staging]")
 {
+    flecs::world ecs;
     SECTION("sandbox_stage_service returns true on success") {
         bootstrapper_t::reset();
         sandbox_service_info_t svc{};
@@ -94,7 +95,7 @@ TEST_CASE("BootABI: C staging functions", "[bootstrapper][abi][staging]")
         mod.service = nullptr; mod.requirements = nullptr; mod.requirement_count = 0; mod.init_fn = nullptr;
         REQUIRE(sandbox_stage_module(&mod) == true);
         bootstrapper_t b;
-        REQUIRE_NOTHROW(b.activate("test::arch", "MyMod", 1, 0, 0));
+        REQUIRE_NOTHROW(b.activate(ecs, "test::arch", "MyMod", 1, 0, 0));
         bootstrapper_t::reset();
     }
 
@@ -107,17 +108,19 @@ TEST_CASE("BootABI: C staging functions", "[bootstrapper][abi][staging]")
 
 TEST_CASE("BootABI: C indexing functions", "[bootstrapper][abi][indexing]")
 {
+    flecs::world ecs;
     SECTION("sandbox_index_library with null is safe") {
-        REQUIRE_NOTHROW(sandbox_index_library(nullptr));
+        REQUIRE_NOTHROW(sandbox_index_library(ecs.c_ptr(), nullptr));
     }
 
     SECTION("sandbox_index_library with nonexistent path doesn't crash") {
-        REQUIRE_NOTHROW(sandbox_index_library("nonexistent_c_lib.so"));
+        REQUIRE_NOTHROW(sandbox_index_library(ecs.c_ptr(), "nonexistent_c_lib.so"));
     }
 }
 
 TEST_CASE("BootABI: SANDBOX_DECLARE_MODULE struct metadata", "[bootstrapper][abi][macro]")
 {
+    flecs::world ecs;
     SECTION("name, architecture, and version are set correctly") {
         REQUIRE(std::string(TestMacroModule_manual_info.name) == "TestMacroModule");
         REQUIRE(std::string(TestMacroModule_manual_info.architecture) == "sandbox::system");
@@ -132,15 +135,15 @@ TEST_CASE("BootABI: SANDBOX_DECLARE_MODULE struct metadata", "[bootstrapper][abi
         stageable.init_fn = [](ecs_world_t*) {};
         bootstrapper_t::stage_module(stageable);
         bootstrapper_t b;
-        REQUIRE_NOTHROW(b.activate("sandbox::system", "TestMacroModule", 1, 0, 0));
-        flecs::world w;
-        REQUIRE_NOTHROW(b.boot(w));
+        REQUIRE_NOTHROW(b.activate(ecs, "sandbox::system", "TestMacroModule", 1, 0, 0));
+        REQUIRE_NOTHROW(b.boot(ecs));
         bootstrapper_t::reset();
     }
 }
 
 TEST_CASE("BootABI: SANDBOX_DECLARE_SERVICE struct metadata", "[bootstrapper][abi][macro]")
 {
+    flecs::world ecs;
     SECTION("name, architecture, and version are set correctly") {
         REQUIRE(std::string(SimpleCounterService_manual_info.name) == "ISimpleCounter");
         REQUIRE(std::string(SimpleCounterService_manual_info.architecture) == "sandbox::system");
@@ -150,6 +153,7 @@ TEST_CASE("BootABI: SANDBOX_DECLARE_SERVICE struct metadata", "[bootstrapper][ab
 
 TEST_CASE("BootABI: service component accessible via Flecs", "[bootstrapper][abi][get_service]")
 {
+    flecs::world ecs;
     bootstrapper_t::reset();
 
     sandbox_module_info_t mod{};
@@ -169,7 +173,7 @@ TEST_CASE("BootABI: service component accessible via Flecs", "[bootstrapper][abi
 
     bootstrapper_t::stage_module(mod);
     bootstrapper_t b;
-    b.activate("sandbox::system", "CounterModule", 1, 0, 0);
+    b.activate(ecs, "sandbox::system", "CounterModule", 1, 0, 0);
     flecs::world w;
     b.boot(w);
 

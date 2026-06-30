@@ -7,15 +7,15 @@ namespace sandbox {
     public:
         // Attaches to the bootstrapper instance for the given ecs world
         explicit bootstrapper(ecs_world_t* ecs);
-        explicit bootstrapper(sandbox_bootstrapper_t* raw);
 
         void activate(const std::string& arch, const std::string& name, int major, int minor, int patch = -1);
         void activate(const std::string& module_str);
-        void boot(ecs_world_t* ecs);
+        void boot();
 
         sandbox_bootstrapper_t* get_raw() const { return m_bootstrapper; }
 
     private:
+        ecs_world_t* m_ecs;
         sandbox_bootstrapper_t* m_bootstrapper;
     };
 }

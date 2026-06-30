@@ -3,22 +3,20 @@
 
 namespace sandbox {
 
-    inline bootstrapper::bootstrapper(ecs_world_t* ecs) {
+    inline bootstrapper::bootstrapper(ecs_world_t* ecs) : m_ecs(ecs) {
         m_bootstrapper = sandbox_get_bootstrapper(ecs);
     }
 
-    inline bootstrapper::bootstrapper(sandbox_bootstrapper_t* raw) : m_bootstrapper(raw) {}
-
     inline void bootstrapper::activate(const std::string& arch, const std::string& name, int major, int minor, int patch) {
-        sandbox_bootstrapper_activate(m_bootstrapper, arch.c_str(), name.c_str(), major, minor, patch);
+        sandbox_bootstrapper_activate(m_bootstrapper, m_ecs, arch.c_str(), name.c_str(), major, minor, patch);
     }
 
     inline void bootstrapper::activate(const std::string& module_str) {
-        sandbox_bootstrapper_activate_string(m_bootstrapper, module_str.c_str());
+        sandbox_bootstrapper_activate_string(m_bootstrapper, m_ecs, module_str.c_str());
     }
 
-    inline void bootstrapper::boot(ecs_world_t* ecs) {
-        sandbox_bootstrapper_boot(m_bootstrapper, ecs);
+    inline void bootstrapper::boot() {
+        sandbox_bootstrapper_boot(m_bootstrapper, m_ecs);
     }
 
 }

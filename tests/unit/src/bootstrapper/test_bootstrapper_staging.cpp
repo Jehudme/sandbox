@@ -3,6 +3,7 @@
 
 #include <catch2/catch_all.hpp>
 #include "core/bootstrapper.h"
+#include "core/exceptions.h"
 
 using sandbox::core::bootstrapper_t;
 using sandbox::core::service_info_t;
@@ -26,6 +27,7 @@ static module_info_t make_module(const char* name, int major, int minor, int pat
 
 TEST_CASE("Boot: stage_service and stage_module", "[bootstrapper][staging]")
 {
+    flecs::world ecs;
     SECTION("staged service lets its module be activated") {
         bootstrapper_t::reset();
         service_info_t svc = make_service("IRenderer", 1, 0);
@@ -33,7 +35,7 @@ TEST_CASE("Boot: stage_service and stage_module", "[bootstrapper][staging]")
         bootstrapper_t::stage_service(svc);
         bootstrapper_t::stage_module(mod);
         bootstrapper_t b;
-        REQUIRE_NOTHROW(b.activate("test_arch", "OpenGLRenderer", 1, 0, 0));
+        REQUIRE_NOTHROW(b.activate(ecs, "test_arch", "OpenGLRenderer", 1, 0, 0));
         bootstrapper_t::reset();
     }
 
@@ -45,7 +47,7 @@ TEST_CASE("Boot: stage_service and stage_module", "[bootstrapper][staging]")
         module_info_t mod = make_module("BulletPhysics", 2, 0, 0, &svc);
         bootstrapper_t::stage_module(mod);
         bootstrapper_t b;
-        REQUIRE_NOTHROW(b.activate("test_arch", "BulletPhysics", 2, 0, 0));
+        REQUIRE_NOTHROW(b.activate(ecs, "test_arch", "BulletPhysics", 2, 0, 0));
         bootstrapper_t::reset();
     }
 
@@ -54,7 +56,7 @@ TEST_CASE("Boot: stage_service and stage_module", "[bootstrapper][staging]")
         module_info_t mod = make_module("AudioEngine", 1, 0, 0);
         bootstrapper_t::stage_module(mod);
         bootstrapper_t b;
-        REQUIRE_NOTHROW(b.activate("test_arch", "AudioEngine", 1, 0, 0));
+        REQUIRE_NOTHROW(b.activate(ecs, "test_arch", "AudioEngine", 1, 0, 0));
         bootstrapper_t::reset();
     }
 
@@ -64,7 +66,7 @@ TEST_CASE("Boot: stage_service and stage_module", "[bootstrapper][staging]")
         bootstrapper_t::stage_module(mod);
         bootstrapper_t::stage_module(mod);  // second call should be a no-op
         bootstrapper_t b;
-        REQUIRE_NOTHROW(b.activate("test_arch", "NetworkModule", 1, 2, 3));
+        REQUIRE_NOTHROW(b.activate(ecs, "test_arch", "NetworkModule", 1, 2, 3));
         bootstrapper_t::reset();
     }
 }
@@ -78,7 +80,8 @@ TEST_CASE("Boot: reset() clears the registry", "[bootstrapper][staging]")
         bootstrapper_t::stage_module(mod);
         bootstrapper_t::reset();
         bootstrapper_t b;
-        REQUIRE_THROWS_AS(b.activate("test_arch", "DummyModule", 1, 0, 0), std::invalid_argument);
+        flecs::world ecs;
+        REQUIRE_THROWS_AS(b.activate(ecs, "test_arch", "DummyModule", 1, 0, 0), sandbox::core::module_activation_error);
     }
 
     SECTION("reset is safe to call multiple times on empty registry") {

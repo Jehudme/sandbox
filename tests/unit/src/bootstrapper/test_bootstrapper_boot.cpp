@@ -30,6 +30,7 @@ static module_info_t make_mod(const char* name, int major, int minor, int patch,
 
 TEST_CASE("Boot: boot() initializes sandbox", "[bootstrapper][boot]")
 {
+    flecs::world ecs;
     SECTION("sandbox with no dependencies are all initialized") {
         bootstrapper_t::reset();
         static int a_calls = 0, b_calls = 0;
@@ -39,8 +40,8 @@ TEST_CASE("Boot: boot() initializes sandbox", "[bootstrapper][boot]")
         bootstrapper_t::stage_module(alpha);
         bootstrapper_t::stage_module(beta);
         bootstrapper_t b;
-        b.activate("sandbox::system", "Alpha", 1, 0, 0);
-        b.activate("sandbox::system", "Beta",  1, 0, 0);
+        b.activate(ecs, "sandbox::system", "Alpha", 1, 0, 0);
+        b.activate(ecs, "sandbox::system", "Beta",  1, 0, 0);
         flecs::world w;
         b.boot(w);
         REQUIRE(a_calls == 1);
@@ -71,7 +72,7 @@ TEST_CASE("Boot: boot() initializes sandbox", "[bootstrapper][boot]")
         bootstrapper_t::stage_module(provider);
         bootstrapper_t::stage_module(consumer);
         bootstrapper_t b;
-        b.activate("sandbox::system", "Consumer", 1, 0, 0);
+        b.activate(ecs, "sandbox::system", "Consumer", 1, 0, 0);
         flecs::world w;
         REQUIRE_NOTHROW(b.boot(w));
 
@@ -100,7 +101,7 @@ TEST_CASE("Boot: boot() initializes sandbox", "[bootstrapper][boot]")
         bootstrapper_t::stage_module(dep);
         bootstrapper_t::stage_module(physics);
         bootstrapper_t b;
-        b.activate("sandbox::system", "Physics", 1, 0, 0);
+        b.activate(ecs, "sandbox::system", "Physics", 1, 0, 0);
         flecs::world w;
         REQUIRE_NOTHROW(b.boot(w));
         REQUIRE(dep_init == true);
@@ -123,7 +124,7 @@ TEST_CASE("Boot: boot() initializes sandbox", "[bootstrapper][boot]")
 
         bootstrapper_t::stage_module(mod);
         bootstrapper_t b;
-        b.activate("sandbox::system", "Flexible", 1, 0, 0);
+        b.activate(ecs, "sandbox::system", "Flexible", 1, 0, 0);
         flecs::world w;
         REQUIRE_NOTHROW(b.boot(w));
         REQUIRE(initialized == true);
@@ -146,8 +147,8 @@ TEST_CASE("Boot: boot() initializes sandbox", "[bootstrapper][boot]")
         bootstrapper_t::stage_module(low);
         bootstrapper_t::stage_module(high);
         bootstrapper_t b;
-        b.activate("sandbox::system", "OpenGLv1", 1, 0, 0);
-        b.activate("sandbox::system", "Vulkan",   2, 0, 0);
+        b.activate(ecs, "sandbox::system", "OpenGLv1", 1, 0, 0);
+        b.activate(ecs, "sandbox::system", "Vulkan",   2, 0, 0);
         flecs::world w;
         REQUIRE_NOTHROW(b.boot(w));
         REQUIRE(winner == 1);
@@ -158,6 +159,7 @@ TEST_CASE("Boot: boot() initializes sandbox", "[bootstrapper][boot]")
 
 TEST_CASE("Boot: boot() error cases", "[bootstrapper][boot]")
 {
+    flecs::world ecs;
     SECTION("missing required service throws") {
         bootstrapper_t::reset();
         sandbox_requirement_info_t req[1];
@@ -168,7 +170,7 @@ TEST_CASE("Boot: boot() error cases", "[bootstrapper][boot]")
         mod.requirement_count = 1;
         bootstrapper_t::stage_module(mod);
         bootstrapper_t b;
-        b.activate("sandbox::system", "Needy", 1, 0, 0);
+        b.activate(ecs, "sandbox::system", "Needy", 1, 0, 0);
         flecs::world w;
         REQUIRE_THROWS_AS(b.boot(w), std::runtime_error);
         bootstrapper_t::reset();
@@ -190,8 +192,8 @@ TEST_CASE("Boot: boot() error cases", "[bootstrapper][boot]")
         bootstrapper_t::stage_module(ma);
         bootstrapper_t::stage_module(mb);
         bootstrapper_t b;
-        b.activate("sandbox::system", "ModuleA", 1, 0, 0);
-        b.activate("sandbox::system", "ModuleB", 1, 0, 0);
+        b.activate(ecs, "sandbox::system", "ModuleA", 1, 0, 0);
+        b.activate(ecs, "sandbox::system", "ModuleB", 1, 0, 0);
         flecs::world w;
         REQUIRE_THROWS_AS(b.boot(w), std::runtime_error);
         bootstrapper_t::reset();
@@ -222,8 +224,8 @@ TEST_CASE("Boot: boot() error cases", "[bootstrapper][boot]")
         bootstrapper_t::stage_module(cons_b);
 
         bootstrapper_t b;
-        b.activate("sandbox::system", "ConsumerA", 1, 0, 0);
-        b.activate("sandbox::system", "ConsumerB", 1, 0, 0);
+        b.activate(ecs, "sandbox::system", "ConsumerA", 1, 0, 0);
+        b.activate(ecs, "sandbox::system", "ConsumerB", 1, 0, 0);
         flecs::world w;
         REQUIRE_THROWS_AS(b.boot(w), std::runtime_error);
         bootstrapper_t::reset();

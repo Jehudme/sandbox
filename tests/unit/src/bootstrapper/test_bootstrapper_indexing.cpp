@@ -1,6 +1,6 @@
-// tests/unit/src/bootstrapper/test_bootstrapper_indexing.cpp
 #include <catch2/catch_all.hpp>
 #include "core/bootstrapper.h"
+#include "core/exceptions.h"
 #include <filesystem>
 #include <string>
 
@@ -30,17 +30,18 @@ static fs::path dummy_plugin_path() {
 TEST_CASE("Bootstrapper: indexing libraries", "[bootstrapper][indexing]") {
     bootstrapper_t::reset();
 
+    flecs::world ecs;
     SECTION("index_library with valid path does not throw") {
         fs::path plugin = dummy_plugin_path();
         if (fs::exists(plugin)) {
-            REQUIRE_NOTHROW(bootstrapper_t::index_library(plugin));
+            REQUIRE_NOTHROW(bootstrapper_t::index_library(ecs, plugin));
         } else {
             SUCCEED("Skipped: dummy_plugin not available on disk");
         }
     }
 
-    SECTION("index_library with invalid path does not throw (caught by loader)") {
-        REQUIRE_NOTHROW(bootstrapper_t::index_library("nonexistent_lib.so"));
+    SECTION("index_library with invalid path throws library_load_error") {
+        REQUIRE_THROWS_AS(bootstrapper_t::index_library(ecs, "nonexistent_lib.so"), sandbox::core::library_load_error);
     }
     
     bootstrapper_t::reset();

@@ -9,7 +9,7 @@
 
 #include <catch2/catch_all.hpp>
 #include "core/library_loader.h"
-
+#include "core/exceptions.h"
 #include <filesystem>
 #include <string>
 #include <vector>
@@ -51,17 +51,18 @@ static bool plugin_available(const std::string& stem) {
 TEST_CASE("Suite: Library loader — failure paths never throw", "[suite][library_loader]")
 {
     library_loader_t loader;
+    flecs::world ecs;
 
-    SECTION("loading a non-existent module is silent") {
-        REQUIRE_NOTHROW(loader.load(fs::path("nonexistent_module_aaa.so")));
-        REQUIRE_NOTHROW(loader.load(fs::path("nonexistent_module_bbb.so")));
-        REQUIRE_NOTHROW(loader.load(fs::path("nonexistent_module_ccc.so")));
+    SECTION("loading a non-existent module throws library_load_error") {
+        REQUIRE_THROWS_AS(loader.load(ecs, fs::path("nonexistent_module_aaa.so")), sandbox::core::library_load_error);
+        REQUIRE_THROWS_AS(loader.load(ecs, fs::path("nonexistent_module_bbb.so")), sandbox::core::library_load_error);
+        REQUIRE_THROWS_AS(loader.load(ecs, fs::path("nonexistent_module_ccc.so")), sandbox::core::library_load_error);
     }
 
     SECTION("unloading sandbox that were never loaded is silent") {
-        REQUIRE_NOTHROW(loader.unload("render_system"));
-        REQUIRE_NOTHROW(loader.unload("audio_system"));
-        REQUIRE_NOTHROW(loader.unload("input_system"));
+        REQUIRE_NOTHROW(loader.unload(ecs, "render_system"));
+        REQUIRE_NOTHROW(loader.unload(ecs, "audio_system"));
+        REQUIRE_NOTHROW(loader.unload(ecs, "input_system"));
     }
 
     SECTION("full boot-fail → teardown sequence is silent") {
@@ -74,16 +75,17 @@ TEST_CASE("Suite: Library loader — failure paths never throw", "[suite][librar
         };
 
         for (const auto& m : fake_modules)
-            REQUIRE_NOTHROW(loader.load(m));
+            REQUIRE_THROWS_AS(loader.load(ecs, m), sandbox::core::library_load_error);
 
         // Teardown: attempt to unload everything regardless
         for (const auto& m : fake_modules)
-            REQUIRE_NOTHROW(loader.unload(m.stem().string()));
+            REQUIRE_NOTHROW(loader.unload(ecs, m.stem().string()));
     }
 }
 
 TEST_CASE("Suite: Library loader — MVP boot and teardown", "[suite][library_loader]")
 {
+    flecs::world ecs;
     if (!plugin_available("dummy_plugin")) {
         WARN("dummy_plugin not found — skipping MVP lifecycle integration tests.");
         SUCCEED("Skipped: dummy_plugin not available on disk");
@@ -92,23 +94,23 @@ TEST_CASE("Suite: Library loader — MVP boot and teardown", "[suite][library_lo
 
     SECTION("single module: load then unload") {
         library_loader_t loader;
-        REQUIRE_NOTHROW(loader.load(find_plugin("dummy_plugin")));
-        REQUIRE_NOTHROW(loader.unload("dummy_plugin"));
+        REQUIRE_NOTHROW(loader.load(ecs, find_plugin("dummy_plugin")));
+        REQUIRE_NOTHROW(loader.unload(ecs, "dummy_plugin"));
     }
 
     SECTION("multiple loads of the same module are deduplicated") {
         library_loader_t loader;
-        loader.load(find_plugin("dummy_plugin"));
-        REQUIRE_NOTHROW(loader.load(find_plugin("dummy_plugin")));  // guard path
-        REQUIRE_NOTHROW(loader.unload("dummy_plugin"));             // single unload is enough
-        REQUIRE_NOTHROW(loader.unload("dummy_plugin"));             // second unload is silent
+        loader.load(ecs, find_plugin("dummy_plugin"));
+        REQUIRE_NOTHROW(loader.load(ecs, find_plugin("dummy_plugin")));  // guard path
+        REQUIRE_NOTHROW(loader.unload(ecs, "dummy_plugin"));             // single unload is enough
+        REQUIRE_NOTHROW(loader.unload(ecs, "dummy_plugin"));             // second unload is silent
     }
 
     SECTION("loader is destroyed cleanly after loading") {
         // Test that the destructor closes the library without crashing
         REQUIRE_NOTHROW([&]{
             library_loader_t loader;
-            loader.load(find_plugin("dummy_plugin"));
+            loader.load(ecs, find_plugin("dummy_plugin"));
             // destructor runs here — library should be unloaded cleanly
         }());
     }
@@ -121,25 +123,25 @@ TEST_CASE("Suite: Library loader — MVP boot and teardown", "[suite][library_lo
         library_loader_t loader;
 
         // "Renderer" — successfully loads
-        REQUIRE_NOTHROW(loader.load(find_plugin("dummy_plugin")));
+        REQUIRE_NOTHROW(loader.load(ecs, find_plugin("dummy_plugin")));
 
         // "AudioEngine", "PhysicsEngine" — not yet built, load silently fails
-        REQUIRE_NOTHROW(loader.load(fs::path("audio_engine.so")));
-        REQUIRE_NOTHROW(loader.load(fs::path("physics_engine.so")));
+        REQUIRE_THROWS_AS(loader.load(ecs, fs::path("audio_engine.so")), sandbox::core::library_load_error);
+        REQUIRE_THROWS_AS(loader.load(ecs, fs::path("physics_engine.so")), sandbox::core::library_load_error);
 
         // Teardown — only dummy_plugin was actually loaded
-        REQUIRE_NOTHROW(loader.unload("dummy_plugin"));
-        REQUIRE_NOTHROW(loader.unload("audio_engine"));    // not loaded, silent
-        REQUIRE_NOTHROW(loader.unload("physics_engine"));  // not loaded, silent
+        REQUIRE_NOTHROW(loader.unload(ecs, "dummy_plugin"));
+        REQUIRE_NOTHROW(loader.unload(ecs, "audio_engine"));    // not loaded, silent
+        REQUIRE_NOTHROW(loader.unload(ecs, "physics_engine"));  // not loaded, silent
     }
 
     SECTION("move-constructed loader retains loaded libraries") {
         library_loader_t a;
-        a.load(find_plugin("dummy_plugin"));
+        a.load(ecs, find_plugin("dummy_plugin"));
 
         REQUIRE_NOTHROW([&]{
             library_loader_t b = std::move(a);
-            b.unload("dummy_plugin");
+            b.unload(ecs, "dummy_plugin");
         }());
     }
 }
