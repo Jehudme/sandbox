@@ -71,6 +71,11 @@ namespace sandbox::core {
             }
         }
         
-        m_bootstrapper->boot(entity_world);
+        try {
+            m_bootstrapper->boot(entity_world);
+        } catch (const std::exception& e) {
+            std::cerr << "Failed to boot sandbox: " << e.what() << "\n";
+            sandbox::modules::logs::error(entity_world, "Failed to boot sandbox: {}", e.what());
+        }
     }
 }

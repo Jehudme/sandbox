@@ -1,4 +1,4 @@
-# Doxygen Checklist
+# Checklist
 
 ## modules/core/include/sandbox/abi/configuration.h
 - [ ] sandbox_properties_handle_t (*get_properties)(ecs_world_t* ecs);

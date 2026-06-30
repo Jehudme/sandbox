@@ -11,16 +11,18 @@
 #include "exceptions.h"
 
 namespace sandbox::core {
+    auto safe_view = [](const char* str) { return str ? std::string_view(str) : std::string_view(); };
+
 
     void bootstrapper_t::reset() {
         // We only clear mock/test modules from the registry. Real modules (arch "sandbox") 
         // loaded via .so files cannot be safely unloaded and re-staged in the same process
         // since dlclose is merely a hint and global constructors won't re-run.
         m_services.erase(std::remove_if(m_services.begin(), m_services.end(), 
-            [](const service_info_t& s) { return std::string_view(s.architecture) != "sandbox"; }), m_services.end());
+            [](const service_info_t& s) { return safe_view(s.architecture) != "sandbox"; }), m_services.end());
             
         m_modules.erase(std::remove_if(m_modules.begin(), m_modules.end(), 
-            [](const module_info_t& m) { return std::string_view(m.architecture) != "sandbox"; }), m_modules.end());
+            [](const module_info_t& m) { return safe_view(m.architecture) != "sandbox"; }), m_modules.end());
     }
 
     void bootstrapper_t::index_library(flecs::world& entity_world, const std::filesystem::path &library_path) {
@@ -53,8 +55,8 @@ namespace sandbox::core {
     static const module_info_t* find_best_module(std::string_view name, std::string_view architecture, int version_major, int version_minor, int version_patch, bool exact_patch, const std::vector<module_info_t>& modules) {
         const module_info_t* best_match = nullptr;
         for (const auto& module_info : modules) {
-            if (std::string_view(module_info.name) != name) continue;
-            if (std::string_view(module_info.architecture) != architecture) continue;
+            if (safe_view(module_info.name) != name) continue;
+            if (safe_view(module_info.architecture) != architecture) continue;
             if (version_major > 0 && module_info.version_major != version_major) continue;
             if (version_minor >= 0 && module_info.version_minor < version_minor) continue;
             if (exact_patch && module_info.version_patch != version_patch) continue;
@@ -68,7 +70,7 @@ namespace sandbox::core {
                     if (module_info.version_minor > best_match->version_minor) best_match = &module_info;
                 } else if (module_info.version_patch != best_match->version_patch) {
                     if (module_info.version_patch > best_match->version_patch) best_match = &module_info;
-                } else if (std::string_view(module_info.name) < std::string_view(best_match->name)) {
+                } else if (safe_view(module_info.name) < safe_view(best_match->name)) {
                     best_match = &module_info;
                 }
             }
@@ -80,8 +82,8 @@ namespace sandbox::core {
         const module_info_t* best_match = nullptr;
         for (const auto& module_info : modules) {
             if (!module_info.service) continue;
-            if (std::string_view(module_info.service->name) != service_name) continue;
-            if (std::string_view(module_info.architecture) != architecture) continue;
+            if (safe_view(module_info.service->name) != service_name) continue;
+            if (safe_view(module_info.architecture) != architecture) continue;
             if (version_major > 0 && module_info.service->version_major != version_major) continue;
             if (version_minor >= 0 && module_info.service->version_minor < version_minor) continue;
             
@@ -98,7 +100,7 @@ namespace sandbox::core {
                     if (module_info.version_minor > best_match->version_minor) best_match = &module_info;
                 } else if (module_info.version_patch != best_match->version_patch) {
                     if (module_info.version_patch > best_match->version_patch) best_match = &module_info;
-                } else if (std::string_view(module_info.name) < std::string_view(best_match->name)) {
+                } else if (safe_view(module_info.name) < safe_view(best_match->name)) {
                     best_match = &module_info;
                 }
             }
@@ -182,7 +184,7 @@ namespace sandbox::core {
         // Pass 1: Required dependencies
         size_t processed_index = 0;
         while (processed_index < m_active_modules.size()) {
-            const module_info_t& current = m_active_modules[processed_index++];
+            module_info_t current = m_active_modules[processed_index++];
             
             for (size_t i = 0; i < current.requirement_count; ++i) {
                 const auto& requirement = current.requirements[i];
@@ -199,13 +201,13 @@ namespace sandbox::core {
                     
                     bool fulfilled = false;
                     for (const auto& active : m_active_modules) {
-                        if (active.service && std::string_view(active.service->name) == requirement.name) {
+                        if (active.service && safe_view(active.service->name) == requirement.name) {
                             fulfilled = true; break;
                         }
                     }
                     if (!fulfilled) {
                         for (const auto& booted : m_booted_modules) {
-                            if (booted.service && std::string_view(booted.service->name) == requirement.name) {
+                            if (booted.service && safe_view(booted.service->name) == requirement.name) {
                                 fulfilled = true; break;
                             }
                         }
@@ -221,13 +223,13 @@ namespace sandbox::core {
                 } else if (requirement.kind == SANDBOX_REQUIREMENT_KIND_MODULE) {
                     bool fulfilled = false;
                     for (const auto& active : m_active_modules) {
-                        if (std::string_view(active.name) == requirement.name) {
+                        if (safe_view(active.name) == requirement.name) {
                             fulfilled = true; break;
                         }
                     }
                     if (!fulfilled) {
                         for (const auto& booted : m_booted_modules) {
-                            if (std::string_view(booted.name) == requirement.name) {
+                            if (safe_view(booted.name) == requirement.name) {
                                 fulfilled = true; break;
                             }
                         }
@@ -248,7 +250,7 @@ namespace sandbox::core {
         // Pass 2: Expected dependencies
         processed_index = 0;
         while (processed_index < m_active_modules.size()) {
-            const module_info_t& current = m_active_modules[processed_index++];
+            module_info_t current = m_active_modules[processed_index++];
             for (size_t i = 0; i < current.requirement_count; ++i) {
                 const auto& requirement = current.requirements[i];
                 if (requirement.strictness != SANDBOX_REQUIREMENT_STRICTNESS_EXPECTED) continue;
@@ -264,13 +266,13 @@ namespace sandbox::core {
                     
                     bool fulfilled = false;
                     for (const auto& active : m_active_modules) {
-                        if (active.service && std::string_view(active.service->name) == requirement.name) {
+                        if (active.service && safe_view(active.service->name) == requirement.name) {
                             fulfilled = true; break;
                         }
                     }
                     if (!fulfilled) {
                         for (const auto& booted : m_booted_modules) {
-                            if (booted.service && std::string_view(booted.service->name) == requirement.name) {
+                            if (booted.service && safe_view(booted.service->name) == requirement.name) {
                                 fulfilled = true; break;
                             }
                         }
@@ -284,13 +286,13 @@ namespace sandbox::core {
                 } else if (requirement.kind == SANDBOX_REQUIREMENT_KIND_MODULE) {
                     bool fulfilled = false;
                     for (const auto& active : m_active_modules) {
-                        if (std::string_view(active.name) == requirement.name) {
+                        if (safe_view(active.name) == requirement.name) {
                             fulfilled = true; break;
                         }
                     }
                     if (!fulfilled) {
                         for (const auto& booted : m_booted_modules) {
-                            if (std::string_view(booted.name) == requirement.name) {
+                            if (safe_view(booted.name) == requirement.name) {
                                 fulfilled = true; break;
                             }
                         }
@@ -327,7 +329,7 @@ namespace sandbox::core {
                     if (current.version_major != winner.version_major) current_wins = current.version_major > winner.version_major;
                     else if (current.version_minor != winner.version_minor) current_wins = current.version_minor > winner.version_minor;
                     else if (current.version_patch != winner.version_patch) current_wins = current.version_patch > winner.version_patch;
-                    else current_wins = std::string_view(current.name) < std::string_view(winner.name);
+                    else current_wins = safe_view(current.name) < safe_view(winner.name);
                     
                     if (current_wins) {
                         to_evict.push_back(winner_idx);
@@ -350,6 +352,15 @@ namespace sandbox::core {
         std::vector<std::vector<size_t>> adj(m_active_modules.size());
         std::vector<int> in_degree(m_active_modules.size(), 0);
         
+        std::unordered_map<std::string_view, size_t> active_module_names;
+        std::unordered_map<std::string_view, size_t> active_service_names;
+        for (size_t j = 0; j < m_active_modules.size(); ++j) {
+            active_module_names[safe_view(m_active_modules[j].name)] = j;
+            if (m_active_modules[j].service) {
+                active_service_names[safe_view(m_active_modules[j].service->name)] = j;
+            }
+        }
+        
         for (size_t a = 0; a < m_active_modules.size(); ++a) {
             const module_info_t& mod_a = m_active_modules[a];
             for (size_t i = 0; i < mod_a.requirement_count; ++i) {
@@ -357,18 +368,14 @@ namespace sandbox::core {
                 
                 size_t b = m_active_modules.size();
                 if (requirement.kind == SANDBOX_REQUIREMENT_KIND_SERVICE) {
-                    for (size_t j = 0; j < m_active_modules.size(); ++j) {
-                        if (m_active_modules[j].service && std::string_view(m_active_modules[j].service->name) == requirement.name) {
-                            b = j;
-                            break;
-                        }
+                    auto it = active_service_names.find(safe_view(requirement.name));
+                    if (it != active_service_names.end()) {
+                        b = it->second;
                     }
                 } else if (requirement.kind == SANDBOX_REQUIREMENT_KIND_MODULE) {
-                    for (size_t j = 0; j < m_active_modules.size(); ++j) {
-                        if (std::string_view(m_active_modules[j].name) == requirement.name) {
-                            b = j;
-                            break;
-                        }
+                    auto it = active_module_names.find(safe_view(requirement.name));
+                    if (it != active_module_names.end()) {
+                        b = it->second;
                     }
                 }
                 

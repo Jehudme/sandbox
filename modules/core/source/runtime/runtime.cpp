@@ -44,6 +44,7 @@ namespace sandbox::modules {
 
     void runtime_t::stop() {
         if (m_thread && m_thread->joinable()) {
+            resume();
             m_thread->join();
             m_thread.reset();
         }
