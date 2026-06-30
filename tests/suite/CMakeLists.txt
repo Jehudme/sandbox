@@ -31,3 +31,5 @@ target_include_directories(sandbox_suite_tests
 add_dependencies(sandbox_suite_tests dummy_plugin core_plugin)
 
 catch_discover_tests(sandbox_suite_tests)
+
+target_precompile_headers(sandbox_suite_tests PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_SOURCE_DIR}/sandbox/source/pch.h>")

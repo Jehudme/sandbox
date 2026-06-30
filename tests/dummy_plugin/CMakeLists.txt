@@ -21,3 +21,5 @@ set_target_properties(dummy_plugin PROPERTIES
 )
 
 target_link_libraries(dummy_plugin PRIVATE sandbox_library)
+
+target_precompile_headers(dummy_plugin PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_SOURCE_DIR}/sandbox/source/pch.h>")

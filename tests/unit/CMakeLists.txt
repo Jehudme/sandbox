@@ -59,3 +59,5 @@ add_dependencies(sandbox_unit_tests dummy_plugin core_plugin)
 
 # Register tests with CTest
 catch_discover_tests(sandbox_unit_tests)
+
+target_precompile_headers(sandbox_unit_tests PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_SOURCE_DIR}/sandbox/source/pch.h>")

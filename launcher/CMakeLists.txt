@@ -20,8 +20,5 @@ target_link_libraries(sandbox_launcher PRIVATE
         CLI11::CLI11
 )
 
-# Apply the Launcher Precompiled Header
-target_precompile_headers(sandbox_launcher
-        PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/source/pch.h>"
-)
+target_precompile_headers(sandbox_launcher PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_SOURCE_DIR}/sandbox/source/pch.h>")
 

@@ -75,3 +75,5 @@ add_custom_command(TARGET core_plugin POST_BUILD
     $<TARGET_FILE:core_plugin>
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_FILE_NAME:core_plugin>
 )
+
+target_precompile_headers(core_plugin PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_SOURCE_DIR}/sandbox/source/pch.h>")
