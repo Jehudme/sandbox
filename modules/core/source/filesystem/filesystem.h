@@ -11,15 +11,27 @@
 
 namespace sandbox::modules {
 
-    class filesystem {
+
+    /**
+     * @brief A global module that abstracts file I/O over physical directories and archives.
+     */
+    class filesystem_t {
     public:
-        // Flecs module registration and instance initialization
-        filesystem(flecs::world& ecs);
-        ~filesystem();
+        /**
+         * @brief Initializes the filesystem module.
+         * @param entity_world The flecs world.
+         */
+        filesystem_t(flecs::world& entity_world);
+        
+        /**
+         * @brief Destroys the filesystem module.
+         */
+        ~filesystem_t();
+
 
         // Prevent copying/moving to guarantee isolated state
-        filesystem(const filesystem&) = delete;
-        filesystem& operator=(const filesystem&) = delete;
+        filesystem_t(const filesystem_t&) = delete;
+        filesystem_t& operator=(const filesystem_t&) = delete;
 
         // ==========================================
         // ARCHIVE & MOUNTING
@@ -75,7 +87,7 @@ namespace sandbox::modules {
         int64_t last_modified(const char* virtual_path) const;
 
     private:
-        flecs::world m_ecs;
+        flecs::world m_entity_world;
 
         std::unordered_map<std::string, std::string> m_physical_mounts;
     };

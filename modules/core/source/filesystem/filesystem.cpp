@@ -10,11 +10,11 @@
 
 namespace sandbox::modules {
 
-    filesystem::filesystem(flecs::world& ecs) : m_ecs(ecs) {
-        sandbox::modules::logs::trace(m_ecs, "Filesystem Module Initializing...");
+    filesystem_t::filesystem_t(flecs::world& entity_world) : m_entity_world(entity_world) {
+        sandbox::modules::logs::trace(m_entity_world, "Filesystem Module Initializing...");
 
         // Require configuration service
-        sandbox::properties config = sandbox::modules::configuration::get_properties(m_ecs);
+        sandbox::properties config = sandbox::modules::configuration::get_properties(m_entity_world);
         
         if (config.is_valid() && config.has("filesystem/mounts")) {
             std::vector<std::string> mounts = config.keys("filesystem/mounts");
@@ -32,60 +32,101 @@ namespace sandbox::modules {
         }
     }
 
-    filesystem::~filesystem() = default;
+    filesystem_t::~filesystem_t() = default;
 
-    bool filesystem::mount(const char* physical_path, const char* virtual_mount_point, bool read_only) {
+    bool filesystem_t::mount(const char* physical_path, const char* virtual_mount_point, bool read_only) {
         if (!physical_path || !virtual_mount_point) {
-            sandbox::modules::logs::error(m_ecs, "Mount failed: null path provided");
+            sandbox::modules::logs::error(m_entity_world, "Mount failed: null path provided");
             throw sandbox::core::filesystem_error("Null path provided to mount");
         }
 
         std::string path_str = physical_path;
         if (path_str.length() >= 4 && path_str.substr(path_str.length() - 4) == ".zip") {
-            sandbox::modules::logs::info(m_ecs, "Mounting ZIP archive '{}' to '{}' (readonly: {})", physical_path, virtual_mount_point, read_only);
+            sandbox::modules::logs::info(m_entity_world, "Mounting ZIP archive '{}' to '{}' (readonly: {})", physical_path, virtual_mount_point, read_only);
             
             // Validate the zip file using miniz
             mz_zip_archive zip_archive;
             memset(&zip_archive, 0, sizeof(zip_archive));
             
             if (!mz_zip_reader_init_file(&zip_archive, physical_path, 0)) {
-                sandbox::modules::logs::error(m_ecs, "Failed to open zip file '{}'", physical_path);
+                sandbox::modules::logs::error(m_entity_world, "Failed to open zip file '{}'", physical_path);
                 throw sandbox::core::filesystem_error("Failed to open zip file");
             }
             
             mz_zip_reader_end(&zip_archive);
         } else {
-            sandbox::modules::logs::info(m_ecs, "Mounting physical include '{}' to '{}' (readonly: {})", physical_path, virtual_mount_point, read_only);
+            sandbox::modules::logs::info(m_entity_world, "Mounting physical include '{}' to '{}' (readonly: {})", physical_path, virtual_mount_point, read_only);
         }
 
         m_physical_mounts[virtual_mount_point] = physical_path;
         return true;
     }
 
-    bool filesystem::unmount(const char* mount_point) { return false; }
-    sandbox_file_handle_t filesystem::open_read(const char* virtual_path) { return {0}; }
-    sandbox_file_handle_t filesystem::open_write(const char* virtual_path, bool append, bool force_path) { return {0}; }
-    size_t filesystem::read(sandbox_file_handle_t handle, void* buffer, size_t bytes_to_read) { return 0; }
-    size_t filesystem::write(sandbox_file_handle_t handle, const void* buffer, size_t bytes_to_write) { return 0; }
-    bool filesystem::eof(sandbox_file_handle_t handle) const { return true; }
-    size_t filesystem::tell(sandbox_file_handle_t handle) const { return 0; }
-    bool filesystem::seek(sandbox_file_handle_t handle, size_t position) { return false; }
-    size_t filesystem::size(sandbox_file_handle_t handle) const { return 0; }
-    void filesystem::close(sandbox_file_handle_t handle) {}
-    std::vector<uint8_t> filesystem::read_all_bytes(const char* virtual_path) { return {}; }
-    std::string filesystem::read_all_text(const char* virtual_path) { return ""; }
-    bool filesystem::write_all(const char* virtual_path, const void* data, size_t size, bool force_path) { return false; }
-    bool filesystem::create_file(const char* virtual_path, bool force_path) { return false; }
-    bool filesystem::remove_file(const char* virtual_path) { return false; }
-    bool filesystem::copy(const char* source_virtual_path, const char* dest_virtual_path, bool overwrite, bool force_path) { return false; }
-    bool filesystem::move(const char* source_virtual_path, const char* dest_virtual_path, bool overwrite, bool force_path) { return false; }
-    bool filesystem::create_directory(const char* virtual_path, bool force_path) { return false; }
-    bool filesystem::remove_directory(const char* virtual_path) { return false; }
-    std::vector<std::string> filesystem::list_contents(const char* virtual_path) const { return {}; }
-    bool filesystem::exists(const char* virtual_path) const { return false; }
-    bool filesystem::is_file(const char* virtual_path) const { return false; }
-    bool filesystem::is_directory(const char* virtual_path) const { return false; }
-    bool filesystem::is_readonly(const char* virtual_path) const { return false; }
-    size_t filesystem::file_size(const char* virtual_path) const { return 0; }
-    int64_t filesystem::last_modified(const char* virtual_path) const { return 0; }
+    bool filesystem_t::unmount(const char* mount_point) { return false; }
+    sandbox_file_handle_t filesystem_t::open_read(const char* virtual_path) { return {0}; }
+    sandbox_file_handle_t filesystem_t::open_write(const char* virtual_path, bool append, bool force_path) { return {0}; }
+    size_t filesystem_t::read(sandbox_file_handle_t handle, void* buffer, size_t bytes_to_read) { return 0; }
+    size_t filesystem_t::write(sandbox_file_handle_t handle, const void* buffer, size_t bytes_to_write) { return 0; }
+    bool filesystem_t::eof(sandbox_file_handle_t handle) const { return true; }
+    size_t filesystem_t::tell(sandbox_file_handle_t handle) const { return 0; }
+    bool filesystem_t::seek(sandbox_file_handle_t handle, size_t position) { return false; }
+    size_t filesystem_t::size(sandbox_file_handle_t handle) const { return 0; }
+    void filesystem_t::close(sandbox_file_handle_t handle) {}
+    std::vector<uint8_t> filesystem_t::read_all_bytes(const char* virtual_path) { return {}; }
+    std::string filesystem_t::read_all_text(const char* virtual_path) { return ""; }
+    bool filesystem_t::write_all(const char* virtual_path, const void* data, size_t size, bool force_path) { return false; }
+    bool filesystem_t::create_file(const char* virtual_path, bool force_path) { return false; }
+    bool filesystem_t::remove_file(const char* virtual_path) { return false; }
+    bool filesystem_t::copy(const char* source_virtual_path, const char* dest_virtual_path, bool overwrite, bool force_path) { return false; }
+    bool filesystem_t::move(const char* source_virtual_path, const char* dest_virtual_path, bool overwrite, bool force_path) { return false; }
+    bool filesystem_t::create_directory(const char* virtual_path, bool force_path) { return false; }
+    bool filesystem_t::remove_directory(const char* virtual_path) { return false; }
+    std::vector<std::string> filesystem_t::list_contents(const char* virtual_path) const { return {}; }
+    bool filesystem_t::exists(const char* virtual_path) const { return false; }
+    bool filesystem_t::is_file(const char* virtual_path) const { return false; }
+    bool filesystem_t::is_directory(const char* virtual_path) const { return false; }
+    bool filesystem_t::is_readonly(const char* virtual_path) const { return false; }
+    size_t filesystem_t::file_size(const char* virtual_path) const { return 0; }
+    int64_t filesystem_t::last_modified(const char* virtual_path) const { return 0; }
+}
+
+
+// ==========================================
+// C-ABI Endpoints
+// ==========================================
+#include <sandbox/abi/filesystem.h>
+
+extern "C" {
+    static bool filesystem_mount(ecs_world_t* entity_world, const char* physical, const char* virt, bool readonly) {
+        flecs::world flecs_world(entity_world);
+        auto* fs = flecs_world.try_get_mut<sandbox::modules::filesystem_t>();
+        if (fs) {
+            try {
+                return fs->mount(physical, virt, readonly);
+            } catch(...) {
+                return false;
+            }
+        }
+        return false;
+    }
+
+    static sandbox_filesystem_api_t filesystem_api = {
+        .mount = filesystem_mount
+    };
+
+    SANDBOX_DEFINE_SERVICE(sandbox_filesystem_service_t, sandbox_filesystem_api_t, &filesystem_api);
+}
+
+namespace sandbox::modules {
+    SANDBOX_DECLARE_MODULE(filesystem_t, {
+        .name = "filesystem",
+        .description = "Filesystem module",
+        .architecture = "sandbox",
+        .version_major = 1,
+        .version_minor = 0,
+        .version_patch = 0,
+        .service = &sandbox_filesystem_service_t_info,
+        .requirements = nullptr,
+        .requirement_count = 0
+    })
 }

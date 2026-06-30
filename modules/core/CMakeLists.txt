@@ -7,7 +7,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Source files
 set(SOURCES
     source/configuration/configuration.cpp
-    source/filesystem/library.cpp
     source/filesystem/filesystem.cpp
     source/logs/logger.cpp
     source/runtime/library.cpp
