@@ -13,15 +13,29 @@ extern "C" {
      * @brief API for the filesystem service.
      */
     typedef struct sandbox_filesystem_api_t {
-        /**
-         * @brief Mounts a physical path to a virtual mount point.
-         * @param ecs The entity component system world.
-         * @param physical The physical file path.
-         * @param virt The virtual mount point.
-         * @param readonly True if mounted read-only, false otherwise.
-         * @return True if successful, false otherwise.
-         */
-        bool (*mount)(ecs_world_t* ecs, const char* physical, const char* virt, bool readonly);
+        bool (*mount)(ecs_world_t* ecs, const char* physical_path, const char* virtual_mount_point, bool read_only);
+        bool (*unmount)(ecs_world_t* ecs, const char* mount_point);
+        sandbox_file_handle_t (*open_read)(ecs_world_t* ecs, const char* virtual_path);
+        sandbox_file_handle_t (*open_write)(ecs_world_t* ecs, const char* virtual_path, bool append, bool force_path);
+        size_t (*read)(ecs_world_t* ecs, sandbox_file_handle_t handle, void* buffer, size_t bytes_to_read);
+        size_t (*write)(ecs_world_t* ecs, sandbox_file_handle_t handle, const void* buffer, size_t bytes_to_write);
+        bool (*eof)(ecs_world_t* ecs, sandbox_file_handle_t handle);
+        size_t (*tell)(ecs_world_t* ecs, sandbox_file_handle_t handle);
+        bool (*seek)(ecs_world_t* ecs, sandbox_file_handle_t handle, size_t position);
+        size_t (*size)(ecs_world_t* ecs, sandbox_file_handle_t handle);
+        void (*close_handle)(ecs_world_t* ecs, sandbox_file_handle_t handle);
+        bool (*create_file)(ecs_world_t* ecs, const char* virtual_path, bool force_path);
+        bool (*remove_file)(ecs_world_t* ecs, const char* virtual_path);
+        bool (*copy)(ecs_world_t* ecs, const char* source_virtual_path, const char* dest_virtual_path, bool overwrite, bool force_path);
+        bool (*move)(ecs_world_t* ecs, const char* source_virtual_path, const char* dest_virtual_path, bool overwrite, bool force_path);
+        bool (*create_directory)(ecs_world_t* ecs, const char* virtual_path, bool force_path);
+        bool (*remove_directory)(ecs_world_t* ecs, const char* virtual_path);
+        bool (*exists)(ecs_world_t* ecs, const char* virtual_path);
+        bool (*is_file)(ecs_world_t* ecs, const char* virtual_path);
+        bool (*is_directory)(ecs_world_t* ecs, const char* virtual_path);
+        bool (*is_readonly)(ecs_world_t* ecs, const char* virtual_path);
+        size_t (*file_size)(ecs_world_t* ecs, const char* virtual_path);
+        int64_t (*last_modified)(ecs_world_t* ecs, const char* virtual_path);
     } sandbox_filesystem_api_t;
 
     /**
