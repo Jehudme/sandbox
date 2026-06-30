@@ -36,12 +36,24 @@ namespace sandbox::modules {
          */
         ~logger_t();
 
-        // Make logger move-constructible so it can be stored directly in Flecs
+        /**
+         * @brief Move constructor.
+         */
         logger_t(logger_t&&) = default;
+
+        /**
+         * @brief Move assignment operator.
+         */
         logger_t& operator=(logger_t&&) = default;
 
-        // Prevent copying
+        /**
+         * @brief Copy constructor (deleted).
+         */
         logger_t(const logger_t&) = delete;
+
+        /**
+         * @brief Copy assignment operator (deleted).
+         */
         logger_t& operator=(const logger_t&) = delete;
 
         /**

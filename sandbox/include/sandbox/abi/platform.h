@@ -1,8 +1,14 @@
 #pragma once
 
-/* ========================================================================== */
-/* PLATFORM DETECTION                                                         */
-/* ========================================================================== */
+/**
+ * @brief ==========================================================================
+ */
+/**
+ * @brief PLATFORM DETECTION
+ */
+/**
+ * @brief ==========================================================================
+ */
 
 #if defined(_WIN32) || defined(_WIN64)
     #define SANDBOX_PLATFORM_WINDOWS
@@ -14,9 +20,15 @@
     #error "Unknown platform!"
 #endif
 
-/* ========================================================================== */
-/* COMPILER DETECTION & INLINING                                              */
-/* ========================================================================== */
+/**
+ * @brief ==========================================================================
+ */
+/**
+ * @brief COMPILER DETECTION & INLINING
+ */
+/**
+ * @brief ==========================================================================
+ */
 
 #if defined(__clang__)
     #define SANDBOX_COMPILER_CLANG
@@ -32,25 +44,41 @@
     #define SANDBOX_FORCE_INLINE inline
 #endif
 
-/* ========================================================================== */
-/* SHARED LIBRARY EXPORT / IMPORT (SANDBOX_API)                               */
-/* ========================================================================== */
+/**
+ * @brief ==========================================================================
+ */
+/**
+ * @brief SHARED LIBRARY EXPORT / IMPORT (SANDBOX_API)
+ */
+/**
+ * @brief ==========================================================================
+ */
 
 #ifdef SANDBOX_STATIC
-    /* Static build: No export/import needed */
+    /**
+ * @brief Static build: No export/import needed
+ */
     #define SANDBOX_API
 #else
-    /* Dynamic build (DLL / .so) */
+    /**
+ * @brief Dynamic build (DLL / .so)
+ */
     #ifdef SANDBOX_PLATFORM_WINDOWS
         #ifdef SANDBOX_BUILD_SHARED
-            /* We are building the engine/library itself */
+            /**
+ * @brief We are building the engine/library itself
+ */
             #define SANDBOX_API __declspec(dllexport)
         #else
-            /* We are a plugin/application importing the library */
+            /**
+ * @brief We are a plugin/application importing the library
+ */
             #define SANDBOX_API __declspec(dllimport)
         #endif
     #else
-        /* Linux and macOS */
+        /**
+ * @brief Linux and macOS
+ */
         #ifdef SANDBOX_BUILD_SHARED
             #define SANDBOX_API __attribute__((visibility("default")))
         #else
@@ -59,18 +87,30 @@
     #endif
 #endif
 
-/* ========================================================================== */
-/* COMPILER-SPECIFIC AUTO-INITIALIZATION MACROS                               */
-/* ========================================================================== */
+/**
+ * @brief ==========================================================================
+ */
+/**
+ * @brief COMPILER-SPECIFIC AUTO-INITIALIZATION MACROS
+ */
+/**
+ * @brief ==========================================================================
+ */
 
 #if defined(SANDBOX_COMPILER_GCC) || defined(SANDBOX_COMPILER_CLANG)
-    /* GCC / Clang (Linux, macOS, MinGW) */
+    /**
+ * @brief GCC / Clang (Linux, macOS, MinGW)
+ */
     #define SANDBOX_CONSTRUCTOR(fn_name) \
         static void __attribute__((constructor)) fn_name(void)
 
 #elif defined(SANDBOX_COMPILER_MSVC)
-    /* Microsoft Visual Studio (Windows) */
-    /* We inject a function pointer directly into the C-Runtime (CRT) initialization section */
+    /**
+ * @brief Microsoft Visual Studio (Windows)
+ */
+    /**
+ * @brief We inject a function pointer directly into the C-Runtime (CRT) initialization section
+ */
     #pragma section(".CRT$XCU", read)
     #define SANDBOX_CONSTRUCTOR(fn_name) \
         static void __cdecl fn_name(void); \
@@ -78,16 +118,26 @@
         static void __cdecl fn_name(void)
 
 #else
-    /* Fallback for completely unknown compilers (Embedded systems, custom compilers) */
-    /* It will compile, but the engine must manually call the function later */
+    /**
+ * @brief Fallback for completely unknown compilers (Embedded systems, custom compilers)
+ */
+    /**
+ * @brief It will compile, but the engine must manually call the function later
+ */
     #pragma message("Warning: Compiler does not support C-constructors. Manual init required.")
     #define SANDBOX_CONSTRUCTOR(fn_name) \
         static void fn_name(void)
 #endif
 
-/* ========================================================================== */
-/* DEBUG BREAK (CRASH/ASSERT HOOKS)                                           */
-/* ========================================================================== */
+/**
+ * @brief ==========================================================================
+ */
+/**
+ * @brief DEBUG BREAK (CRASH/ASSERT HOOKS)
+ */
+/**
+ * @brief ==========================================================================
+ */
 
 #if defined(SANDBOX_COMPILER_MSVC)
     #define SANDBOX_DEBUGBREAK() __debugbreak()

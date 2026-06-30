@@ -1,4 +1,3 @@
-// modules/configuration/include/sandbox/abi/configuration.h
 #pragma once
 #include <sandbox/abi/bootstrapper.h>
 #include <sandbox/abi/properties.h>
@@ -7,11 +6,21 @@
 extern "C" {
 #endif
 
-// The API for the configuration service
+/**
+ * @brief API for the configuration service.
+ */
 typedef struct {
+    /**
+     * @brief Retrieves the global properties handle.
+     * @param ecs The entity component system world.
+     * @return The global properties handle.
+     */
     sandbox_properties_handle_t (*get_properties)(ecs_world_t* ecs);
 } sandbox_configuration_api_t;
 
+/**
+ * @brief The configuration service definition for global properties.
+ */
 SANDBOX_DECLARE_SERVICE(sandbox_configuration_service_t, sandbox_configuration_api_t, {
     .name = "configuration",
     .description = "The configuration service for global properties",

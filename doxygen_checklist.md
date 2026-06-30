@@ -1,0 +1,295 @@
+# Doxygen Checklist
+
+## modules/core/include/sandbox/abi/configuration.h
+- [ ] sandbox_properties_handle_t (*get_properties)(ecs_world_t* ecs);
+- [ ] SANDBOX_DECLARE_SERVICE(sandbox_configuration_service_t, sandbox_configuration_api_t, {
+## modules/core/include/sandbox/abi/filesystem.h
+- [ ] SANDBOX_DEFINE_HANDLE(sandbox_file_handle_t);
+- [ ] bool (*mount)(ecs_world_t* ecs, const char* physical, const char* virt, bool readonly);
+- [ ] SANDBOX_DECLARE_SERVICE(sandbox_filesystem_service_t, sandbox_filesystem_api_t, {
+## modules/core/include/sandbox/abi/logs.h
+- [ ] void (*trace)(ecs_world_t* ecs, const char* msg);
+- [ ] void (*debug)(ecs_world_t* ecs, const char* msg);
+- [ ] void (*info)(ecs_world_t* ecs, const char* msg);
+- [ ] void (*warn)(ecs_world_t* ecs, const char* msg);
+- [ ] void (*error)(ecs_world_t* ecs, const char* msg);
+- [ ] SANDBOX_DECLARE_SERVICE(sandbox_logs_service_t, sandbox_logs_api_t, {
+## modules/core/include/sandbox/sdk/configuration.hpp
+- [ ] class configuration {
+- [ ] static sandbox::properties get_properties(flecs::world& entity_world) {
+- [ ] const sandbox_configuration_service_t* service = SANDBOX_GET_SERVICE(entity_world, sandbox_configuration_service_t);
+- [ ] if (service && service->api) {
+- [ ] return sandbox::properties(service->api->get_properties(entity_world.c_ptr()));
+- [ ] return sandbox::properties(invalid);
+- [ ] static std::optional<Type> get(flecs::world& entity_world, const std::string& path) {
+- [ ] sandbox::properties temp = get_properties(entity_world);
+- [ ] if (!temp.is_valid()) return std::nullopt;
+- [ ] auto result = temp.get<Type>(path);
+- [ ] static void set(flecs::world& entity_world, const std::string& path, const Type& value) {
+- [ ] sandbox::properties temp = get_properties(entity_world);
+- [ ] if (!temp.is_valid()) return;
+- [ ] temp.set<Type>(path, value);
+- [ ] temp.release();
+## modules/core/include/sandbox/sdk/filesystem.hpp
+## modules/core/include/sandbox/sdk/logs.hpp
+- [ ] class logs {
+- [ ] static void trace(flecs::world& entity_world, std::format_string<Args...> fmt, Args&&... args) {
+- [ ] if (const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_logs_service_t)) {
+- [ ] if (service->api) {
+- [ ] std::string message = std::format(fmt, std::forward<Args>(args)...);
+- [ ] service->api->trace(entity_world.c_ptr(), message.c_str());
+- [ ] static void debug(flecs::world& entity_world, std::format_string<Args...> fmt, Args&&... args) {
+- [ ] if (const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_logs_service_t)) {
+- [ ] if (service->api) {
+- [ ] std::string message = std::format(fmt, std::forward<Args>(args)...);
+- [ ] service->api->debug(entity_world.c_ptr(), message.c_str());
+- [ ] static void info(flecs::world& entity_world, std::format_string<Args...> fmt, Args&&... args) {
+- [ ] if (const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_logs_service_t)) {
+- [ ] if (service->api) {
+- [ ] std::string message = std::format(fmt, std::forward<Args>(args)...);
+- [ ] service->api->info(entity_world.c_ptr(), message.c_str());
+- [ ] static void warn(flecs::world& entity_world, std::format_string<Args...> fmt, Args&&... args) {
+- [ ] if (const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_logs_service_t)) {
+- [ ] if (service->api) {
+- [ ] std::string message = std::format(fmt, std::forward<Args>(args)...);
+- [ ] service->api->warn(entity_world.c_ptr(), message.c_str());
+- [ ] static void error(flecs::world& entity_world, std::format_string<Args...> fmt, Args&&... args) {
+- [ ] if (const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_logs_service_t)) {
+- [ ] if (service->api) {
+- [ ] std::string message = std::format(fmt, std::forward<Args>(args)...);
+- [ ] service->api->error(entity_world.c_ptr(), message.c_str());
+## modules/core/include/sandbox/sdk/runtime.hpp
+- [ ] class runtime {
+- [ ] static void run(flecs::world& entity_world) {
+- [ ] if (const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_runtime_service_t)) {
+- [ ] if (service->api && service->api->run) {
+- [ ] service->api->run(entity_world.c_ptr());
+- [ ] static void start(flecs::world& entity_world) {
+- [ ] if (const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_runtime_service_t)) {
+- [ ] if (service->api && service->api->start) {
+- [ ] service->api->start(entity_world.c_ptr());
+- [ ] static void stop(flecs::world& entity_world) {
+- [ ] if (const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_runtime_service_t)) {
+- [ ] if (service->api && service->api->stop) {
+- [ ] service->api->stop(entity_world.c_ptr());
+- [ ] static void pause(flecs::world& entity_world) {
+- [ ] if (const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_runtime_service_t)) {
+- [ ] if (service->api && service->api->pause) {
+- [ ] service->api->pause(entity_world.c_ptr());
+- [ ] static void resume(flecs::world& entity_world) {
+- [ ] if (const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_runtime_service_t)) {
+- [ ] if (service->api && service->api->resume) {
+- [ ] service->api->resume(entity_world.c_ptr());
+## modules/core/source/configuration/configuration.h
+- [ ] struct configuration_module_t {
+- [ ] explicit configuration_module_t(flecs::world& entity_world);
+## modules/core/source/filesystem/filesystem.h
+- [ ] class filesystem_t {
+- [ ] filesystem_t(flecs::world& entity_world);
+- [ ] ~filesystem_t();
+- [ ] filesystem_t(const filesystem_t&) = delete;
+- [ ] filesystem_t& operator=(const filesystem_t&) = delete;
+- [ ] bool mount(const char* physical_path, const char* virtual_mount_point, bool read_only = true);
+- [ ] bool unmount(const char* mount_point);
+- [ ] sandbox_file_handle_t open_read(const char* virtual_path);
+- [ ] sandbox_file_handle_t open_write(const char* virtual_path, bool append = false, bool force_path = false);
+- [ ] size_t read(sandbox_file_handle_t handle, void* buffer, size_t bytes_to_read);
+- [ ] size_t write(sandbox_file_handle_t handle, const void* buffer, size_t bytes_to_write);
+- [ ] bool eof(sandbox_file_handle_t handle) const;
+- [ ] size_t tell(sandbox_file_handle_t handle) const;
+- [ ] bool seek(sandbox_file_handle_t handle, size_t position);
+- [ ] size_t size(sandbox_file_handle_t handle) const;
+- [ ] void close(sandbox_file_handle_t handle);
+- [ ] std::vector<uint8_t> read_all_bytes(const char* virtual_path);
+- [ ] std::string read_all_text(const char* virtual_path);
+- [ ] bool write_all(const char* virtual_path, const void* data, size_t size, bool force_path = false);
+- [ ] bool create_file(const char* virtual_path, bool force_path = false);
+- [ ] bool remove_file(const char* virtual_path);
+- [ ] bool copy(const char* source_virtual_path, const char* dest_virtual_path, bool overwrite = false, bool force_path = false);
+- [ ] bool move(const char* source_virtual_path, const char* dest_virtual_path, bool overwrite = false, bool force_path = false);
+- [ ] bool create_directory(const char* virtual_path, bool force_path = false);
+- [ ] bool remove_directory(const char* virtual_path);
+- [ ] std::vector<std::string> list_contents(const char* virtual_path) const;
+- [ ] bool exists(const char* virtual_path) const;
+- [ ] bool is_file(const char* virtual_path) const;
+- [ ] bool is_directory(const char* virtual_path) const;
+- [ ] bool is_readonly(const char* virtual_path) const;
+- [ ] size_t file_size(const char* virtual_path) const;
+- [ ] int64_t last_modified(const char* virtual_path) const;
+## modules/core/source/logs/logger.h
+- [ ] class logger;
+- [ ] class logger_t {
+- [ ] logger_t(flecs::world& entity_world);
+- [ ] ~logger_t();
+- [ ] logger_t(logger_t&&) = default;
+- [ ] logger_t& operator=(logger_t&&) = default;
+- [ ] logger_t(const logger_t&) = delete;
+- [ ] logger_t& operator=(const logger_t&) = delete;
+- [ ] void log(level_t log_level, const char* message);
+## modules/core/source/runtime/runtime.h
+- [ ] struct runtime_t {
+- [ ] runtime_t() = default;
+- [ ] ~runtime_t();
+- [ ] void run(flecs::world& entity_world);
+- [ ] void start(flecs::world& entity_world);
+- [ ] void stop();
+- [ ] void pause();
+- [ ] void resume();
+- [ ] void main_loop(flecs::world& entity_world);
+- [ ] std::shared_ptr<std::mutex> m_mutex = std::make_shared<std::mutex>();
+- [ ] std::shared_ptr<std::condition_variable> m_cv = std::make_shared<std::condition_variable>();
+- [ ] std::shared_ptr<std::atomic<bool>> m_paused = std::make_shared<std::atomic<bool>>(false);
+## sandbox/include/sandbox/abi/bootstrapper.h
+- [ ] void (*init_fn)(ecs_world_t* ecs);
+- [ ] void (*init_fn)(ecs_world_t* ecs);
+- [ ] SANDBOX_API bool sandbox_stage_service(const sandbox_service_info_t* info);
+- [ ] SANDBOX_API bool sandbox_stage_module(const sandbox_module_info_t* info);
+- [ ] SANDBOX_API void sandbox_index_library(ecs_world_t* ecs, const char* library_path);
+- [ ] extern ECS_COMPONENT_DECLARE(sandbox_bootstrapper_component_t);
+- [ ] SANDBOX_API sandbox_bootstrapper_t* sandbox_get_bootstrapper(ecs_world_t* ecs);
+- [ ] SANDBOX_API bool sandbox_bootstrapper_activate(sandbox_bootstrapper_t* bootstrapper, ecs_world_t* ecs, const char* architecture, const char* name, int version_major, int version_minor, int version_patch);
+- [ ] SANDBOX_API bool sandbox_bootstrapper_activate_string(sandbox_bootstrapper_t* bootstrapper, ecs_world_t* ecs, const char* module_str);
+- [ ] SANDBOX_API bool sandbox_bootstrapper_boot(sandbox_bootstrapper_t* bootstrapper, ecs_world_t* ecs);
+- [ ] do { flecs::world __w(ecs); __w.import<ModuleClass>(); } while(0)
+- [ ] ECS_IMPORT(ecs, ModuleClass)
+- [ ] (world_obj).try_get<ServiceClass>()
+- [ ] ecs_singleton_get((ecs_ptr), ServiceClass)
+## sandbox/include/sandbox/abi/engine.h
+- [ ] sandbox_engine_t* sandbox_engine_create(void);
+- [ ] void sandbox_engine_destroy(sandbox_engine_t* engine);
+- [ ] bool sandbox_engine_initialize(sandbox_engine_t* engine, sandbox_properties_handle_t properties);
+- [ ] void* sandbox_engine_get_ecs(sandbox_engine_t* engine);
+## sandbox/include/sandbox/abi/handle.h
+## sandbox/include/sandbox/abi/platform.h
+- [ ] static void __attribute__((constructor)) fn_name(void)
+- [ ] static void __cdecl fn_name(void)
+- [ ] static void fn_name(void)
+## sandbox/include/sandbox/abi/properties.h
+- [ ] SANDBOX_DEFINE_HANDLE(sandbox_properties_handle_t);
+- [ ] sandbox_properties_handle_t sandbox_properties_create(void);
+- [ ] void sandbox_properties_destroy(sandbox_properties_handle_t* props);
+- [ ] bool sandbox_properties_load(sandbox_properties_handle_t props, const char* data, size_t data_length, sandbox_properties_format_t format);
+- [ ] char* sandbox_properties_dump(sandbox_properties_handle_t props, sandbox_properties_format_t format);
+- [ ] void  sandbox_properties_free_string(char* str);
+- [ ] void sandbox_properties_clear(sandbox_properties_handle_t props, const char* path_str);
+- [ ] bool sandbox_properties_has(sandbox_properties_handle_t props, const char* path_str);
+- [ ] void sandbox_properties_keys(sandbox_properties_handle_t props, const char* path_str, void (*callback)(const char* key, void* ctx), void* ctx);
+- [ ] void sandbox_properties_merge(sandbox_properties_handle_t props, const char* path_str, sandbox_properties_handle_t other);
+- [ ] sandbox_properties_handle_t sandbox_properties_sub(sandbox_properties_handle_t props, const char* path_str);
+- [ ] bool sandbox_properties_get_int64(sandbox_properties_handle_t props, const char* path_str, int64_t* out_val);
+- [ ] bool sandbox_properties_get_uint64(sandbox_properties_handle_t props, const char* path_str, uint64_t* out_val);
+- [ ] bool sandbox_properties_get_double(sandbox_properties_handle_t props, const char* path_str, double* out_val);
+- [ ] bool sandbox_properties_get_bool(sandbox_properties_handle_t props, const char* path_str, bool* out_val);
+- [ ] void sandbox_properties_read_string(sandbox_properties_handle_t props, const char* path_str, void (*callback)(const char* value, void* user_data), void* user_data);
+- [ ] void sandbox_properties_read_int64_array(sandbox_properties_handle_t props, const char* path_str, void (*callback)(int64_t value, void* user_data), void* user_data);
+- [ ] void sandbox_properties_read_uint64_array(sandbox_properties_handle_t props, const char* path_str, void (*callback)(uint64_t value, void* user_data), void* user_data);
+- [ ] void sandbox_properties_read_double_array(sandbox_properties_handle_t props, const char* path_str, void (*callback)(double value, void* user_data), void* user_data);
+- [ ] void sandbox_properties_read_bool_array(sandbox_properties_handle_t props, const char* path_str, void (*callback)(bool value, void* user_data), void* user_data);
+- [ ] void sandbox_properties_read_string_array(sandbox_properties_handle_t props, const char* path_str, void (*callback)(const char* value, void* user_data), void* user_data);
+- [ ] void sandbox_properties_set_int64(sandbox_properties_handle_t props, const char* path_str, int64_t val);
+- [ ] void sandbox_properties_set_uint64(sandbox_properties_handle_t props, const char* path_str, uint64_t val);
+- [ ] void sandbox_properties_set_double(sandbox_properties_handle_t props, const char* path_str, double val);
+- [ ] void sandbox_properties_set_bool(sandbox_properties_handle_t props, const char* path_str, bool val);
+- [ ] void sandbox_properties_set_string(sandbox_properties_handle_t props, const char* path_str, const char* val);
+- [ ] void sandbox_properties_set_int64_array(sandbox_properties_handle_t props, const char* path_str, const int64_t* values, size_t count);
+- [ ] void sandbox_properties_set_uint64_array(sandbox_properties_handle_t props, const char* path_str, const uint64_t* values, size_t count);
+- [ ] void sandbox_properties_set_double_array(sandbox_properties_handle_t props, const char* path_str, const double* values, size_t count);
+- [ ] void sandbox_properties_set_bool_array(sandbox_properties_handle_t props, const char* path_str, const bool* values, size_t count);
+- [ ] void sandbox_properties_set_string_array(sandbox_properties_handle_t props, const char* path_str, const char** values, size_t count);
+## sandbox/include/sandbox/abi/runtime.h
+- [ ] void (*run)(ecs_world_t* ecs);
+- [ ] void (*start)(ecs_world_t* ecs);
+- [ ] void (*stop)(ecs_world_t* ecs);
+- [ ] void (*pause)(ecs_world_t* ecs);
+- [ ] void (*resume)(ecs_world_t* ecs);
+- [ ] SANDBOX_DECLARE_SERVICE(sandbox_runtime_service_t, sandbox_runtime_api_t, {
+## sandbox/include/sandbox/sdk/bootstrapper.hpp
+- [ ] class bootstrapper {
+- [ ] explicit bootstrapper(ecs_world_t* ecs);
+- [ ] void activate(const std::string& arch, const std::string& name, int major, int minor, int patch = -1);
+- [ ] void activate(const std::string& module_str);
+- [ ] void boot();
+## sandbox/include/sandbox/sdk/engine.hpp
+- [ ] class properties;
+- [ ] class engine {
+- [ ] engine();
+- [ ] ~engine();
+- [ ] engine(const engine&) = delete;
+- [ ] engine& operator=(const engine&) = delete;
+- [ ] engine(engine&& other) noexcept;
+- [ ] engine& operator=(engine&& other) noexcept;
+- [ ] explicit engine(sandbox_engine_t* raw);
+- [ ] bool initialize(const properties& props);
+- [ ] void* get_ecs() const;
+## sandbox/include/sandbox/sdk/properties.hpp
+- [ ] class properties {
+- [ ] properties();
+- [ ] ~properties();
+- [ ] properties(const properties&) = delete;
+- [ ] properties& operator=(const properties&) = delete;
+- [ ] properties(properties&& other) noexcept;
+- [ ] properties& operator=(properties&& other) noexcept;
+- [ ] explicit properties(sandbox_properties_handle_t raw);
+- [ ] bool load(const std::string& data, Format format = Format::JSON);
+- [ ] std::string dump(Format format = Format::JSON) const;
+- [ ] void clear(const std::string& path);
+- [ ] bool has(const std::string& path) const;
+- [ ] std::vector<std::string> keys(const std::string& path) const;
+- [ ] void merge(const std::string& path, const properties& other);
+- [ ] properties sub(const std::string& path) const;
+- [ ] bool get(const std::string& path, T& out_val) const;
+- [ ] std::optional<T> get(const std::string& path) const;
+- [ ] bool get_array(const std::string& path, std::vector<T>& out_val) const;
+- [ ] void set(const std::string& path, const T& value);
+- [ ] void set_array(const std::string& path, const std::vector<T>& values);
+## sandbox/source/core/bootstrapper.h
+- [ ] class bootstrapper_t {
+- [ ] bootstrapper_t() = default;
+- [ ] ~bootstrapper_t() = default;
+- [ ] static void stage_service(const service_info_t& service_info);
+- [ ] static void stage_module(const module_info_t& module_info);
+- [ ] static void reset();
+- [ ] static void index_library(flecs::world& entity_world, const std::filesystem::path& library_path);
+- [ ] void activate(flecs::world& entity_world, std::string_view architecture, std::string_view name, int version_major, int version_minor, int version_patch = -1);
+- [ ] void activate(flecs::world& entity_world, std::string_view module_urn);
+- [ ] void boot(flecs::world& entity_world);
+## sandbox/source/core/engine.h
+- [ ] class bootstrapper_t;
+- [ ] class engine_t {
+- [ ] engine_t();
+- [ ] ~engine_t();
+- [ ] void initialize(properties_t& properties);
+- [ ] void save_bootstrapper();
+- [ ] void boot();
+## sandbox/source/core/exceptions.h
+- [ ] class sandbox_error : public std::runtime_error {
+- [ ] class library_load_error : public sandbox_error {
+- [ ] class module_activation_error : public sandbox_error {
+- [ ] class service_collision_error : public sandbox_error {
+- [ ] class module_dependency_error : public sandbox_error {
+- [ ] class property_format_error : public sandbox_error {
+- [ ] class filesystem_error : public sandbox_error {
+## sandbox/source/core/library_loader.h
+- [ ] class library_loader_t {
+- [ ] library_loader_t() = default;
+- [ ] ~library_loader_t() = default;
+- [ ] library_loader_t(const library_loader_t&) = delete;
+- [ ] library_loader_t& operator=(const library_loader_t&) = delete;
+- [ ] library_loader_t(library_loader_t&&) noexcept = default;
+- [ ] library_loader_t& operator=(library_loader_t&&) noexcept = default;
+- [ ] void load(flecs::world& entity_world, const std::filesystem::path& path);
+- [ ] void unload(flecs::world& entity_world, const std::string& library_name);
+## sandbox/source/core/properties.h
+- [ ] class properties_t {
+- [ ] properties_t();
+- [ ] ~properties_t();
+- [ ] void load(std::string_view data, Format format);
+- [ ] std::string dump(Format format) const;
+- [ ] void clear(const path_t& path);
+- [ ] bool has(const path_t& path) const;
+- [ ] keys_t keys(const path_t& path) const;
+- [ ] void merge(const path_t& path, const properties_t& other);
+- [ ] properties_t sub(const path_t& path) const;
+- [ ] std::optional<Type> get(const path_t& path = {}) const;
+- [ ] void set(const path_t& path, Type value);
+## sandbox/source/pch.h

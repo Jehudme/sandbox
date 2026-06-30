@@ -14,9 +14,15 @@ namespace sandbox::modules {
         /**
          * @brief Constructs a new runtime instance.
          */
+/**
+         * @brief Default constructor.
+         */
         runtime_t() = default;
         /**
          * @brief Destroys the runtime instance and joins any running threads.
+         */
+/**
+         * @brief Destructor.
          */
         ~runtime_t();
 
@@ -24,26 +30,47 @@ namespace sandbox::modules {
          * @brief Runs the engine loop synchronously on the current thread.
          * @param entity_world The flecs world.
          */
+/**
+         * @brief Runs the main loop on the current thread.
+         * @param entity_world The flecs world.
+         */
         void run(flecs::world& entity_world);
         /**
          * @brief Starts the engine loop asynchronously in a background thread.
+         * @param entity_world The flecs world.
+         */
+/**
+         * @brief Starts the runtime asynchronously.
          * @param entity_world The flecs world.
          */
         void start(flecs::world& entity_world);
         /**
          * @brief Stops the engine loop.
          */
+/**
+         * @brief Stops the runtime.
+         */
         void stop();
         /**
          * @brief Pauses the engine loop.
+         */
+/**
+         * @brief Pauses the runtime.
          */
         void pause();
         /**
          * @brief Resumes the engine loop.
          */
+/**
+         * @brief Resumes the runtime.
+         */
         void resume();
 
     private:
+/**
+         * @brief The internal main loop.
+         * @param entity_world The flecs world.
+         */
         void main_loop(flecs::world& entity_world);
 
         std::shared_ptr<std::thread> m_thread;

@@ -9,18 +9,27 @@
 extern "C" {
 #endif
 
+/**
+ * @brief Enumeration of requirement kinds.
+ */
 typedef uint32_t sandbox_requirement_kind_t;
 enum {
     SANDBOX_REQUIREMENT_KIND_SERVICE = 0,
     SANDBOX_REQUIREMENT_KIND_MODULE
 };
 
+/**
+ * @brief Enumeration of requirement strictness.
+ */
 typedef uint32_t sandbox_requirement_strictness_t;
 enum {
     SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED = 0,
     SANDBOX_REQUIREMENT_STRICTNESS_EXPECTED
 };
 
+/**
+ * @brief Enumeration of requirement kinds.
+ */
 typedef struct {
     sandbox_requirement_kind_t kind;
     sandbox_requirement_strictness_t strictness;
@@ -28,9 +37,14 @@ typedef struct {
     const char* architecture;
     int32_t version_major;
     int32_t version_minor;
-    int32_t version_patch; /* only for module, -1 to set to the highest patch available. */
+    int32_t version_patch; /**
+ * @brief only for module, -1 to set to the highest patch available.
+ */
 } sandbox_requirement_info_t;
 
+/**
+ * @brief Represents a service definition.
+ */
 typedef struct {
     uint32_t struct_size;
     const char* name;
@@ -41,6 +55,9 @@ typedef struct {
     void (*init_fn)(ecs_world_t* ecs);
 } sandbox_service_info_t;
 
+/**
+ * @brief Represents a module or service requirement.
+ */
 typedef struct {
     uint32_t struct_size;
     const char* name;
@@ -50,8 +67,7 @@ typedef struct {
     int32_t version_minor;
     int32_t version_patch;
 
-    /* Linked service (Optional, NULL if no service provided) */
-    const sandbox_service_info_t* service;
+        const sandbox_service_info_t* service;
 
     const sandbox_requirement_info_t* requirements;
     size_t requirement_count;
@@ -59,40 +75,82 @@ typedef struct {
     void (*init_fn)(ecs_world_t* ecs);
 } sandbox_module_info_t;
 
-/* engine_t hooks (Implemented in engine sdk, called automatically by plugins) */
+/**
+ * @brief engine_t hooks (Implemented in engine sdk, called automatically by plugins)
+ */
+/**
+ * @brief Stages a service for initialization.
+ * @param info Service information.
+ * @return True on success.
+ */
 SANDBOX_API bool sandbox_stage_service(const sandbox_service_info_t* info);
+/**
+ * @brief Stages a module for initialization.
+ * @param info Module information.
+ * @return True on success.
+ */
 SANDBOX_API bool sandbox_stage_module(const sandbox_module_info_t* info);
 
-/* Indexing hooks */
+/**
+ * @brief Indexes a dynamic library for modules.
+ * @param ecs The entity component system world.
+ * @param library_path The path to the library.
+ */
 SANDBOX_API void sandbox_index_library(ecs_world_t* ecs, const char* library_path);
 
-/* ========================================================================== */
-/* INSTANCE API (Access to the engine's bootstrapper)                         */
-/* ========================================================================== */
 
-/* Opaque pointer for the bootstrapper instance */
 typedef struct sandbox_bootstrapper sandbox_bootstrapper_t;
 
-/* ECS Component for holding the bootstrapper */
 typedef struct {
     sandbox_bootstrapper_t* internal_bootstrapper;
 } sandbox_bootstrapper_component_t;
 
+/**
+ * @brief Declares the bootstrapper ECS component.
+ */
 extern ECS_COMPONENT_DECLARE(sandbox_bootstrapper_component_t);
 
+/**
+ * @brief Retrieves the bootstrapper instance from the ECS world.
+ * @param ecs The entity component system world.
+ * @return The bootstrapper instance.
+ */
 SANDBOX_API sandbox_bootstrapper_t* sandbox_get_bootstrapper(ecs_world_t* ecs);
 
+/**
+ * @brief Activates a module by explicit architecture, name, and version.
+ * @param bootstrapper The bootstrapper instance.
+ * @param ecs The entity component system world.
+ * @param architecture The module architecture.
+ * @param name The module name.
+ * @param version_major The major version.
+ * @param version_minor The minor version.
+ * @param version_patch The patch version.
+ * @return True on success.
+ */
 SANDBOX_API bool sandbox_bootstrapper_activate(sandbox_bootstrapper_t* bootstrapper, ecs_world_t* ecs, const char* architecture, const char* name, int version_major, int version_minor, int version_patch);
+/**
+ * @brief Activates a module by a string descriptor.
+ * @param bootstrapper The bootstrapper instance.
+ * @param ecs The entity component system world.
+ * @param module_str The module descriptor string.
+ * @return True on success.
+ */
 SANDBOX_API bool sandbox_bootstrapper_activate_string(sandbox_bootstrapper_t* bootstrapper, ecs_world_t* ecs, const char* module_str);
+/**
+ * @brief Boots all activated modules.
+ * @param bootstrapper The bootstrapper instance.
+ * @param ecs The entity component system world.
+ * @return True on success.
+ */
 SANDBOX_API bool sandbox_bootstrapper_boot(sandbox_bootstrapper_t* bootstrapper, ecs_world_t* ecs);
 
-/* ========================================================================== */
-/* SERVICE DECLARATION (100% Pure C ABI Safe)                                 */
-/* ========================================================================== */
 
 /**
- * SANDBOX_DECLARE_SERVICE
- * Generates the struct, Flecs Component, auto-init function, and stages it.
+ * @brief Generates the struct, Flecs Component, auto-init function, and stages it.
+ * @param ServiceClass The name of the service struct.
+ * @param IModuleType The API type name.
+ * @param ... The service info initialization list.
  */
 #define SANDBOX_DECLARE_SERVICE(ServiceClass, IModuleType, ...) \
     typedef struct ServiceClass { \
@@ -103,6 +161,12 @@ SANDBOX_API bool sandbox_bootstrapper_boot(sandbox_bootstrapper_t* bootstrapper,
     extern ECS_COMPONENT_DECLARE(ServiceClass); \
     static const sandbox_service_info_t ServiceClass##_info_decl = __VA_ARGS__;
 
+/**
+ * @brief Defines the initialization function for the service.
+ * @param ServiceClass The name of the service struct.
+ * @param IModuleType The API type name.
+ * @param api_ptr The pointer to the API instance.
+ */
 #define SANDBOX_DEFINE_SERVICE(ServiceClass, IModuleType, api_ptr) \
     ECS_COMPONENT_DECLARE(ServiceClass); \
     static sandbox_service_info_t ServiceClass##_info = ServiceClass##_info_decl; \
@@ -123,14 +187,10 @@ SANDBOX_API bool sandbox_bootstrapper_boot(sandbox_bootstrapper_t* bootstrapper,
     }
 
 #ifdef __cplusplus
-} /* End extern "C" */
+}
 #endif
 
-/* ========================================================================== */
-/* MODULE DECLARATION (Seamless C and C++ Support)                            */
-/* ========================================================================== */
 
-/* Internal helper: Chooses correct Flecs import syntax based on language */
 #ifdef __cplusplus
     #define __SANDBOX_IMPORT_MODULE(ecs, ModuleClass) \
         do { flecs::world __w(ecs); __w.import<ModuleClass>(); } while(0)
@@ -140,8 +200,9 @@ SANDBOX_API bool sandbox_bootstrapper_boot(sandbox_bootstrapper_t* bootstrapper,
 #endif
 
 /**
- * SANDBOX_DECLARE_MODULE
- * Generates info struct, ties the service init via pointer, imports module, and stages it.
+ * @brief Generates info struct, ties the service init via pointer, imports module, and stages it.
+ * @param ModuleClass The name of the module class.
+ * @param ... The module info initialization list.
  */
 #define SANDBOX_DECLARE_MODULE(ModuleClass, ...) \
     static sandbox_module_info_t ModuleClass##_info = __VA_ARGS__; \
@@ -161,9 +222,11 @@ SANDBOX_API bool sandbox_bootstrapper_boot(sandbox_bootstrapper_t* bootstrapper,
         sandbox_stage_module(&ModuleClass##_info); \
     }
 
-/* ========================================================================== */
-/* 5. UNIFIED FETCH MACRO                                                     */
-/* ========================================================================== */
+/**
+ * @brief Unified macro to fetch a service instance from the ECS world.
+ * @param world_obj The flecs world object (C++) or ecs_world_t pointer (C).
+ * @param ServiceClass The class of the service to fetch.
+ */
 
 #ifdef __cplusplus
     #define SANDBOX_GET_SERVICE(world_obj, ServiceClass) \
