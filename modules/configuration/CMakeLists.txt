@@ -2,6 +2,7 @@ project(configuration LANGUAGES C CXX)
 
 add_library(configuration MODULE
     source/library.cpp
+    source/configuration.cpp
 )
 
 set_target_properties(configuration PROPERTIES PREFIX "")
