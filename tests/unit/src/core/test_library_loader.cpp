@@ -11,6 +11,7 @@
 #include "core/exceptions.h"
 #include <filesystem>
 #include <string>
+#include <fstream>
 
 namespace fs = std::filesystem;
 using sandbox::core::library_loader_t;
@@ -146,5 +147,39 @@ TEST_CASE("LibraryLoader: successful load and unload", "[library_loader][load][i
         loader.load(ecs, plugin);
         loader.unload(ecs, "dummy_plugin");
         REQUIRE_NOTHROW(loader.load(ecs, plugin));
+    }
+}
+
+TEST_CASE("LibraryLoader: load_from_memory", "[library_loader][memory]")
+{
+    library_loader_t loader;
+    flecs::world ecs;
+
+    SECTION("loading empty vector throws") {
+        std::vector<uint8_t> empty_vec;
+        REQUIRE_THROWS_AS(loader.load_from_memory(ecs, empty_vec), sandbox::core::library_load_error);
+    }
+
+    fs::path plugin = dummy_plugin_path();
+    if (!fs::exists(plugin)) {
+        WARN("dummy_plugin shared library not found - skipping load_from_memory valid tests.");
+        SUCCEED("Skipped: dummy_plugin not available on disk");
+        return;
+    }
+
+    // Read the plugin into a memory buffer
+    std::ifstream file(plugin, std::ios::binary | std::ios::ate);
+    std::streamsize size = file.tellg();
+    file.seekg(0, std::ios::beg);
+    std::vector<uint8_t> plugin_memory(size);
+    if (file.read(reinterpret_cast<char*>(plugin_memory.data()), size)) {
+        SECTION("loading from memory buffer creates cache and succeeds") {
+            REQUIRE_NOTHROW(loader.load_from_memory(ecs, plugin_memory));
+        }
+
+        SECTION("duplicate load from same memory buffer uses cache") {
+            loader.load_from_memory(ecs, plugin_memory);
+            REQUIRE_NOTHROW(loader.load_from_memory(ecs, plugin_memory));
+        }
     }
 }
