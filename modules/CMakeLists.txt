@@ -1,6 +1,5 @@
 add_subdirectory(analytics)
 add_subdirectory(configuration)
 add_subdirectory(filesystem)
-add_subdirectory(jobs)
 add_subdirectory(logs)
 add_subdirectory(runtime)
