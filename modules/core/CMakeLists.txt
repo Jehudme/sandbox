@@ -29,21 +29,22 @@ set(HEADERS
 )
 
 # Create shared library
-add_library(core_plugin MODULE ${SOURCES} ${HEADERS})
-set_target_properties(core_plugin PROPERTIES
+add_library(sandbox_plugin MODULE ${SOURCES} ${HEADERS})
+add_library(sandbox::plugins ALIAS sandbox_plugin)
+set_target_properties(sandbox_plugin PROPERTIES
     PREFIX ""
     CXX_VISIBILITY_PRESET hidden
     VISIBILITY_INLINES_HIDDEN ON
 )
 
 # Includes
-target_include_directories(core_plugin PRIVATE
+target_include_directories(sandbox_plugin PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/source
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/sandbox/include
 )
 
-target_include_directories(core_plugin PUBLIC
+target_include_directories(sandbox_plugin PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
@@ -67,17 +68,17 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(miniz)
 
 # Link against core engine and deps
-target_link_libraries(core_plugin PRIVATE 
+target_link_libraries(sandbox_plugin PRIVATE
     flecs_headers
     spdlog::spdlog
     miniz
 )
 
 # Copy to bin directory
-add_custom_command(TARGET core_plugin POST_BUILD
+add_custom_command(TARGET sandbox_plugin POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-    $<TARGET_FILE:core_plugin>
-    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_FILE_NAME:core_plugin>
+    $<TARGET_FILE:sandbox_plugin>
+    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_FILE_NAME:sandbox_plugin>
 )
 
-target_precompile_headers(core_plugin PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_SOURCE_DIR}/sandbox/source/pch.h>")
+target_precompile_headers(sandbox_plugin PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_SOURCE_DIR}/sandbox/source/pch.h>")

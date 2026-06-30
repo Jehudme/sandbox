@@ -189,6 +189,14 @@ namespace sandbox::modules {
          * @return List of file and directory names.
          */
         std::vector<std::string> list_contents(const char* virtual_path) const;
+/**
+         * @brief Lists all files inside a directory, optionally recursive.
+         * @param virtual_path The directory path.
+         * @param recursive True to search subdirectories recursively.
+         * @return List of file paths relative to the virtual path.
+         */
+        std::vector<std::string> list_files(const char* virtual_path, bool recursive) const;
+
 
 /**
          * @brief Checks if a path exists.

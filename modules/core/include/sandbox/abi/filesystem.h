@@ -36,6 +36,8 @@ extern "C" {
         bool (*is_readonly)(ecs_world_t* ecs, const char* virtual_path);
         size_t (*file_size)(ecs_world_t* ecs, const char* virtual_path);
         int64_t (*last_modified)(ecs_world_t* ecs, const char* virtual_path);
+        bool (*list_files)(ecs_world_t* ecs, const char* virtual_path, bool recursive, char*** out_files, size_t* out_count);
+        void (*free_file_list)(ecs_world_t* ecs, char** files, size_t count);
     } sandbox_filesystem_api_t;
 
     /**

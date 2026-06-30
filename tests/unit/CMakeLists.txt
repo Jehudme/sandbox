@@ -57,7 +57,7 @@ target_include_directories(sandbox_unit_tests
 )
 
 # Ensure the shared libraries are built before the test executable
-add_dependencies(sandbox_unit_tests dummy_plugin core_plugin)
+add_dependencies(sandbox_unit_tests dummy_plugin sandbox_plugin)
 
 # Register tests with CTest
 catch_discover_tests(sandbox_unit_tests)

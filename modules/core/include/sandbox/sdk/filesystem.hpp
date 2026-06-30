@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+#include "sandbox/abi/bootstrapper.h"
+
 namespace sandbox::modules {
     class filesystem {
     public:
@@ -218,6 +220,26 @@ namespace sandbox::modules {
             size_t written = write(entity_world, handle, data, sz);
             close_handle(entity_world, handle);
             return written == sz;
+        }
+
+        static std::vector<std::string> list_files(flecs::world& entity_world, const char* virtual_path, bool recursive = false) {
+            std::vector<std::string> result;
+            const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
+            if (service && service->api && service->api->list_files) {
+                char** files = nullptr;
+                size_t count = 0;
+                if (service->api->list_files(entity_world.c_ptr(), virtual_path, recursive, &files, &count)) {
+                    for (size_t i = 0; i < count; ++i) {
+                        if (files[i]) {
+                            result.emplace_back(files[i]);
+                        }
+                    }
+                    if (service->api->free_file_list) {
+                        service->api->free_file_list(entity_world.c_ptr(), files, count);
+                    }
+                }
+            }
+            return result;
         }
     };
 }

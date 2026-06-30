@@ -7,6 +7,9 @@
 #include <sandbox/sdk/configuration.hpp>
 #include "../../../sandbox/source/core/exceptions.h"
 #include "miniz.h"
+#include <filesystem>
+#include <algorithm>
+#include <cstring>
 
 namespace sandbox::modules {
 
@@ -88,6 +91,78 @@ namespace sandbox::modules {
     bool filesystem_t::is_readonly(const char* virtual_path) const { return false; }
     size_t filesystem_t::file_size(const char* virtual_path) const { return 0; }
     int64_t filesystem_t::last_modified(const char* virtual_path) const { return 0; }
+
+    std::vector<std::string> filesystem_t::list_files(const char* virtual_path, bool recursive) const {
+        flecs::world world_mut = m_entity_world;
+        if (!virtual_path) {
+            sandbox::modules::logs::error(world_mut, "list_files failed: null virtual path");
+            throw sandbox::core::filesystem_error("Null virtual path provided to list_files");
+        }
+        
+        sandbox::modules::logs::trace(world_mut, "Listing files for virtual path: {} (recursive: {})", virtual_path, recursive);
+        std::vector<std::string> results;
+        std::string v_path_str = virtual_path;
+        
+        // Find matching mount point
+        std::string matched_mount;
+        std::string physical_base;
+        for (const auto& [mount_pt, phys_pt] : m_physical_mounts) {
+            // Prefix matching
+            if (v_path_str.find(mount_pt) == 0) {
+                if (mount_pt.length() > matched_mount.length()) {
+                    matched_mount = mount_pt;
+                    physical_base = phys_pt;
+                }
+            }
+        }
+        
+        if (matched_mount.empty()) {
+            sandbox::modules::logs::warn(world_mut, "No physical mount found for virtual path: {}", virtual_path);
+            return results;
+        }
+        
+        // Construct physical path
+        std::string relative = v_path_str.substr(matched_mount.length());
+        if (!relative.empty() && relative[0] == '/') relative = relative.substr(1);
+        
+        std::filesystem::path phys_target = std::filesystem::path(physical_base) / relative;
+        
+        try {
+            if (!std::filesystem::exists(phys_target) || !std::filesystem::is_directory(phys_target)) {
+                sandbox::modules::logs::warn(world_mut, "Path does not exist or is not a directory: {}", phys_target.string());
+                return results;
+            }
+            
+            if (recursive) {
+                for (const auto& entry : std::filesystem::recursive_directory_iterator(phys_target)) {
+                    if (entry.is_regular_file()) {
+                        std::string rel_to_base = std::filesystem::relative(entry.path(), physical_base).string();
+                        std::replace(rel_to_base.begin(), rel_to_base.end(), '\\', '/');
+                        std::string virt = matched_mount;
+                        if (virt.back() != '/') virt += '/';
+                        virt += rel_to_base;
+                        results.push_back(virt);
+                    }
+                }
+            } else {
+                for (const auto& entry : std::filesystem::directory_iterator(phys_target)) {
+                    if (entry.is_regular_file()) {
+                        std::string rel_to_base = std::filesystem::relative(entry.path(), physical_base).string();
+                        std::replace(rel_to_base.begin(), rel_to_base.end(), '\\', '/');
+                        std::string virt = matched_mount;
+                        if (virt.back() != '/') virt += '/';
+                        virt += rel_to_base;
+                        results.push_back(virt);
+                    }
+                }
+            }
+        } catch (const std::exception& e) {
+            sandbox::modules::logs::error(world_mut, "Filesystem error while listing files: {}", e.what());
+            throw sandbox::core::filesystem_error(e.what());
+        }
+        
+        return results;
+    }
 }
 
 
@@ -374,6 +449,42 @@ extern "C" {
         return 0;
     }
 
+    static bool filesystem_list_files(ecs_world_t* entity_world, const char* virtual_path, bool recursive, char*** out_files, size_t* out_count) {
+        if (!entity_world || !virtual_path || !out_files || !out_count) return false;
+        flecs::world flecs_world(entity_world);
+        auto* fs = flecs_world.try_get_mut<sandbox::modules::filesystem_t>();
+        if (fs) {
+            try {
+                auto files = fs->list_files(virtual_path, recursive);
+                if (files.empty()) {
+                    *out_files = nullptr;
+                    *out_count = 0;
+                    return true;
+                }
+                *out_count = files.size();
+                *out_files = new char*[files.size()];
+                for (size_t i = 0; i < files.size(); ++i) {
+                    (*out_files)[i] = strdup(files[i].c_str());
+                }
+                return true;
+            } catch (const std::exception& e) {
+                sandbox::modules::logs::error(flecs_world, "ABI filesystem_list_files error: {}", e.what());
+                return false;
+            } catch (...) {
+                return false;
+            }
+        }
+        return false;
+    }
+
+    static void filesystem_free_file_list(ecs_world_t*, char** files, size_t count) {
+        if (!files) return;
+        for (size_t i = 0; i < count; ++i) {
+            if (files[i]) free(files[i]);
+        }
+        delete[] files;
+    }
+
     static sandbox_filesystem_api_t filesystem_api = {
         .mount = filesystem_mount,
         .unmount = filesystem_unmount,
@@ -398,6 +509,8 @@ extern "C" {
         .is_readonly = filesystem_is_readonly,
         .file_size = filesystem_file_size,
         .last_modified = filesystem_last_modified,
+        .list_files = filesystem_list_files,
+        .free_file_list = filesystem_free_file_list,
     };
 
     SANDBOX_DEFINE_SERVICE(sandbox_filesystem_service_t, sandbox_filesystem_api_t, &filesystem_api);

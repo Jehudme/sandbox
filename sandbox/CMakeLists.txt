@@ -73,11 +73,11 @@ target_compile_features(sandbox_library PUBLIC cxx_std_23)
 
 target_include_directories(sandbox_library
     PUBLIC
+        $<TARGET_PROPERTY:sandbox::plugins,INTERFACE_INCLUDE_DIRECTORIES>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/source
-        ${CMAKE_CURRENT_SOURCE_DIR}/../modules/core/include
 )
 
 target_link_libraries(sandbox_library 

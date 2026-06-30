@@ -1,11 +1,11 @@
 
 #include "application.h"
 
-#include "../../../modules/core/include/sandbox/sdk/configuration.hpp"
-#include "../../../modules/core/include/sandbox/sdk/filesystem.hpp"
-#include "../../../modules/core/source/configuration/configuration.h"
-#include "../../../sandbox/source/core/properties.h"
+#include "sandbox/sdk/bootstrapper.hpp"
+#include "sandbox/sdk/configuration.hpp"
+#include "sandbox/sdk/filesystem.hpp"
 
+#
 namespace sandbox::launcher {
 
     void stage_filesystem(flecs::world& ecs);
@@ -23,6 +23,13 @@ namespace sandbox::launcher {
     }
 
     void orchestrate_modules(flecs::world &ecs) {
+        std::vector<std::string> plugins_paths = sandbox::modules::filesystem::list_files(ecs, "sandbox://plugins");
+        //sandbox::modules::filesystem::re
+        for (std::string& plugin_path : plugins_paths) {
+
+
+        }
+
     }
 
     void ingest_configuration(flecs::world &ecs) {
