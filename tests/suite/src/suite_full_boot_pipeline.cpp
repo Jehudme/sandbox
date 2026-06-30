@@ -145,3 +145,32 @@ TEST_CASE("Suite: Explicit activate of all providers is valid", "[suite][full_bo
 
     bootstrapper_t::reset();
 }
+
+TEST_CASE("Suite: Multi-Boot capability", "[suite][full_boot][multi_boot]")
+{
+    restage_all();
+
+    bootstrapper_t b;
+    flecs::world w;
+    
+    // First boot cycle
+    b.activate(w, "sandbox::system", "OpenGLRendererModule", 1, 0, -1);
+    REQUIRE_NOTHROW(b.boot(w));
+
+    SECTION("First boot only has Renderer") {
+        REQUIRE(SANDBOX_GET_SERVICE(w, RendererService) != nullptr);
+        REQUIRE(SANDBOX_GET_SERVICE(w, AudioService)    == nullptr);
+    }
+
+    // Second boot cycle
+    b.activate(w, "sandbox::system", "GameLayerModule", 1, 0, 0);
+    REQUIRE_NOTHROW(b.boot(w));
+
+    SECTION("Second boot auto-pulls Audio and Input dependencies while preserving Renderer") {
+        REQUIRE(SANDBOX_GET_SERVICE(w, RendererService) != nullptr);
+        REQUIRE(SANDBOX_GET_SERVICE(w, AudioService)    != nullptr);
+        REQUIRE(SANDBOX_GET_SERVICE(w, InputService)    != nullptr);
+    }
+
+    bootstrapper_t::reset();
+}

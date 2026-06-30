@@ -22,7 +22,6 @@ namespace sandbox::core {
         sandbox_properties_handle_t properties_handle;
         properties_handle.token = reinterpret_cast<uintptr_t>(m_arguments.get());
         ecs.entity("::sandbox::configuration::handle").set<uint64_t>(properties_handle.token);
-        sandbox::modules::logs::trace(ecs, "Created config handle entity");
 
         save_bootstrapper();
 

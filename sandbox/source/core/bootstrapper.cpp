@@ -5,7 +5,7 @@
 #include <format>
 #include <unordered_map>
 #include <queue>
-#include <iostream>
+
 #include <charconv>
 #include <sandbox/sdk/logs.hpp>
 #include "exceptions.h"
@@ -341,7 +341,7 @@ namespace sandbox::core {
         
         std::sort(to_evict.begin(), to_evict.end(), std::greater<size_t>());
         for (size_t idx : to_evict) {
-            std::cerr << std::format("[Warning] ECS registration suppressed for module '{}' due to service collision on '{}'\n", 
+            sandbox::modules::logs::warn(ecs, "ECS registration suppressed for module '{}' due to service collision on '{}'", 
                                      m_active_modules[idx].name, m_active_modules[idx].service->name);
             m_active_modules.erase(m_active_modules.begin() + idx);
         }
