@@ -33,7 +33,7 @@ target_link_libraries(sandbox_launcher PRIVATE
         -Wl,--whole-archive $<TARGET_FILE:flecs_static> -Wl,--no-whole-archive
 )
 
-target_precompile_headers(sandbox_launcher PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_SOURCE_DIR}/sandbox/source/pch.h>")
+target_precompile_headers(sandbox_launcher PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/../sandbox/source/pch.h>")
 
 # =============================================================================
 # INSTALLATION
