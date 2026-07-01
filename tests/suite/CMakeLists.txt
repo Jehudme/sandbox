@@ -36,4 +36,4 @@ add_dependencies(sandbox_suite_tests dummy_plugin sandbox_plugin)
 
 catch_discover_tests(sandbox_suite_tests WORKING_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 
-target_precompile_headers(sandbox_suite_tests PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_SOURCE_DIR}/sandbox/source/pch.h>")
+target_precompile_headers(sandbox_suite_tests PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/../../sandbox/source/pch.h>")

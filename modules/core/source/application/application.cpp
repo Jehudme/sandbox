@@ -23,7 +23,9 @@ namespace fs = std::filesystem;
     inline constexpr std::string_view NATIVE_LIB_EXTENSION = ".so"; // Linux / BSD / WebAssembly
 #endif
 
-namespace sandbox::launcher {
+#include <sandbox/abi/application.h>
+
+namespace sandbox::modules {
 
     // ABI methods
     static bool application_is_running(ecs_world_t* ecs) {

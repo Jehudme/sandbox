@@ -10,6 +10,7 @@ set(SOURCES
     source/filesystem/filesystem.cpp
     source/logs/logger.cpp
     source/runtime/runtime.cpp
+    source/application/application.cpp
 )
 
 # Headers
@@ -18,14 +19,17 @@ set(HEADERS
     source/filesystem/filesystem.h
     source/logs/logger.h
     source/runtime/runtime.h
+    source/application/application.h
     include/sandbox/abi/configuration.h
     include/sandbox/abi/filesystem.h
     include/sandbox/abi/logs.h
     include/sandbox/abi/runtime.h
+    include/sandbox/abi/application.h
     include/sandbox/sdk/configuration.hpp
     include/sandbox/sdk/filesystem.hpp
     include/sandbox/sdk/logs.hpp
     include/sandbox/sdk/runtime.hpp
+    include/sandbox/sdk/application.hpp
 )
 
 # Create shared library
@@ -48,7 +52,7 @@ add_library(sandbox::plugins ALIAS sandbox_plugin)
 target_include_directories(sandbox_plugin PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/source
     ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/sandbox/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../sandbox/include
 )
 
 target_include_directories(sandbox_plugin PUBLIC
@@ -101,7 +105,7 @@ add_custom_command(TARGET sandbox_plugin POST_BUILD
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_FILE_NAME:sandbox_plugin>
 )
 
-target_precompile_headers(sandbox_plugin PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_SOURCE_DIR}/sandbox/source/pch.h>")
+target_precompile_headers(sandbox_plugin PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/../../sandbox/source/pch.h>")
 
 # =============================================================================
 # INSTALLATION

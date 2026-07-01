@@ -20,9 +20,7 @@ set(BUILD_SHARED_LIBS ${SANDBOX_ORIGINAL_BUILD_SHARED_LIBS})
 
 add_executable(sandbox_launcher source/main.cpp
         source/cli/cli_parser.cpp
-        source/cli/cli_parser.h
-        source/application/application.cpp
-        source/application/application.h)
+        source/cli/cli_parser.h)
 add_executable(sandbox::launcher ALIAS sandbox_launcher)
 
 set_target_properties(sandbox_launcher PROPERTIES ENABLE_EXPORTS ON)

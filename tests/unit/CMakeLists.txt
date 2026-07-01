@@ -34,7 +34,6 @@ set(SANDBOX_UNIT_TEST_SOURCES
     src/modules/test_filesystem.cpp
     src/modules/test_application.cpp
     ../../launcher/source/cli/cli_parser.cpp
-    ../../launcher/source/application/application.cpp
 )
 
 # =============================================================================
@@ -66,4 +65,4 @@ add_dependencies(sandbox_unit_tests dummy_plugin sandbox_plugin)
 # Register tests with CTest
 catch_discover_tests(sandbox_unit_tests WORKING_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 
-target_precompile_headers(sandbox_unit_tests PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_SOURCE_DIR}/sandbox/source/pch.h>")
+target_precompile_headers(sandbox_unit_tests PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/../../sandbox/source/pch.h>")
