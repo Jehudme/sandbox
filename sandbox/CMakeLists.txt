@@ -105,21 +105,23 @@ target_precompile_headers(sandbox_library
 # =============================================================================
 # 3. INSTALLATION RULES
 # =============================================================================
-include(GNUInstallDirs)
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    include(GNUInstallDirs)
 
-install(TARGETS sandbox_library flecs_headers
-    EXPORT sandboxTargets
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
+    install(TARGETS sandbox_library flecs_headers
+        EXPORT sandboxTargets
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
 
-install(DIRECTORY include/sandbox
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-)
+    install(DIRECTORY include/sandbox
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    )
 
-install(EXPORT sandboxTargets
-    FILE sandboxTargets.cmake
-    NAMESPACE sandbox::
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/sandbox
-)
+    install(EXPORT sandboxTargets
+        FILE sandboxTargets.cmake
+        NAMESPACE sandbox::
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/sandbox
+    )
+endif()

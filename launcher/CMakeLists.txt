@@ -38,7 +38,9 @@ target_precompile_headers(sandbox_launcher PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${
 # =============================================================================
 # INSTALLATION
 # =============================================================================
-include(GNUInstallDirs)
-install(TARGETS sandbox_launcher
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    include(GNUInstallDirs)
+    install(TARGETS sandbox_launcher
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+endif()

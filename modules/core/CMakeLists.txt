@@ -106,10 +106,12 @@ target_precompile_headers(sandbox_plugin PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CM
 # =============================================================================
 # INSTALLATION
 # =============================================================================
-include(GNUInstallDirs)
-install(TARGETS sandbox_plugin
-    EXPORT sandboxTargets
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    include(GNUInstallDirs)
+    install(TARGETS sandbox_plugin
+        EXPORT sandboxTargets
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
+endif()
