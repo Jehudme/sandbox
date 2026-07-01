@@ -30,7 +30,7 @@ namespace sandbox {
         return sandbox_engine_initialize(m_engine, props.get_raw());
     }
 
-    inline void* engine::get_ecs() const {
+    inline ecs_world_t *engine::get_ecs() const {
         return sandbox_engine_get_ecs(m_engine);
     }
 

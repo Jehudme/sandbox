@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <algorithm>
 #include <cstring>
+#include <fstream>
 
 namespace sandbox::modules {
 
@@ -19,19 +20,26 @@ namespace sandbox::modules {
         // Require configuration service
         sandbox::properties config = sandbox::modules::configuration::get_properties(m_entity_world);
         
-        if (config.is_valid() && config.has("filesystem/mounts")) {
-            std::vector<std::string> mounts = config.keys("filesystem/mounts");
-            for (const auto& mnt_name : mounts) {
-                std::string path = "filesystem/mounts/" + mnt_name;
-                auto physical = config.get<std::string>(path + "/physical");
-                auto readonly = config.get<bool>(path + "/readonly").value_or(true);
-                
-                if (physical.has_value()) {
-                    // Virtual path is just the mount name preceded by /
-                    std::string virtual_path = "/" + mnt_name;
-                    mount(physical->c_str(), virtual_path.c_str(), readonly);
+        if (config.is_valid()) {
+            if (config.has("filesystem/mounts")) {
+                std::vector<std::string> mounts = config.keys("filesystem/mounts");
+                sandbox::modules::logs::info(m_entity_world, "Filesystem Module: Found {} mounts in configuration.", mounts.size());
+                for (const auto& mnt_name : mounts) {
+                    std::string path = "filesystem/mounts/" + mnt_name;
+                    auto physical = config.get<std::string>(path + "/physical");
+                    auto readonly = config.get<bool>(path + "/readonly").value_or(true);
+                    
+                    if (physical.has_value()) {
+                        // Virtual path uses URI scheme format
+                        std::string virtual_path = mnt_name + "://";
+                        mount(physical->c_str(), virtual_path.c_str(), readonly);
+                    }
                 }
+            } else {
+                sandbox::modules::logs::info(m_entity_world, "Filesystem Module: No 'filesystem/mounts' found in config.");
             }
+        } else {
+            sandbox::modules::logs::info(m_entity_world, "Filesystem Module: config object is INVALID.");
         }
     }
 
@@ -75,8 +83,105 @@ namespace sandbox::modules {
     bool filesystem_t::seek(sandbox_file_handle_t handle, size_t position) { return false; }
     size_t filesystem_t::size(sandbox_file_handle_t handle) const { return 0; }
     void filesystem_t::close(sandbox_file_handle_t handle) {}
-    std::vector<uint8_t> filesystem_t::read_all_bytes(const char* virtual_path) { return {}; }
-    std::string filesystem_t::read_all_text(const char* virtual_path) { return ""; }
+    std::string filesystem_t::resolve_physical_path(const std::string& virtual_path, std::string& out_internal_path) const {
+        std::string matched_mount;
+        std::string physical_base;
+        for (const auto& [mount_pt, phys_pt] : m_physical_mounts) {
+            if (virtual_path.find(mount_pt) == 0) {
+                if (mount_pt.length() > matched_mount.length()) {
+                    matched_mount = mount_pt;
+                    physical_base = phys_pt;
+                }
+            }
+        }
+
+        if (matched_mount.empty()) {
+            return "";
+        }
+
+        out_internal_path = virtual_path.substr(matched_mount.length());
+        if (!out_internal_path.empty() && out_internal_path[0] == '/') {
+            out_internal_path = out_internal_path.substr(1);
+        }
+        
+        return physical_base;
+    }
+
+    std::vector<uint8_t> filesystem_t::read_all_bytes(const char* virtual_path) {
+        flecs::world world_mut = m_entity_world;
+        if (!virtual_path) {
+            sandbox::modules::logs::error(world_mut, "read_all_bytes failed: null virtual path");
+            throw sandbox::core::filesystem_error("Null virtual path provided to read_all_bytes");
+        }
+
+        std::string internal_path;
+        std::string physical_base = resolve_physical_path(virtual_path, internal_path);
+
+        if (physical_base.empty()) {
+            sandbox::modules::logs::error(world_mut, "Failed to resolve virtual path to physical mount: {}", virtual_path);
+            throw sandbox::core::filesystem_error("Path resolution failed");
+        }
+
+        if (physical_base.length() >= 4 && physical_base.substr(physical_base.length() - 4) == ".zip") {
+            mz_zip_archive zip_archive;
+            memset(&zip_archive, 0, sizeof(zip_archive));
+
+            if (!mz_zip_reader_init_file(&zip_archive, physical_base.c_str(), 0)) {
+                sandbox::modules::logs::error(world_mut, "Failed to open zip file '{}'", physical_base);
+                throw sandbox::core::filesystem_error("Failed to open zip file");
+            }
+
+            int file_index = mz_zip_reader_locate_file(&zip_archive, internal_path.c_str(), nullptr, 0);
+            if (file_index < 0) {
+                mz_zip_reader_end(&zip_archive);
+                sandbox::modules::logs::error(world_mut, "File '{}' not found in zip archive '{}'", internal_path, physical_base);
+                throw sandbox::core::filesystem_error("File not found in zip archive");
+            }
+
+            size_t uncomp_size;
+            void* p = mz_zip_reader_extract_to_heap(&zip_archive, file_index, &uncomp_size, 0);
+            if (!p) {
+                mz_zip_reader_end(&zip_archive);
+                sandbox::modules::logs::error(world_mut, "Failed to extract file '{}' from zip archive '{}'", internal_path, physical_base);
+                throw sandbox::core::filesystem_error("Failed to extract file from zip");
+            }
+
+            std::vector<uint8_t> result(static_cast<uint8_t*>(p), static_cast<uint8_t*>(p) + uncomp_size);
+            mz_free(p);
+            mz_zip_reader_end(&zip_archive);
+            sandbox::modules::logs::trace(world_mut, "Successfully read {} bytes from zip file: {}", uncomp_size, virtual_path);
+            return result;
+        } else {
+            std::filesystem::path full_path = std::filesystem::path(physical_base) / internal_path;
+            if (!std::filesystem::exists(full_path) || !std::filesystem::is_regular_file(full_path)) {
+                sandbox::modules::logs::error(world_mut, "File does not exist or is not a regular file: {}", full_path.string());
+                throw sandbox::core::filesystem_error("File does not exist on disk");
+            }
+
+            std::ifstream file(full_path, std::ios::binary | std::ios::ate);
+            if (!file) {
+                sandbox::modules::logs::error(world_mut, "Failed to open file for reading: {}", full_path.string());
+                throw sandbox::core::filesystem_error("Failed to open physical file");
+            }
+
+            std::streamsize size = file.tellg();
+            file.seekg(0, std::ios::beg);
+
+            std::vector<uint8_t> buffer(size);
+            if (file.read(reinterpret_cast<char*>(buffer.data()), size)) {
+                sandbox::modules::logs::trace(world_mut, "Successfully read {} bytes from physical file: {}", size, virtual_path);
+                return buffer;
+            } else {
+                sandbox::modules::logs::error(world_mut, "Failed to read data from file: {}", full_path.string());
+                throw sandbox::core::filesystem_error("Failed to read from physical file");
+            }
+        }
+    }
+    
+    std::string filesystem_t::read_all_text(const char* virtual_path) {
+        std::vector<uint8_t> bytes = read_all_bytes(virtual_path);
+        return std::string(bytes.begin(), bytes.end());
+    }
     bool filesystem_t::write_all(const char* virtual_path, const void* data, size_t size, bool force_path) { return false; }
     bool filesystem_t::create_file(const char* virtual_path, bool force_path) { return false; }
     bool filesystem_t::remove_file(const char* virtual_path) { return false; }
@@ -85,7 +190,26 @@ namespace sandbox::modules {
     bool filesystem_t::create_directory(const char* virtual_path, bool force_path) { return false; }
     bool filesystem_t::remove_directory(const char* virtual_path) { return false; }
     std::vector<std::string> filesystem_t::list_contents(const char* virtual_path) const { return {}; }
-    bool filesystem_t::exists(const char* virtual_path) const { return false; }
+    bool filesystem_t::exists(const char* virtual_path) const {
+        if (!virtual_path) return false;
+        std::string internal_path;
+        std::string physical_base = resolve_physical_path(virtual_path, internal_path);
+        if (physical_base.empty()) return false;
+        
+        if (physical_base.length() >= 4 && physical_base.substr(physical_base.length() - 4) == ".zip") {
+            mz_zip_archive zip_archive;
+            memset(&zip_archive, 0, sizeof(zip_archive));
+            if (!mz_zip_reader_init_file(&zip_archive, physical_base.c_str(), 0)) {
+                return false;
+            }
+            int file_index = mz_zip_reader_locate_file(&zip_archive, internal_path.c_str(), nullptr, 0);
+            mz_zip_reader_end(&zip_archive);
+            return file_index >= 0;
+        } else {
+            std::filesystem::path full_path = std::filesystem::path(physical_base) / internal_path;
+            return std::filesystem::exists(full_path);
+        }
+    }
     bool filesystem_t::is_file(const char* virtual_path) const { return false; }
     bool filesystem_t::is_directory(const char* virtual_path) const { return false; }
     bool filesystem_t::is_readonly(const char* virtual_path) const { return false; }
@@ -485,6 +609,36 @@ extern "C" {
         delete[] files;
     }
 
+    static bool filesystem_read_all_bytes(ecs_world_t* entity_world, const char* virtual_path, uint8_t** out_data, size_t* out_size) {
+        if (!entity_world || !virtual_path || !out_data || !out_size) return false;
+        flecs::world flecs_world(entity_world);
+        auto* fs = flecs_world.try_get_mut<sandbox::modules::filesystem_t>();
+        if (fs) {
+            try {
+                auto data = fs->read_all_bytes(virtual_path);
+                if (data.empty()) {
+                    *out_data = nullptr;
+                    *out_size = 0;
+                    return true;
+                }
+                *out_size = data.size();
+                *out_data = new uint8_t[data.size()];
+                std::memcpy(*out_data, data.data(), data.size());
+                return true;
+            } catch (const std::exception& e) {
+                sandbox::modules::logs::error(flecs_world, "ABI filesystem_read_all_bytes error: {}", e.what());
+                return false;
+            } catch (...) {
+                return false;
+            }
+        }
+        return false;
+    }
+
+    static void filesystem_free_bytes(ecs_world_t*, uint8_t* data) {
+        if (data) delete[] data;
+    }
+
     static sandbox_filesystem_api_t filesystem_api = {
         .mount = filesystem_mount,
         .unmount = filesystem_unmount,
@@ -511,12 +665,19 @@ extern "C" {
         .last_modified = filesystem_last_modified,
         .list_files = filesystem_list_files,
         .free_file_list = filesystem_free_file_list,
+        .read_all_bytes = filesystem_read_all_bytes,
+        .free_bytes = filesystem_free_bytes,
     };
 
     SANDBOX_DEFINE_SERVICE(sandbox_filesystem_service_t, sandbox_filesystem_api_t, &filesystem_api);
 }
 
 namespace sandbox::modules {
+    static sandbox_requirement_info_t filesystem_reqs[] = {
+        {SANDBOX_REQUIREMENT_KIND_MODULE, SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED, "configuration", "sandbox", 1, 0, -1},
+        {SANDBOX_REQUIREMENT_KIND_MODULE, SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED, "logs", "sandbox", 1, 0, -1}
+    };
+    
     SANDBOX_DECLARE_MODULE(filesystem_t, {
         .name = "filesystem",
         .description = "Filesystem module",
@@ -525,7 +686,7 @@ namespace sandbox::modules {
         .version_minor = 0,
         .version_patch = 0,
         .service = &sandbox_filesystem_service_t_info,
-        .requirements = nullptr,
-        .requirement_count = 0
+        .requirements = filesystem_reqs,
+        .requirement_count = 2
     })
 }

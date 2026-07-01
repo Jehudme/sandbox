@@ -9,27 +9,34 @@ namespace sandbox {
     }
 
     inline properties::~properties() {
-        sandbox_properties_destroy(&m_handle);
+        if (m_owns) {
+            sandbox_properties_destroy(&m_handle);
+        }
     }
 
     inline properties::properties(std::string &content, Format format) {
+        m_handle = sandbox_properties_create();
+        m_owns = true;
         load(content, format);
     }
 
-    inline properties::properties(properties&& other) noexcept : m_handle(other.m_handle) {
+    inline properties::properties(properties&& other) noexcept : m_handle(other.m_handle), m_owns(other.m_owns) {
         other.m_handle.token = 0;
+        other.m_owns = false;
     }
 
     inline properties& properties::operator=(properties&& other) noexcept {
         if (this != &other) {
-            sandbox_properties_destroy(&m_handle);
+            if (m_owns) sandbox_properties_destroy(&m_handle);
             m_handle = other.m_handle;
+            m_owns = other.m_owns;
             other.m_handle.token = 0;
+            other.m_owns = false;
         }
         return *this;
     }
 
-    inline properties::properties(sandbox_properties_handle_t raw) : m_handle(raw) {}
+    inline properties::properties(sandbox_properties_handle_t raw, bool owns) : m_handle(raw), m_owns(owns) {}
 
     inline bool properties::load(const std::string& data, Format format) {
         sandbox_properties_format_t fmt = SANDBOX_FORMAT_JSON;

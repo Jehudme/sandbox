@@ -38,6 +38,8 @@ extern "C" {
         int64_t (*last_modified)(ecs_world_t* ecs, const char* virtual_path);
         bool (*list_files)(ecs_world_t* ecs, const char* virtual_path, bool recursive, char*** out_files, size_t* out_count);
         void (*free_file_list)(ecs_world_t* ecs, char** files, size_t count);
+        bool (*read_all_bytes)(ecs_world_t* ecs, const char* virtual_path, uint8_t** out_data, size_t* out_size);
+        void (*free_bytes)(ecs_world_t* ecs, uint8_t* data);
     } sandbox_filesystem_api_t;
 
     /**

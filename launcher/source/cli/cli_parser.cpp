@@ -1,27 +1,23 @@
 #include "cli_parser.h"
 #include <CLI/CLI.hpp>
-#include <fstream>
 #include <iostream>
 #include <vector>
 #include <string>
-#include <stdexcept>
 
 namespace sandbox::launcher {
 
     std::optional<sandbox::properties> parse_cli(int argc, char **argv) {
         CLI::App cli_app{"Sandbox Engine Launcher"};
 
-        // --- Command Line Options Definition ---
-        std::vector<std::string> library_paths;
-        cli_app.add_option("-l,--library", library_paths, "Paths to libraries to index");
+        std::string app_path;
+        cli_app.add_option("app_path", app_path, "Path to the application to run (folder or zip)")->required();
 
-        std::vector<std::string> modules_to_activate;
-        cli_app.add_option("-m,--module", modules_to_activate, "Modules to activate (format: arch-name@major.minor.patch)");
+        bool dev_mode = false;
+        cli_app.add_flag("--dev", dev_mode, "Enable developer mode");
 
-        std::string config_file_path;
-        cli_app.add_option("-c,--config", config_file_path, "Path to the base configuration file (JSON format)");
+        std::string log_level;
+        cli_app.add_option("--logs", log_level, "Set log level (e.g., trace, debug, info, warn, error)");
 
-        // --- Parse Arguments ---
         try {
             cli_app.parse(argc, argv);
         } catch (const CLI::ParseError& parse_error) {
@@ -31,33 +27,30 @@ namespace sandbox::launcher {
 
         sandbox::properties engine_properties;
 
-        // --- Step 1: Load Base Configuration (File) ---
-        if (!config_file_path.empty()) {
-            std::ifstream config_file(config_file_path);
+        engine_properties.set("filesystem/mounts/app/physical", app_path);
+        engine_properties.set("filesystem/mounts/app/readonly", !dev_mode);
 
-            if (!config_file.is_open()) {
-                throw std::runtime_error("Failed to open configuration file: " + config_file_path);
-            }
-
-            std::string config_content(
-                (std::istreambuf_iterator<char>(config_file)),
-                std::istreambuf_iterator<char>()
-            );
-
-            if (!engine_properties.load(config_content, sandbox::properties::Format::JSON)) {
-                throw std::runtime_error("Failed to parse JSON properties from config file: " + config_file_path);
-            }
+        if (dev_mode) {
+            engine_properties.set("engine/dev", true);
         }
 
-        // --- Step 2: Apply Command Line Overrides (Libraries) ---
-        if (!library_paths.empty()) {
-            engine_properties.set_array("engine/libraries", library_paths);
+        if (!log_level.empty()) {
+            engine_properties.set("logs/level", log_level);
         }
 
-        // --- Step 3: Apply Command Line Overrides (Modules) ---
-        if (!modules_to_activate.empty()) {
-            engine_properties.set_array("engine/sandbox", modules_to_activate);
-        }
+        // We load sandbox_plugin.so
+        std::vector<std::string> library_paths = {"./sandbox_plugin.so"};
+        engine_properties.set_array("engine/libraries", library_paths);
+
+        // We activate sandbox-configuration, sandbox-logs, sandbox-filesystem, sandbox-runtime, sandbox-application
+        std::vector<std::string> modules = {
+            "sandbox-configuration@1.0.0", 
+            "sandbox-logs@1.0.0", 
+            "sandbox-filesystem@1.0.0", 
+            "sandbox-runtime@1.0.0",
+            "sandbox-application@1.0.0"
+        };
+        engine_properties.set_array("engine/sandbox", modules);
 
         return engine_properties;
     }

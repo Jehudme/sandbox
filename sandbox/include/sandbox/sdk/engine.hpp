@@ -20,7 +20,7 @@ namespace sandbox {
         bool initialize(const properties& props);
         
         // Returns the ECS world managed by the engine (ecs_world_t*)
-        void* get_ecs() const;
+        ecs_world_t *get_ecs() const;
 
         sandbox_engine_t* get_raw() const { return m_engine; }
         

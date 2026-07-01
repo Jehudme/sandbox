@@ -193,25 +193,33 @@ namespace sandbox::modules {
             return 0;
         }
 
-        static std::string read_all_text(flecs::world& entity_world, const char* virtual_path) {
-            sandbox_file_handle_t handle = open_read(entity_world, virtual_path);
-            if (!SANDBOX_HANDLE_IS_VALID(handle)) return "";
-            size_t sz = size(entity_world, handle);
-            std::string result;
-            result.resize(sz);
-            read(entity_world, handle, result.data(), sz);
-            close_handle(entity_world, handle);
+        static std::vector<uint8_t> read_all_bytes(flecs::world& entity_world, const char* virtual_path) {
+            std::vector<uint8_t> result;
+            const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
+            if (service && service->api && service->api->read_all_bytes) {
+                uint8_t* data = nullptr;
+                size_t size = 0;
+                if (service->api->read_all_bytes(entity_world.c_ptr(), virtual_path, &data, &size)) {
+                    if (data && size > 0) {
+                        result.assign(data, data + size);
+                    }
+                    if (service->api->free_bytes && data) {
+                        service->api->free_bytes(entity_world.c_ptr(), data);
+                    }
+                } else {
+                    // Propagate the exception indirectly or throw our own if it failed without crashing (the C-ABI will handle logging/throwing)
+                    // Actually, if it failed but didn't throw across C boundary, we can throw here to satisfy tests.
+                    throw std::runtime_error("SDK read_all_bytes failed");
+                }
+            } else {
+                throw std::runtime_error("Filesystem service or read_all_bytes ABI not available");
+            }
             return result;
         }
 
-        static std::vector<uint8_t> read_all_bytes(flecs::world& entity_world, const char* virtual_path) {
-            sandbox_file_handle_t handle = open_read(entity_world, virtual_path);
-            if (!SANDBOX_HANDLE_IS_VALID(handle)) return {};
-            size_t sz = size(entity_world, handle);
-            std::vector<uint8_t> result(sz);
-            read(entity_world, handle, result.data(), sz);
-            close_handle(entity_world, handle);
-            return result;
+        static std::string read_all_text(flecs::world& entity_world, const char* virtual_path) {
+            std::vector<uint8_t> bytes = read_all_bytes(entity_world, virtual_path);
+            return std::string(bytes.begin(), bytes.end());
         }
 
         static bool write_all(flecs::world& entity_world, const char* virtual_path, const void* data, size_t sz, bool force_path = false) {

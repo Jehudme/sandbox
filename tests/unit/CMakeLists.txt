@@ -32,7 +32,9 @@ set(SANDBOX_UNIT_TEST_SOURCES
     src/modules/test_logs.cpp
     src/modules/test_runtime.cpp
     src/modules/test_filesystem.cpp
+    src/modules/test_application.cpp
     ../../launcher/source/cli/cli_parser.cpp
+    ../../launcher/source/application/application.cpp
 )
 
 # =============================================================================

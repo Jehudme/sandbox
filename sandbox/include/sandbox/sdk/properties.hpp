@@ -20,7 +20,7 @@ namespace sandbox {
         properties(properties&& other) noexcept;
         properties& operator=(properties&& other) noexcept;
 
-        explicit properties(sandbox_properties_handle_t raw);
+        explicit properties(sandbox_properties_handle_t raw, bool owns = true);
 
         void release() { m_handle.token = 0; }
         bool is_valid() const { return m_handle.token != 0; }
@@ -54,6 +54,7 @@ namespace sandbox {
         
     private:
         sandbox_properties_handle_t m_handle;
+        bool m_owns = true;
     };
 }
 

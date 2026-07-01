@@ -4,44 +4,85 @@
 #include <sandbox/sdk/configuration.hpp>
 #include <sandbox/sdk/logs.hpp>
 #include <sandbox/abi/filesystem.h>
+#include <sandbox/sdk/filesystem.hpp>
 #include <sandbox/abi/bootstrapper.h>
 #include "core/bootstrapper.h"
+#include "core/exceptions.h"
 #include <fstream>
 #include <string>
+#include <cstdlib>
+#include <filesystem>
 
 using namespace sandbox::core;
 
-TEST_CASE("Filesystem Module", "[filesystem]") {
+TEST_CASE("Filesystem Module: URI Mounting and Reading", "[filesystem][uri]") {
     bootstrapper_t::reset();
 
-    // Create a dummy file to test mounting
-    {
-        std::ofstream dummy("test_physical_dir.txt");
-        dummy << "hello";
-    }
+    // 1. Setup test physical files and zip
+    std::filesystem::create_directories("test_physical_dir");
+    std::ofstream dummy("test_physical_dir/test_file.txt");
+    dummy << "Hello from physical directory!";
+    dummy.close();
 
-    // 1. Setup properties with mounts
+    std::filesystem::create_directories("test_zip_dir");
+    std::ofstream zip_dummy("test_zip_dir/test_zip_file.txt");
+    zip_dummy << "Hello from zip archive!";
+    zip_dummy.close();
+    
+    // Create zip archive
+    system("cd test_zip_dir && zip -q -r ../test_archive.zip *");
+
+    // 2. Setup properties with mounts
     properties_t engine_props;
-    engine_props.set<std::vector<std::string>>({"engine", "libraries"}, {"./core_plugin.so"});
+    engine_props.set<std::vector<std::string>>({"engine", "libraries"}, {"./sandbox_plugin.so"});
     engine_props.set<std::vector<std::string>>({"engine", "sandbox"}, {"sandbox-configuration@1.0.0", "sandbox-logs@1.0.0", "sandbox-filesystem@1.0.0", "sandbox-runtime@1.0.0"});
     
     // Add filesystem mount config
-    engine_props.set<std::string>({"filesystem", "mounts", "test_mount", "physical"}, "./");
-    engine_props.set<bool>({"filesystem", "mounts", "test_mount", "readonly"}, true);
+    engine_props.set<std::string>({"filesystem", "mounts", "app", "physical"}, "./test_archive.zip");
+    engine_props.set<bool>({"filesystem", "mounts", "app", "readonly"}, true);
 
-    // 2. Initialize engine
+    engine_props.set<std::string>({"filesystem", "mounts", "cache", "physical"}, "./test_physical_dir");
+    engine_props.set<bool>({"filesystem", "mounts", "cache", "readonly"}, false);
+
+    // 3. Initialize engine
     engine_t engine;
     REQUIRE_NOTHROW(engine.initialize(engine_props));
 
     flecs::world& world = engine.entity_world;
 
-    // 3. Retrieve service and manually call mount to test API
-    const sandbox_filesystem_service_t* svc = SANDBOX_GET_SERVICE(world, sandbox_filesystem_service_t);
-    REQUIRE(svc != nullptr);
-    REQUIRE(svc->api != nullptr);
+    // 4. Test physical folder reading (cache://)
+    SECTION("Read text from physical folder via cache://") {
+        std::string content;
+        REQUIRE_NOTHROW(content = sandbox::modules::filesystem::read_all_text(world, "cache://test_file.txt"));
+        REQUIRE(content == "Hello from physical directory!");
+    }
 
-    bool result = svc->api->mount(world.c_ptr(), "./test_physical_dir.txt", "/test", true);
-    REQUIRE(result == true);
+    // 5. Test zip archive reading (app://)
+    SECTION("Read text from zip archive via app://") {
+        std::string content;
+        REQUIRE_NOTHROW(content = sandbox::modules::filesystem::read_all_text(world, "app://test_zip_file.txt"));
+        REQUIRE(content == "Hello from zip archive!");
+    }
+
+    // 6. Test binary reading
+    SECTION("Read bytes from physical folder") {
+        std::vector<uint8_t> bytes;
+        REQUIRE_NOTHROW(bytes = sandbox::modules::filesystem::read_all_bytes(world, "cache://test_file.txt"));
+        REQUIRE(bytes.size() == 30);
+    }
+
+    // 7. Test exceptions
+    SECTION("Throw on non-existent file in physical folder") {
+        REQUIRE_THROWS_AS(sandbox::modules::filesystem::read_all_text(world, "cache://does_not_exist.txt"), std::runtime_error);
+    }
+
+    SECTION("Throw on non-existent file in zip archive") {
+        REQUIRE_THROWS_AS(sandbox::modules::filesystem::read_all_text(world, "app://does_not_exist.txt"), std::runtime_error);
+    }
+
+    SECTION("Throw on unregistered URI scheme") {
+        REQUIRE_THROWS_AS(sandbox::modules::filesystem::read_all_text(world, "unknown://test_file.txt"), std::runtime_error);
+    }
 
     bootstrapper_t::reset();
 }

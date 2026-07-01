@@ -15,7 +15,7 @@ TEST_CASE("Runtime Module", "[runtime]") {
     bootstrapper_t b;
     flecs::world w;
 
-    b.index_library(w, "./core_plugin.so");
+    b.index_library(w, "./sandbox_plugin.so");
     
     
     REQUIRE_NOTHROW(b.activate(w, "sandbox", "logs", 1, 0, 0));

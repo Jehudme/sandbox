@@ -20,11 +20,11 @@ namespace sandbox::modules {
          */
         static sandbox::properties get_properties(flecs::world& entity_world) {
             const sandbox_configuration_service_t* service = SANDBOX_GET_SERVICE(entity_world, sandbox_configuration_service_t);
-            if (service && service->api) {
-                return sandbox::properties(service->api->get_properties(entity_world.c_ptr()));
+            if (service && service->api && service->api->get_properties) {
+                return sandbox::properties(service->api->get_properties(entity_world.c_ptr()), false);
             }
             sandbox_properties_handle_t invalid = {0};
-            return sandbox::properties(invalid);
+            return sandbox::properties(invalid, false);
         }
 
         /**
@@ -39,7 +39,6 @@ namespace sandbox::modules {
             sandbox::properties temp = get_properties(entity_world);
             if (!temp.is_valid()) return std::nullopt;
             auto result = temp.get<Type>(path);
-            temp.release(); // Do not destroy the module's handle
             return result;
         }
 
@@ -55,7 +54,6 @@ namespace sandbox::modules {
             sandbox::properties temp = get_properties(entity_world);
             if (!temp.is_valid()) return;
             temp.set<Type>(path, value);
-            temp.release();
         }
     };
 }

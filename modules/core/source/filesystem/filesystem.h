@@ -239,6 +239,8 @@ namespace sandbox::modules {
         flecs::world m_entity_world;
 
         std::unordered_map<std::string, std::string> m_physical_mounts;
+
+        std::string resolve_physical_path(const std::string& virtual_path, std::string& out_internal_path) const;
     };
 
 } // namespace sandbox::plugins

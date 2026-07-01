@@ -36,7 +36,7 @@ bool sandbox_engine_initialize(sandbox_engine_t* engine, sandbox_properties_hand
  * @param engine The engine instance.
  * @return A pointer to the ECS world, or NULL if not initialized/available.
  */
-void* sandbox_engine_get_ecs(sandbox_engine_t* engine);
+ecs_world_t *sandbox_engine_get_ecs(sandbox_engine_t *engine);
 
 #ifdef __cplusplus
 }

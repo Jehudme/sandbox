@@ -1,5 +1,6 @@
 #pragma once
 
+#include <filesystem>
 #include <sandbox/abi/library_loader.h>
 #include <flecs/addons/cpp/flecs.hpp>
 #include <vector>
@@ -16,10 +17,10 @@ namespace sandbox::core {
          * @param entity_world The flecs world.
          * @param path The path to the library.
          */
-        static void load(flecs::world& entity_world, const char* path) {
+        static void load(flecs::world& entity_world, std::filesystem::path path) {
             const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_library_loader_service_t);
             if (service && service->api && service->api->load) {
-                service->api->load(entity_world.c_ptr(), path);
+                service->api->load(entity_world.c_ptr(), path.string().c_str());
             }
         }
 
