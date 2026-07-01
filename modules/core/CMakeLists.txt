@@ -29,13 +29,20 @@ set(HEADERS
 )
 
 # Create shared library
-add_library(sandbox_plugin MODULE ${SOURCES} ${HEADERS})
+option(SANDBOX_MODULES_STATIC "Build modules statically and link them directly" OFF)
+
+if(SANDBOX_MODULES_STATIC)
+    add_library(sandbox_plugin STATIC ${SOURCES} ${HEADERS})
+else()
+    add_library(sandbox_plugin MODULE ${SOURCES} ${HEADERS})
+    set_target_properties(sandbox_plugin PROPERTIES
+        PREFIX ""
+        CXX_VISIBILITY_PRESET hidden
+        VISIBILITY_INLINES_HIDDEN ON
+    )
+endif()
+
 add_library(sandbox::plugins ALIAS sandbox_plugin)
-set_target_properties(sandbox_plugin PROPERTIES
-    PREFIX ""
-    CXX_VISIBILITY_PRESET hidden
-    VISIBILITY_INLINES_HIDDEN ON
-)
 
 # Includes
 target_include_directories(sandbox_plugin PRIVATE
@@ -45,27 +52,34 @@ target_include_directories(sandbox_plugin PRIVATE
 )
 
 target_include_directories(sandbox_plugin PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
 )
 
 include(FetchContent)
 
-FetchContent_Declare(
-    spdlog
-    GIT_REPOSITORY https://github.com/gabime/spdlog.git
-    GIT_TAG v1.15.3
-    GIT_SHALLOW TRUE
-)
-FetchContent_MakeAvailable(spdlog)
+find_package(spdlog QUIET)
+if(NOT spdlog_FOUND)
+    FetchContent_Declare(
+        spdlog
+        GIT_REPOSITORY https://github.com/gabime/spdlog.git
+        GIT_TAG v1.15.3
+        GIT_SHALLOW TRUE
+    )
+    FetchContent_MakeAvailable(spdlog)
+endif()
 
-FetchContent_Declare(
-    miniz
-    GIT_REPOSITORY https://github.com/richgel999/miniz.git
-    GIT_TAG 3.0.2
-    GIT_SHALLOW TRUE
-    PATCH_COMMAND sed -i "s/cmake_minimum_required(VERSION 3.0)/cmake_minimum_required(VERSION 3.5)/g" CMakeLists.txt
-)
-FetchContent_MakeAvailable(miniz)
+find_package(miniz QUIET)
+if(NOT miniz_FOUND)
+    FetchContent_Declare(
+        miniz
+        GIT_REPOSITORY https://github.com/richgel999/miniz.git
+        GIT_TAG 3.0.2
+        GIT_SHALLOW TRUE
+    )
+    set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(miniz)
+endif()
 
 # Link against core engine and deps
 target_link_libraries(sandbox_plugin PRIVATE
@@ -82,3 +96,14 @@ add_custom_command(TARGET sandbox_plugin POST_BUILD
 )
 
 target_precompile_headers(sandbox_plugin PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_SOURCE_DIR}/sandbox/source/pch.h>")
+
+# =============================================================================
+# INSTALLATION
+# =============================================================================
+include(GNUInstallDirs)
+install(TARGETS sandbox_plugin
+    EXPORT sandboxTargets
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)

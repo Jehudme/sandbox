@@ -27,6 +27,7 @@ namespace sandbox::launcher {
 
     // ABI methods
     static bool application_is_running(ecs_world_t* ecs) {
+        (void)ecs;
         return true; 
     }
 

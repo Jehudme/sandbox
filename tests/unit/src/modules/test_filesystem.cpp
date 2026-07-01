@@ -30,7 +30,9 @@ TEST_CASE("Filesystem Module: URI Mounting and Reading", "[filesystem][uri]") {
     zip_dummy.close();
     
     // Create zip archive
-    system("cd test_zip_dir && zip -q -r ../test_archive.zip *");
+    if (system("cd test_zip_dir && zip -q -r ../test_archive.zip *") != 0) {
+        std::cerr << "Warning: Failed to create test zip archive." << std::endl;
+    }
 
     // 2. Setup properties with mounts
     properties_t engine_props;

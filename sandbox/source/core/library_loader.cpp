@@ -27,12 +27,12 @@ namespace sandbox::core {
             // We intentionally leak the loaded libraries globally during execution
             // to ensure dylib destructors don't erroneously unmap libraries during unit test tear-downs
             // while the bootstrapper's global registry might still have pointers to its static symbols.
-            static std::unordered_map<std::string, std::shared_ptr<dylib::library>> s_leaked_libs;
-            if (s_leaked_libs.find(library_name) == s_leaked_libs.end()) {
-                s_leaked_libs[library_name] = std::make_shared<dylib::library>(path.string());
+            static auto* s_leaked_libs = new std::unordered_map<std::string, std::shared_ptr<dylib::library>>();
+            if (s_leaked_libs->find(library_name) == s_leaked_libs->end()) {
+                (*s_leaked_libs)[library_name] = std::make_shared<dylib::library>(path.string());
             }
             
-            m_libraries.emplace(library_name, s_leaked_libs[library_name]);
+            m_libraries.emplace(library_name, (*s_leaked_libs)[library_name]);
 
             sandbox::modules::logs::info(entity_world, "Successfully loaded: {}", library_name);
         }
@@ -47,7 +47,7 @@ namespace sandbox::core {
             throw library_load_error("Cannot load library from empty memory buffer.");
         }
         
-        std::filesystem::path cache_dir = "./sandbox/plugins";
+        std::filesystem::path cache_dir = std::filesystem::temp_directory_path() / "SandboxEngine" / "plugin_cache";
         if (!std::filesystem::exists(cache_dir)) {
             std::filesystem::create_directories(cache_dir);
         }
