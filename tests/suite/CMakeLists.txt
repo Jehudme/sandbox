@@ -20,6 +20,8 @@ target_link_libraries(sandbox_suite_tests
     PRIVATE
         sandbox::library
         Catch2::Catch2WithMain
+        glaze::glaze
+        dylib
         -Wl,--whole-archive $<TARGET_FILE:flecs_static> -Wl,--no-whole-archive
 )
 
@@ -32,6 +34,6 @@ target_include_directories(sandbox_suite_tests
 # Ensure the shared libraries are built before the test executable
 add_dependencies(sandbox_suite_tests dummy_plugin sandbox_plugin)
 
-catch_discover_tests(sandbox_suite_tests)
+catch_discover_tests(sandbox_suite_tests WORKING_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 
 target_precompile_headers(sandbox_suite_tests PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_SOURCE_DIR}/sandbox/source/pch.h>")

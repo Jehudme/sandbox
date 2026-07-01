@@ -11,6 +11,7 @@
 #include <fstream>
 #include <string>
 #include <cstdlib>
+#include <iostream>
 #include <filesystem>
 
 using namespace sandbox::core;

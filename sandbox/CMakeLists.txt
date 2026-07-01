@@ -31,7 +31,10 @@ FetchContent_Declare(
 )
 
 # Populate and make targets available
+set(SANDBOX_ORIGINAL_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
+set(BUILD_SHARED_LIBS OFF)
 FetchContent_MakeAvailable(glaze flecs dylib)
+set(BUILD_SHARED_LIBS ${SANDBOX_ORIGINAL_BUILD_SHARED_LIBS})
 
 set(FLECS_SHARED OFF CACHE INTERNAL "Build Flecs as a shared library")
 set(FLECS_STATIC ON CACHE INTERNAL "Disable Flecs static library")

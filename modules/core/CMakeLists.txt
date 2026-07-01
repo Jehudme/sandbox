@@ -58,6 +58,9 @@ target_include_directories(sandbox_plugin PUBLIC
 
 include(FetchContent)
 
+set(SANDBOX_ORIGINAL_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
+set(BUILD_SHARED_LIBS OFF)
+
 find_package(spdlog QUIET)
 if(NOT spdlog_FOUND)
     FetchContent_Declare(
@@ -77,9 +80,12 @@ if(NOT miniz_FOUND)
         GIT_TAG 3.0.2
         GIT_SHALLOW TRUE
     )
-    set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "" FORCE)
+    # Force new CMake versions (3.30+) to accept miniz's legacy cmake_minimum_required(3.0)
+    set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "" FORCE)
     FetchContent_MakeAvailable(miniz)
 endif()
+
+set(BUILD_SHARED_LIBS ${SANDBOX_ORIGINAL_BUILD_SHARED_LIBS})
 
 # Link against core engine and deps
 target_link_libraries(sandbox_plugin PRIVATE

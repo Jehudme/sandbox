@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.20)
 project(sandbox_launcher LANGUAGES CXX)
 
 include(FetchContent)
+set(SANDBOX_ORIGINAL_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
+set(BUILD_SHARED_LIBS OFF)
+
 find_package(cli11 QUIET)
 if(NOT cli11_FOUND)
     FetchContent_Declare(
@@ -12,6 +15,8 @@ if(NOT cli11_FOUND)
     )
     FetchContent_MakeAvailable(cli11)
 endif()
+
+set(BUILD_SHARED_LIBS ${SANDBOX_ORIGINAL_BUILD_SHARED_LIBS})
 
 add_executable(sandbox_launcher source/main.cpp
         source/cli/cli_parser.cpp
