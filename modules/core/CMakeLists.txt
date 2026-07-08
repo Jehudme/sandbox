@@ -26,8 +26,7 @@ set(HEADERS
     source/runtime/runtime_module.h
     source/application/application_module.h
     include/sandbox/services/configuration_service.h
-    include/sandbox/services/filesystem_service.h
-    include/sandbox/services/logs_service.h
+        include/sandbox/services/logs_service.h
     include/sandbox/services/runtime_service.h
     include/sandbox/services/application_service.h
 )
