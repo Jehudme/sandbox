@@ -45,6 +45,7 @@ set_target_properties(sandbox_unit_tests PROPERTIES ENABLE_EXPORTS ON)
 target_link_libraries(sandbox_unit_tests
     PRIVATE
         sandbox::library
+        sandbox::plugins_static
         Catch2::Catch2WithMain
         CLI11::CLI11
         glaze::glaze
@@ -60,7 +61,7 @@ target_include_directories(sandbox_unit_tests
 )
 
 # Ensure the shared libraries are built before the test executable
-add_dependencies(sandbox_unit_tests dummy_plugin sandbox_plugin)
+add_dependencies(sandbox_unit_tests dummy_plugin sandbox_plugin sandbox_plugin_static)
 
 # Register tests with CTest
 catch_discover_tests(sandbox_unit_tests WORKING_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")

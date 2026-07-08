@@ -13,9 +13,7 @@ namespace sandbox::modules {
          * @param entity_world The flecs world.
          * @return True if running, false otherwise.
          */
-        static bool is_running(const flecs::world& entity_world) {
-            return sandbox_application_is_running(entity_world.c_ptr());
-        }
+    static bool is_running(const flecs::world& entity_world);
     };
 }
 #endif

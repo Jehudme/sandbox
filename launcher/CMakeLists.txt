@@ -27,6 +27,7 @@ set_target_properties(sandbox_launcher PROPERTIES ENABLE_EXPORTS ON)
 
 target_link_libraries(sandbox_launcher PRIVATE
         sandbox::library
+        sandbox::plugins_static
         CLI11::CLI11
         -Wl,--whole-archive $<TARGET_FILE:flecs_static> -Wl,--no-whole-archive
 )

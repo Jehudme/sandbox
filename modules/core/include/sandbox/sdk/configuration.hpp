@@ -13,9 +13,7 @@ namespace sandbox::modules {
          * @param entity_world The flecs world.
          * @return The properties object representing the configuration.
          */
-        static sandbox::properties get_properties(flecs::world& entity_world) {
-            return sandbox::properties(sandbox_configuration_get_properties(entity_world.c_ptr()), false);
-        }
+    static sandbox::properties get_properties(flecs::world& entity_world);
 
         /**
          * @brief Retrieves a configuration value at the given path.

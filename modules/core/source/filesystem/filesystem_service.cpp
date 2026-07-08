@@ -1,3 +1,4 @@
+#include <sandbox/sdk/filesystem.hpp>
 #include "sandbox/services/filesystem_service.h"
 #include "filesystem_module.h"
 #include <cstring>
@@ -382,4 +383,582 @@ extern "C" {
     };
 
     SANDBOX_DEFINE_SERVICE(sandbox_filesystem_service_t, sandbox_filesystem_api_t, &filesystem_api);
+}
+
+// --- Public C API Implementations ---
+bool sandbox_filesystem_mount(ecs_world_t* ecs, const char* physical_path, const char* virtual_mount_point, bool read_only) {
+#ifdef __cplusplus
+    flecs::world flecs_world(ecs);
+    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+#else
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
+#endif
+    if (service && service->api && service->api->mount) {
+        return service->api->mount(ecs, physical_path, virtual_mount_point, read_only);
+        
+    }
+    return false;
+}
+
+bool sandbox_filesystem_unmount(ecs_world_t* ecs, const char* mount_point) {
+#ifdef __cplusplus
+    flecs::world flecs_world(ecs);
+    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+#else
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
+#endif
+    if (service && service->api && service->api->unmount) {
+        return service->api->unmount(ecs, mount_point);
+        
+    }
+    return false;
+}
+
+sandbox_file_handle_t sandbox_filesystem_open_read(ecs_world_t* ecs, const char* virtual_path) {
+#ifdef __cplusplus
+    flecs::world flecs_world(ecs);
+    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+#else
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
+#endif
+    if (service && service->api && service->api->open_read) {
+        return service->api->open_read(ecs, virtual_path);
+        
+    }
+    return (sandbox_file_handle_t){0};
+}
+
+sandbox_file_handle_t sandbox_filesystem_open_write(ecs_world_t* ecs, const char* virtual_path, bool append, bool force_path) {
+#ifdef __cplusplus
+    flecs::world flecs_world(ecs);
+    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+#else
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
+#endif
+    if (service && service->api && service->api->open_write) {
+        return service->api->open_write(ecs, virtual_path, append, force_path);
+        
+    }
+    return (sandbox_file_handle_t){0};
+}
+
+size_t sandbox_filesystem_read(ecs_world_t* ecs, sandbox_file_handle_t handle, void* buffer, size_t bytes_to_read) {
+#ifdef __cplusplus
+    flecs::world flecs_world(ecs);
+    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+#else
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
+#endif
+    if (service && service->api && service->api->read) {
+        return service->api->read(ecs, handle, buffer, bytes_to_read);
+        
+    }
+    return 0;
+}
+
+size_t sandbox_filesystem_write(ecs_world_t* ecs, sandbox_file_handle_t handle, const void* buffer, size_t bytes_to_write) {
+#ifdef __cplusplus
+    flecs::world flecs_world(ecs);
+    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+#else
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
+#endif
+    if (service && service->api && service->api->write) {
+        return service->api->write(ecs, handle, buffer, bytes_to_write);
+        
+    }
+    return 0;
+}
+
+bool sandbox_filesystem_eof(ecs_world_t* ecs, sandbox_file_handle_t handle) {
+#ifdef __cplusplus
+    flecs::world flecs_world(ecs);
+    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+#else
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
+#endif
+    if (service && service->api && service->api->eof) {
+        return service->api->eof(ecs, handle);
+        
+    }
+    return false;
+}
+
+size_t sandbox_filesystem_tell(ecs_world_t* ecs, sandbox_file_handle_t handle) {
+#ifdef __cplusplus
+    flecs::world flecs_world(ecs);
+    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+#else
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
+#endif
+    if (service && service->api && service->api->tell) {
+        return service->api->tell(ecs, handle);
+        
+    }
+    return 0;
+}
+
+bool sandbox_filesystem_seek(ecs_world_t* ecs, sandbox_file_handle_t handle, size_t position) {
+#ifdef __cplusplus
+    flecs::world flecs_world(ecs);
+    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+#else
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
+#endif
+    if (service && service->api && service->api->seek) {
+        return service->api->seek(ecs, handle, position);
+        
+    }
+    return false;
+}
+
+size_t sandbox_filesystem_size(ecs_world_t* ecs, sandbox_file_handle_t handle) {
+#ifdef __cplusplus
+    flecs::world flecs_world(ecs);
+    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+#else
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
+#endif
+    if (service && service->api && service->api->size) {
+        return service->api->size(ecs, handle);
+        
+    }
+    return 0;
+}
+
+void sandbox_filesystem_close_handle(ecs_world_t* ecs, sandbox_file_handle_t handle) {
+#ifdef __cplusplus
+    flecs::world flecs_world(ecs);
+    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+#else
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
+#endif
+    if (service && service->api && service->api->close_handle) {
+        service->api->close_handle(ecs, handle);
+        return;
+    }
+    
+}
+
+bool sandbox_filesystem_create_file(ecs_world_t* ecs, const char* virtual_path, bool force_path) {
+#ifdef __cplusplus
+    flecs::world flecs_world(ecs);
+    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+#else
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
+#endif
+    if (service && service->api && service->api->create_file) {
+        return service->api->create_file(ecs, virtual_path, force_path);
+        
+    }
+    return false;
+}
+
+bool sandbox_filesystem_remove_file(ecs_world_t* ecs, const char* virtual_path) {
+#ifdef __cplusplus
+    flecs::world flecs_world(ecs);
+    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+#else
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
+#endif
+    if (service && service->api && service->api->remove_file) {
+        return service->api->remove_file(ecs, virtual_path);
+        
+    }
+    return false;
+}
+
+bool sandbox_filesystem_copy(ecs_world_t* ecs, const char* source_virtual_path, const char* dest_virtual_path, bool overwrite, bool force_path) {
+#ifdef __cplusplus
+    flecs::world flecs_world(ecs);
+    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+#else
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
+#endif
+    if (service && service->api && service->api->copy) {
+        return service->api->copy(ecs, source_virtual_path, dest_virtual_path, overwrite, force_path);
+        
+    }
+    return false;
+}
+
+bool sandbox_filesystem_move(ecs_world_t* ecs, const char* source_virtual_path, const char* dest_virtual_path, bool overwrite, bool force_path) {
+#ifdef __cplusplus
+    flecs::world flecs_world(ecs);
+    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+#else
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
+#endif
+    if (service && service->api && service->api->move) {
+        return service->api->move(ecs, source_virtual_path, dest_virtual_path, overwrite, force_path);
+        
+    }
+    return false;
+}
+
+bool sandbox_filesystem_create_directory(ecs_world_t* ecs, const char* virtual_path, bool force_path) {
+#ifdef __cplusplus
+    flecs::world flecs_world(ecs);
+    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+#else
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
+#endif
+    if (service && service->api && service->api->create_directory) {
+        return service->api->create_directory(ecs, virtual_path, force_path);
+        
+    }
+    return false;
+}
+
+bool sandbox_filesystem_remove_directory(ecs_world_t* ecs, const char* virtual_path) {
+#ifdef __cplusplus
+    flecs::world flecs_world(ecs);
+    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+#else
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
+#endif
+    if (service && service->api && service->api->remove_directory) {
+        return service->api->remove_directory(ecs, virtual_path);
+        
+    }
+    return false;
+}
+
+bool sandbox_filesystem_exists(ecs_world_t* ecs, const char* virtual_path) {
+#ifdef __cplusplus
+    flecs::world flecs_world(ecs);
+    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+#else
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
+#endif
+    if (service && service->api && service->api->exists) {
+        return service->api->exists(ecs, virtual_path);
+        
+    }
+    return false;
+}
+
+bool sandbox_filesystem_is_file(ecs_world_t* ecs, const char* virtual_path) {
+#ifdef __cplusplus
+    flecs::world flecs_world(ecs);
+    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+#else
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
+#endif
+    if (service && service->api && service->api->is_file) {
+        return service->api->is_file(ecs, virtual_path);
+        
+    }
+    return false;
+}
+
+bool sandbox_filesystem_is_directory(ecs_world_t* ecs, const char* virtual_path) {
+#ifdef __cplusplus
+    flecs::world flecs_world(ecs);
+    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+#else
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
+#endif
+    if (service && service->api && service->api->is_directory) {
+        return service->api->is_directory(ecs, virtual_path);
+        
+    }
+    return false;
+}
+
+bool sandbox_filesystem_is_readonly(ecs_world_t* ecs, const char* virtual_path) {
+#ifdef __cplusplus
+    flecs::world flecs_world(ecs);
+    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+#else
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
+#endif
+    if (service && service->api && service->api->is_readonly) {
+        return service->api->is_readonly(ecs, virtual_path);
+        
+    }
+    return false;
+}
+
+size_t sandbox_filesystem_file_size(ecs_world_t* ecs, const char* virtual_path) {
+#ifdef __cplusplus
+    flecs::world flecs_world(ecs);
+    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+#else
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
+#endif
+    if (service && service->api && service->api->file_size) {
+        return service->api->file_size(ecs, virtual_path);
+        
+    }
+    return 0;
+}
+
+int64_t sandbox_filesystem_last_modified(ecs_world_t* ecs, const char* virtual_path) {
+#ifdef __cplusplus
+    flecs::world flecs_world(ecs);
+    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+#else
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
+#endif
+    if (service && service->api && service->api->last_modified) {
+        return service->api->last_modified(ecs, virtual_path);
+        
+    }
+    return 0;
+}
+
+bool sandbox_filesystem_list_files(ecs_world_t* ecs, const char* virtual_path, bool recursive, char*** out_files, size_t* out_count) {
+#ifdef __cplusplus
+    flecs::world flecs_world(ecs);
+    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+#else
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
+#endif
+    if (service && service->api && service->api->list_files) {
+        return service->api->list_files(ecs, virtual_path, recursive, out_files, out_count);
+        
+    }
+    return false;
+}
+
+void sandbox_filesystem_free_file_list(ecs_world_t* ecs, char** files, size_t count) {
+#ifdef __cplusplus
+    flecs::world flecs_world(ecs);
+    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+#else
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
+#endif
+    if (service && service->api && service->api->free_file_list) {
+        service->api->free_file_list(ecs, files, count);
+        return;
+    }
+    
+}
+
+bool sandbox_filesystem_read_all_bytes(ecs_world_t* ecs, const char* virtual_path, uint8_t** out_data, size_t* out_size) {
+#ifdef __cplusplus
+    flecs::world flecs_world(ecs);
+    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+#else
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
+#endif
+    if (service && service->api && service->api->read_all_bytes) {
+        return service->api->read_all_bytes(ecs, virtual_path, out_data, out_size);
+        
+    }
+    return false;
+}
+
+void sandbox_filesystem_free_bytes(ecs_world_t* ecs, uint8_t* data) {
+#ifdef __cplusplus
+    flecs::world flecs_world(ecs);
+    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+#else
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
+#endif
+    if (service && service->api && service->api->free_bytes) {
+        service->api->free_bytes(ecs, data);
+        return;
+    }
+    
+}
+
+// --- SDK Implementations ---
+namespace sandbox::modules {
+bool filesystem::mount(flecs::world& entity_world, const char* physical_path, const char* virtual_mount_point, bool read_only) {
+            const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
+            if (service && service->api) {
+                return service->api->mount(entity_world.c_ptr(), physical_path, virtual_mount_point, read_only);
+            }
+            return false;
+        }
+
+bool filesystem::unmount(flecs::world& entity_world, const char* mount_point) {
+            const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
+            if (service && service->api) {
+                return service->api->unmount(entity_world.c_ptr(), mount_point);
+            }
+            return false;
+        }
+
+sandbox_file_handle_t filesystem::open_read(flecs::world& entity_world, const char* virtual_path) {
+            const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
+            if (service && service->api) {
+                return service->api->open_read(entity_world.c_ptr(), virtual_path);
+            }
+            return {0};
+        }
+
+sandbox_file_handle_t filesystem::open_write(flecs::world& entity_world, const char* virtual_path, bool append, bool force_path) {
+            const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
+            if (service && service->api) {
+                return service->api->open_write(entity_world.c_ptr(), virtual_path, append, force_path);
+            }
+            return {0};
+        }
+
+size_t filesystem::read(flecs::world& entity_world, sandbox_file_handle_t handle, void* buffer, size_t bytes_to_read) {
+            const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
+            if (service && service->api) {
+                return service->api->read(entity_world.c_ptr(), handle, buffer, bytes_to_read);
+            }
+            return 0;
+        }
+
+size_t filesystem::write(flecs::world& entity_world, sandbox_file_handle_t handle, const void* buffer, size_t bytes_to_write) {
+            const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
+            if (service && service->api) {
+                return service->api->write(entity_world.c_ptr(), handle, buffer, bytes_to_write);
+            }
+            return 0;
+        }
+
+bool filesystem::eof(flecs::world& entity_world, sandbox_file_handle_t handle) {
+            const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
+            if (service && service->api) {
+                return service->api->eof(entity_world.c_ptr(), handle);
+            }
+            return false;
+        }
+
+size_t filesystem::tell(flecs::world& entity_world, sandbox_file_handle_t handle) {
+            const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
+            if (service && service->api) {
+                return service->api->tell(entity_world.c_ptr(), handle);
+            }
+            return 0;
+        }
+
+bool filesystem::seek(flecs::world& entity_world, sandbox_file_handle_t handle, size_t position) {
+            const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
+            if (service && service->api) {
+                return service->api->seek(entity_world.c_ptr(), handle, position);
+            }
+            return false;
+        }
+
+size_t filesystem::size(flecs::world& entity_world, sandbox_file_handle_t handle) {
+            const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
+            if (service && service->api) {
+                return service->api->size(entity_world.c_ptr(), handle);
+            }
+            return 0;
+        }
+
+void filesystem::close_handle(flecs::world& entity_world, sandbox_file_handle_t handle) {
+            const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
+            if (service && service->api) {
+                service->api->close_handle(entity_world.c_ptr(), handle);
+            }
+        }
+
+bool filesystem::create_file(flecs::world& entity_world, const char* virtual_path, bool force_path) {
+            const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
+            if (service && service->api) {
+                return service->api->create_file(entity_world.c_ptr(), virtual_path, force_path);
+            }
+            return false;
+        }
+
+bool filesystem::remove_file(flecs::world& entity_world, const char* virtual_path) {
+            const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
+            if (service && service->api) {
+                return service->api->remove_file(entity_world.c_ptr(), virtual_path);
+            }
+            return false;
+        }
+
+bool filesystem::copy(flecs::world& entity_world, const char* source_virtual_path, const char* dest_virtual_path, bool overwrite, bool force_path) {
+            const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
+            if (service && service->api) {
+                return service->api->copy(entity_world.c_ptr(), source_virtual_path, dest_virtual_path, overwrite, force_path);
+            }
+            return false;
+        }
+
+bool filesystem::move(flecs::world& entity_world, const char* source_virtual_path, const char* dest_virtual_path, bool overwrite, bool force_path) {
+            const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
+            if (service && service->api) {
+                return service->api->move(entity_world.c_ptr(), source_virtual_path, dest_virtual_path, overwrite, force_path);
+            }
+            return false;
+        }
+
+bool filesystem::create_directory(flecs::world& entity_world, const char* virtual_path, bool force_path) {
+            const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
+            if (service && service->api) {
+                return service->api->create_directory(entity_world.c_ptr(), virtual_path, force_path);
+            }
+            return false;
+        }
+
+bool filesystem::remove_directory(flecs::world& entity_world, const char* virtual_path) {
+            const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
+            if (service && service->api) {
+                return service->api->remove_directory(entity_world.c_ptr(), virtual_path);
+            }
+            return false;
+        }
+
+bool filesystem::exists(flecs::world& entity_world, const char* virtual_path) {
+            const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
+            if (service && service->api) {
+                return service->api->exists(entity_world.c_ptr(), virtual_path);
+            }
+            return false;
+        }
+
+bool filesystem::is_file(flecs::world& entity_world, const char* virtual_path) {
+            const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
+            if (service && service->api) {
+                return service->api->is_file(entity_world.c_ptr(), virtual_path);
+            }
+            return false;
+        }
+
+bool filesystem::is_directory(flecs::world& entity_world, const char* virtual_path) {
+            const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
+            if (service && service->api) {
+                return service->api->is_directory(entity_world.c_ptr(), virtual_path);
+            }
+            return false;
+        }
+
+bool filesystem::is_readonly(flecs::world& entity_world, const char* virtual_path) {
+            const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
+            if (service && service->api) {
+                return service->api->is_readonly(entity_world.c_ptr(), virtual_path);
+            }
+            return false;
+        }
+
+size_t filesystem::file_size(flecs::world& entity_world, const char* virtual_path) {
+            const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
+            if (service && service->api) {
+                return service->api->file_size(entity_world.c_ptr(), virtual_path);
+            }
+            return 0;
+        }
+
+int64_t filesystem::last_modified(flecs::world& entity_world, const char* virtual_path) {
+            const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
+            if (service && service->api) {
+                return service->api->last_modified(entity_world.c_ptr(), virtual_path);
+            }
+            return 0;
+        }
+
+std::string filesystem::read_all_text(flecs::world& entity_world, const char* virtual_path) {
+            std::vector<uint8_t> bytes = read_all_bytes(entity_world, virtual_path);
+            return std::string(bytes.begin(), bytes.end());
+        }
+
+bool filesystem::write_all(flecs::world& entity_world, const char* virtual_path, const void* data, size_t sz, bool force_path) {
+            sandbox_file_handle_t handle = open_write(entity_world, virtual_path, false, force_path);
+            if (!SANDBOX_HANDLE_IS_VALID(handle)) return false;
+            size_t written = write(entity_world, handle, data, sz);
+            close_handle(entity_world, handle);
+            return written == sz;
+        }
 }

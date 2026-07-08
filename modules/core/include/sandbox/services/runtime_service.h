@@ -51,96 +51,11 @@ SANDBOX_DECLARE_SERVICE(sandbox_runtime_service_t, sandbox_runtime_api_t, {
 })
 
 // --- Public C API ---
-static inline void sandbox_runtime_run(ecs_world_t* ecs) {
-#ifdef __cplusplus
-    flecs::world flecs_world(ecs);
-    const sandbox_runtime_service_t* service = flecs_world.try_get<sandbox_runtime_service_t>();
-#else
-#ifdef __cplusplus
-    flecs::world flecs_world(ecs);
-    const sandbox_runtime_service_t* service = flecs_world.try_get<sandbox_runtime_service_t>();
-#else
-    const sandbox_runtime_service_t* service = (const sandbox_runtime_service_t*)ecs_singleton_get(ecs, sandbox_runtime_service_t);
-#endif
-#endif
-    if (service && service->api && service->api->run) {
-        service->api->run(ecs);
-        return;
-    }
-    
-}
-static inline void sandbox_runtime_start(ecs_world_t* ecs) {
-#ifdef __cplusplus
-    flecs::world flecs_world(ecs);
-    const sandbox_runtime_service_t* service = flecs_world.try_get<sandbox_runtime_service_t>();
-#else
-#ifdef __cplusplus
-    flecs::world flecs_world(ecs);
-    const sandbox_runtime_service_t* service = flecs_world.try_get<sandbox_runtime_service_t>();
-#else
-    const sandbox_runtime_service_t* service = (const sandbox_runtime_service_t*)ecs_singleton_get(ecs, sandbox_runtime_service_t);
-#endif
-#endif
-    if (service && service->api && service->api->start) {
-        service->api->start(ecs);
-        return;
-    }
-    
-}
-static inline void sandbox_runtime_stop(ecs_world_t* ecs) {
-#ifdef __cplusplus
-    flecs::world flecs_world(ecs);
-    const sandbox_runtime_service_t* service = flecs_world.try_get<sandbox_runtime_service_t>();
-#else
-#ifdef __cplusplus
-    flecs::world flecs_world(ecs);
-    const sandbox_runtime_service_t* service = flecs_world.try_get<sandbox_runtime_service_t>();
-#else
-    const sandbox_runtime_service_t* service = (const sandbox_runtime_service_t*)ecs_singleton_get(ecs, sandbox_runtime_service_t);
-#endif
-#endif
-    if (service && service->api && service->api->stop) {
-        service->api->stop(ecs);
-        return;
-    }
-    
-}
-static inline void sandbox_runtime_pause(ecs_world_t* ecs) {
-#ifdef __cplusplus
-    flecs::world flecs_world(ecs);
-    const sandbox_runtime_service_t* service = flecs_world.try_get<sandbox_runtime_service_t>();
-#else
-#ifdef __cplusplus
-    flecs::world flecs_world(ecs);
-    const sandbox_runtime_service_t* service = flecs_world.try_get<sandbox_runtime_service_t>();
-#else
-    const sandbox_runtime_service_t* service = (const sandbox_runtime_service_t*)ecs_singleton_get(ecs, sandbox_runtime_service_t);
-#endif
-#endif
-    if (service && service->api && service->api->pause) {
-        service->api->pause(ecs);
-        return;
-    }
-    
-}
-static inline void sandbox_runtime_resume(ecs_world_t* ecs) {
-#ifdef __cplusplus
-    flecs::world flecs_world(ecs);
-    const sandbox_runtime_service_t* service = flecs_world.try_get<sandbox_runtime_service_t>();
-#else
-#ifdef __cplusplus
-    flecs::world flecs_world(ecs);
-    const sandbox_runtime_service_t* service = flecs_world.try_get<sandbox_runtime_service_t>();
-#else
-    const sandbox_runtime_service_t* service = (const sandbox_runtime_service_t*)ecs_singleton_get(ecs, sandbox_runtime_service_t);
-#endif
-#endif
-    if (service && service->api && service->api->resume) {
-        service->api->resume(ecs);
-        return;
-    }
-    
-}
+SANDBOX_API void sandbox_runtime_run(ecs_world_t* ecs);
+SANDBOX_API void sandbox_runtime_start(ecs_world_t* ecs);
+SANDBOX_API void sandbox_runtime_stop(ecs_world_t* ecs);
+SANDBOX_API void sandbox_runtime_pause(ecs_world_t* ecs);
+SANDBOX_API void sandbox_runtime_resume(ecs_world_t* ecs);
 
 #ifdef __cplusplus
 }

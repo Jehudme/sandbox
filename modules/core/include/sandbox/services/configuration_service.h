@@ -36,19 +36,7 @@ SANDBOX_DECLARE_SERVICE(sandbox_configuration_service_t, sandbox_configuration_a
 })
 
 // --- Public C API ---
-static inline sandbox_properties_handle_t sandbox_configuration_get_properties(ecs_world_t* ecs) {
-#ifdef __cplusplus
-    flecs::world flecs_world(ecs);
-    const sandbox_configuration_service_t* service = flecs_world.try_get<sandbox_configuration_service_t>();
-#else
-    const sandbox_configuration_service_t* service = (const sandbox_configuration_service_t*)ecs_singleton_get(ecs, sandbox_configuration_service_t);
-#endif
-    if (service && service->api && service->api->get_properties) {
-        return service->api->get_properties(ecs);
-    }
-    sandbox_properties_handle_t invalid = {0};
-    return invalid;
-}
+SANDBOX_API sandbox_properties_handle_t sandbox_configuration_get_properties(ecs_world_t* ecs);
 
 #ifdef __cplusplus
 }

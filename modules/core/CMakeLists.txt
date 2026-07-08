@@ -33,20 +33,17 @@ set(HEADERS
 )
 
 # Create shared library
-option(SANDBOX_MODULES_STATIC "Build modules statically and link them directly" OFF)
-
-if(SANDBOX_MODULES_STATIC)
-    add_library(sandbox_plugin STATIC ${SOURCES} ${HEADERS})
-else()
-    add_library(sandbox_plugin MODULE ${SOURCES} ${HEADERS})
-    set_target_properties(sandbox_plugin PROPERTIES
-        PREFIX ""
-        CXX_VISIBILITY_PRESET hidden
-        VISIBILITY_INLINES_HIDDEN ON
-    )
-endif()
+add_library(sandbox_plugin MODULE ${SOURCES} ${HEADERS})
+set_target_properties(sandbox_plugin PROPERTIES
+    PREFIX ""
+    CXX_VISIBILITY_PRESET hidden
+    VISIBILITY_INLINES_HIDDEN ON
+)
+# Also create the static variant
+add_library(sandbox_plugin_static STATIC ${SOURCES} ${HEADERS})
 
 add_library(sandbox::plugins ALIAS sandbox_plugin)
+add_library(sandbox::plugins_static ALIAS sandbox_plugin_static)
 
 # Includes
 target_include_directories(sandbox_plugin PRIVATE
@@ -56,6 +53,17 @@ target_include_directories(sandbox_plugin PRIVATE
 )
 
 target_include_directories(sandbox_plugin PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+
+target_include_directories(sandbox_plugin_static PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/source
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../sandbox/include
+)
+
+target_include_directories(sandbox_plugin_static PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
@@ -98,6 +106,12 @@ target_link_libraries(sandbox_plugin PRIVATE
     miniz
 )
 
+target_link_libraries(sandbox_plugin_static PRIVATE
+    flecs_headers
+    spdlog::spdlog
+    miniz
+)
+
 # Copy to bin directory
 add_custom_command(TARGET sandbox_plugin POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
@@ -106,6 +120,7 @@ add_custom_command(TARGET sandbox_plugin POST_BUILD
 )
 
 target_precompile_headers(sandbox_plugin PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/../../sandbox/source/pch.h>")
+target_precompile_headers(sandbox_plugin_static PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/../../sandbox/source/pch.h>")
 
 # =============================================================================
 # INSTALLATION

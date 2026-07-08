@@ -1,3 +1,4 @@
+#include <sandbox/sdk/logs.hpp>
 #include "sandbox/services/logs_service.h"
 #include "logs_module.h"
 #include <spdlog/spdlog.h>
