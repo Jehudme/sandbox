@@ -2,7 +2,7 @@
 #include "core/engine.h"
 #include "core/bootstrapper.h"
 #include <sandbox/sdk/properties.hpp>
-#include <sandbox/sdk/configuration.hpp>
+#include <sandbox/services/configuration_service.h>
 #include <iostream>
 
 using namespace sandbox;

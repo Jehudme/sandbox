@@ -159,7 +159,8 @@ SANDBOX_API bool sandbox_bootstrapper_boot(sandbox_bootstrapper_t* bootstrapper,
     } ServiceClass; \
     \
     extern ECS_COMPONENT_DECLARE(ServiceClass); \
-    static const sandbox_service_info_t ServiceClass##_info_decl = __VA_ARGS__;
+    static const sandbox_service_info_t ServiceClass##_info_decl = __VA_ARGS__; \
+    extern sandbox_service_info_t ServiceClass##_info;
 
 /**
  * @brief Defines the initialization function for the service.
@@ -169,7 +170,7 @@ SANDBOX_API bool sandbox_bootstrapper_boot(sandbox_bootstrapper_t* bootstrapper,
  */
 #define SANDBOX_DEFINE_SERVICE(ServiceClass, IModuleType, api_ptr) \
     ECS_COMPONENT_DECLARE(ServiceClass); \
-    static sandbox_service_info_t ServiceClass##_info = ServiceClass##_info_decl; \
+    sandbox_service_info_t ServiceClass##_info = ServiceClass##_info_decl; \
     \
     static void ServiceClass##_init_fn(ecs_world_t* ecs) { \
         ecs_id(ServiceClass) = 0; \

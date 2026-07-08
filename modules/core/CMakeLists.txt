@@ -6,30 +6,30 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Source files
 set(SOURCES
-    source/configuration/configuration.cpp
-    source/filesystem/filesystem.cpp
-    source/logs/logger.cpp
-    source/runtime/runtime.cpp
-    source/application/application.cpp
+    source/configuration/configuration_module.cpp
+    source/configuration/configuration_service.cpp
+    source/filesystem/filesystem_module.cpp
+    source/filesystem/filesystem_service.cpp
+    source/logs/logs_module.cpp
+    source/logs/logs_service.cpp
+    source/runtime/runtime_module.cpp
+    source/runtime/runtime_service.cpp
+    source/application/application_module.cpp
+    source/application/application_service.cpp
 )
 
 # Headers
 set(HEADERS
-    source/configuration/configuration.h
-    source/filesystem/filesystem.h
-    source/logs/logger.h
-    source/runtime/runtime.h
-    source/application/application.h
-    include/sandbox/abi/configuration.h
-    include/sandbox/abi/filesystem.h
-    include/sandbox/abi/logs.h
-    include/sandbox/abi/runtime.h
-    include/sandbox/abi/application.h
-    include/sandbox/sdk/configuration.hpp
-    include/sandbox/sdk/filesystem.hpp
-    include/sandbox/sdk/logs.hpp
-    include/sandbox/sdk/runtime.hpp
-    include/sandbox/sdk/application.hpp
+    source/configuration/configuration_module.h
+    source/filesystem/filesystem_module.h
+    source/logs/logs_module.h
+    source/runtime/runtime_module.h
+    source/application/application_module.h
+    include/sandbox/services/configuration_service.h
+    include/sandbox/services/filesystem_service.h
+    include/sandbox/services/logs_service.h
+    include/sandbox/services/runtime_service.h
+    include/sandbox/services/application_service.h
 )
 
 # Create shared library

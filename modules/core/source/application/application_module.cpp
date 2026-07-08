@@ -1,10 +1,10 @@
-#include "application.h"
+#include "application_module.h"
 
 #include "sandbox/sdk/bootstrapper.hpp"
-#include "sandbox/sdk/configuration.hpp"
-#include "sandbox/sdk/filesystem.hpp"
+#include <sandbox/services/configuration_service.h>
+#include <sandbox/services/filesystem_service.h>
 #include "sandbox/sdk/library_loader.hpp"
-#include "sandbox/sdk/logs.hpp"
+#include <sandbox/services/logs_service.h>
 
 #include <filesystem>
 #include <vector>
@@ -23,21 +23,9 @@ namespace fs = std::filesystem;
     inline constexpr std::string_view NATIVE_LIB_EXTENSION = ".so"; // Linux / BSD / WebAssembly
 #endif
 
-#include <sandbox/abi/application.h>
+#include <sandbox/services/application_service.h>
 
 namespace sandbox::modules {
-
-    // ABI methods
-    static bool application_is_running(ecs_world_t* ecs) {
-        (void)ecs;
-        return true; 
-    }
-
-    static sandbox_application_api_t application_api = {
-        .is_running = application_is_running
-    };
-
-    SANDBOX_DEFINE_SERVICE(sandbox_application_service_t, sandbox_application_api_t, &application_api);
 
     // Module requirements
     static sandbox_requirement_info_t application_requirements[] = {

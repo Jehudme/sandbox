@@ -2,8 +2,8 @@
 #include <flecs.h>
 #include <sandbox/abi/bootstrapper.h>
 #include "core/bootstrapper.h"
-#include <sandbox/sdk/runtime.hpp>
-#include <sandbox/abi/runtime.h>
+#include <sandbox/services/runtime_service.h>
+#include <sandbox/services/runtime_service.h>
 #include <thread>
 #include <chrono>
 

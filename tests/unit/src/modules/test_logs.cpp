@@ -1,8 +1,8 @@
 #include <catch2/catch_test_macros.hpp>
 #include "core/engine.h"
 #include <sandbox/sdk/properties.hpp>
-#include <sandbox/sdk/configuration.hpp>
-#include <sandbox/sdk/logs.hpp>
+#include <sandbox/services/configuration_service.h>
+#include <sandbox/services/logs_service.h>
 #include <fstream>
 #include <sstream>
 
