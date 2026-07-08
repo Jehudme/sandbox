@@ -1,6 +1,6 @@
 #pragma once
 
-#include <sandbox/services/filesystem_service.h>
+#include <sandbox/sdk/filesystem.hpp>
 #include <flecs.h>
 #include <string>
 #include <vector>

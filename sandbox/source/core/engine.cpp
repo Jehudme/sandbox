@@ -7,7 +7,7 @@
 #include "sandbox/abi/handle.h"
 #include "sandbox/abi/properties.h"
 #include "exceptions.h"
-#include <sandbox/services/logs_service.h>
+#include <sandbox/sdk/logs.hpp>
 #include <iostream>
 
 namespace sandbox::core {

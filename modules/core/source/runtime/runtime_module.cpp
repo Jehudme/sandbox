@@ -1,6 +1,6 @@
 #include "runtime_module.h"
-#include <sandbox/services/runtime_service.h>
-#include <sandbox/services/logs_service.h>
+#include <sandbox/sdk/runtime.hpp>
+#include <sandbox/sdk/logs.hpp>
 #include <chrono>
 
 namespace sandbox::modules {

@@ -7,7 +7,7 @@
 #include <queue>
 
 #include <charconv>
-#include <sandbox/services/logs_service.h>
+#include <sandbox/sdk/logs.hpp>
 #include "exceptions.h"
 
 namespace sandbox::core {

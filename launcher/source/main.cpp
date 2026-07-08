@@ -2,7 +2,7 @@
 #include <sandbox/sdk/engine.hpp>
 #include <iostream>
 #include <exception>
-#include <sandbox/services/runtime_service.h>
+#include <sandbox/sdk/runtime.hpp>
 
 int main(int argc, char* argv[]) {
     try {

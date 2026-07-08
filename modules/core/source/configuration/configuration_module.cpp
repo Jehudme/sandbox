@@ -1,7 +1,7 @@
 #include "configuration_module.h"
-#include <sandbox/services/logs_service.h>
+#include <sandbox/sdk/logs.hpp>
 #include <flecs/addons/cpp/flecs.hpp>
-#include <sandbox/services/configuration_service.h>
+#include <sandbox/sdk/configuration.hpp>
 
 namespace sandbox::modules {
     configuration_module_t::configuration_module_t(flecs::world& entity_world) {

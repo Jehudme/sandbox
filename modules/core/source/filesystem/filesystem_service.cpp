@@ -1,7 +1,7 @@
 #include "sandbox/services/filesystem_service.h"
 #include "filesystem_module.h"
 #include <cstring>
-#include <sandbox/services/logs_service.h>
+#include <sandbox/sdk/logs.hpp>
 #include <flecs.h>
 
 // C-ABI Endpoints

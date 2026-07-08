@@ -1,10 +1,10 @@
 #include "application_module.h"
 
 #include "sandbox/sdk/bootstrapper.hpp"
-#include <sandbox/services/configuration_service.h>
-#include <sandbox/services/filesystem_service.h>
+#include <sandbox/sdk/configuration.hpp>
+#include <sandbox/sdk/filesystem.hpp>
 #include "sandbox/sdk/library_loader.hpp"
-#include <sandbox/services/logs_service.h>
+#include <sandbox/sdk/logs.hpp>
 
 #include <filesystem>
 #include <vector>
@@ -23,7 +23,7 @@ namespace fs = std::filesystem;
     inline constexpr std::string_view NATIVE_LIB_EXTENSION = ".so"; // Linux / BSD / WebAssembly
 #endif
 
-#include <sandbox/services/application_service.h>
+#include <sandbox/sdk/application.hpp>
 
 namespace sandbox::modules {
 

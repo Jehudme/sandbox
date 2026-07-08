@@ -1,10 +1,10 @@
 #include <catch2/catch_all.hpp>
 #include <flecs.h>
 #include "core/engine.h"
-#include <sandbox/services/configuration_service.h>
-#include <sandbox/services/logs_service.h>
-#include <sandbox/services/filesystem_service.h>
-#include <sandbox/services/filesystem_service.h>
+#include <sandbox/sdk/configuration.hpp>
+#include <sandbox/sdk/logs.hpp>
+#include <sandbox/sdk/filesystem.hpp>
+#include <sandbox/sdk/filesystem.hpp>
 #include <sandbox/abi/bootstrapper.h>
 #include "core/bootstrapper.h"
 #include "core/exceptions.h"

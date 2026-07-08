@@ -1,9 +1,9 @@
 #include "logs_module.h"
-#include <sandbox/services/logs_service.h>
+#include <sandbox/sdk/logs.hpp>
 
 #include <string>
 #include <vector>
-#include <sandbox/services/configuration_service.h>
+#include <sandbox/sdk/configuration.hpp>
 
 // spdlog includes
 #include <spdlog/spdlog.h>

@@ -6,9 +6,9 @@
 
 #include "sandbox/abi/bootstrapper.h"
 #include "sandbox/sdk/engine.hpp"
-#include <sandbox/services/filesystem_service.h>
+#include <sandbox/sdk/filesystem.hpp>
 #include "sandbox/sdk/properties.hpp"
-#include <sandbox/services/configuration_service.h>
+#include <sandbox/sdk/configuration.hpp>
 
 namespace fs = std::filesystem;
 

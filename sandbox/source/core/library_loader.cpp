@@ -6,7 +6,7 @@
 #include <iostream>
 #include <flecs.h>
 #include <flecs/addons/cpp/flecs.hpp>
-#include <sandbox/services/logs_service.h>
+#include <sandbox/sdk/logs.hpp>
 #include "exceptions.h"
 #include "bootstrapper.h"
 #include <sandbox/abi/library_loader.h>
