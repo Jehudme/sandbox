@@ -14,12 +14,7 @@ namespace sandbox::modules {
          * @return The properties object representing the configuration.
          */
         static sandbox::properties get_properties(flecs::world& entity_world) {
-            const sandbox_configuration_service_t* service = SANDBOX_GET_SERVICE(entity_world, sandbox_configuration_service_t);
-            if (service && service->api && service->api->get_properties) {
-                return sandbox::properties(service->api->get_properties(entity_world.c_ptr()), false);
-            }
-            sandbox_properties_handle_t invalid = {0};
-            return sandbox::properties(invalid, false);
+            return sandbox::properties(sandbox_configuration_get_properties(entity_world.c_ptr()), false);
         }
 
         /**
