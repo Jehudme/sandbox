@@ -14,44 +14,39 @@ namespace sandbox::modules {
 typedef sandbox::modules::logs_module_t sandbox_logs_module_t;
 
 // API Implementations
-static void logs_trace(ecs_world_t* entity_world, const char* msg);
-static void logs_debug(ecs_world_t* entity_world, const char* msg);
-static void logs_info(ecs_world_t* entity_world, const char* msg);
-static void logs_warn(ecs_world_t* entity_world, const char* msg);
-static void logs_error(ecs_world_t* entity_world, const char* msg);
-
-sandbox_logs_api_t g_logs_api = {
-    .trace = logs_trace,
-    .debug = logs_debug,
-    .info = logs_info,
-    .warn = logs_warn,
-    .error = logs_error
-};
-
-SANDBOX_DEFINE_SERVICE(sandbox_logs_service_t, sandbox_logs_api_t, &g_logs_api)
-
-static void logs_trace(ecs_world_t* entity_world, const char* msg) {
+void sandbox_logs_trace(ecs_world_t* entity_world, const char* msg) {
     flecs::world flecs_world(entity_world);
     auto* log = flecs_world.try_get_mut<sandbox::modules::logger_t>();
     if (log) log->log(sandbox::modules::logger_t::level_t::TRACE, msg);
 }
-static void logs_debug(ecs_world_t* entity_world, const char* msg) {
+void sandbox_logs_debug(ecs_world_t* entity_world, const char* msg) {
     flecs::world flecs_world(entity_world);
     auto* log = flecs_world.try_get_mut<sandbox::modules::logger_t>();
     if (log) log->log(sandbox::modules::logger_t::level_t::DEBUG, msg);
 }
-static void logs_info(ecs_world_t* entity_world, const char* msg) {
+void sandbox_logs_info(ecs_world_t* entity_world, const char* msg) {
     flecs::world flecs_world(entity_world);
     auto* log = flecs_world.try_get_mut<sandbox::modules::logger_t>();
     if (log) log->log(sandbox::modules::logger_t::level_t::INFO, msg);
 }
-static void logs_warn(ecs_world_t* entity_world, const char* msg) {
+void sandbox_logs_warn(ecs_world_t* entity_world, const char* msg) {
     flecs::world flecs_world(entity_world);
     auto* log = flecs_world.try_get_mut<sandbox::modules::logger_t>();
     if (log) log->log(sandbox::modules::logger_t::level_t::WARN, msg);
 }
-static void logs_error(ecs_world_t* entity_world, const char* msg) {
+void sandbox_logs_error(ecs_world_t* entity_world, const char* msg) {
     flecs::world flecs_world(entity_world);
     auto* log = flecs_world.try_get_mut<sandbox::modules::logger_t>();
     if (log) log->log(sandbox::modules::logger_t::level_t::ERROR, msg);
 }
+
+sandbox_logs_api_t g_logs_api = {
+    .trace = sandbox_logs_trace,
+    .debug = sandbox_logs_debug,
+    .info = sandbox_logs_info,
+    .warn = sandbox_logs_warn,
+    .error = sandbox_logs_error
+};
+
+SANDBOX_DEFINE_SERVICE(sandbox_logs_service_t, sandbox_logs_api_t, &g_logs_api)
+

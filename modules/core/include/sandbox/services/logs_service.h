@@ -50,6 +50,12 @@ typedef struct {
     void (*error)(ecs_world_t* ecs, const char* msg);
 } sandbox_logs_api_t;
 
+SANDBOX_API void sandbox_logs_trace(ecs_world_t* ecs, const char* msg);
+SANDBOX_API void sandbox_logs_debug(ecs_world_t* ecs, const char* msg);
+SANDBOX_API void sandbox_logs_info(ecs_world_t* ecs, const char* msg);
+SANDBOX_API void sandbox_logs_warn(ecs_world_t* ecs, const char* msg);
+SANDBOX_API void sandbox_logs_error(ecs_world_t* ecs, const char* msg);
+
 /**
  * @brief The logging service definition.
  */
