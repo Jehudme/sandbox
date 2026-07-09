@@ -15,26 +15,31 @@ typedef sandbox::modules::logs_module_t sandbox_logs_module_t;
 
 // API Implementations
 void sandbox_logs_trace(ecs_world_t* entity_world, const char* msg) {
+    if (!entity_world) return;
     flecs::world flecs_world(entity_world);
     auto* log = flecs_world.try_get_mut<sandbox::modules::logger_t>();
     if (log) log->log(sandbox::modules::logger_t::level_t::TRACE, msg);
 }
 void sandbox_logs_debug(ecs_world_t* entity_world, const char* msg) {
+    if (!entity_world) return;
     flecs::world flecs_world(entity_world);
     auto* log = flecs_world.try_get_mut<sandbox::modules::logger_t>();
     if (log) log->log(sandbox::modules::logger_t::level_t::DEBUG, msg);
 }
 void sandbox_logs_info(ecs_world_t* entity_world, const char* msg) {
+    if (!entity_world) return;
     flecs::world flecs_world(entity_world);
     auto* log = flecs_world.try_get_mut<sandbox::modules::logger_t>();
     if (log) log->log(sandbox::modules::logger_t::level_t::INFO, msg);
 }
 void sandbox_logs_warn(ecs_world_t* entity_world, const char* msg) {
+    if (!entity_world) return;
     flecs::world flecs_world(entity_world);
     auto* log = flecs_world.try_get_mut<sandbox::modules::logger_t>();
     if (log) log->log(sandbox::modules::logger_t::level_t::WARN, msg);
 }
 void sandbox_logs_error(ecs_world_t* entity_world, const char* msg) {
+    if (!entity_world) return;
     flecs::world flecs_world(entity_world);
     auto* log = flecs_world.try_get_mut<sandbox::modules::logger_t>();
     if (log) log->log(sandbox::modules::logger_t::level_t::ERROR, msg);
