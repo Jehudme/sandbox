@@ -396,6 +396,8 @@ bool sandbox_filesystem_mount(ecs_world_t* ecs, const char* physical_path, const
     if (service && service->api && service->api->mount) {
         return service->api->mount(ecs, physical_path, virtual_mount_point, read_only);
         
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Filesystem Module] Service not initialized!");
     }
     return false;
 }
@@ -410,6 +412,8 @@ bool sandbox_filesystem_unmount(ecs_world_t* ecs, const char* mount_point) {
     if (service && service->api && service->api->unmount) {
         return service->api->unmount(ecs, mount_point);
         
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Filesystem Module] Service not initialized!");
     }
     return false;
 }
@@ -424,6 +428,8 @@ sandbox_file_handle_t sandbox_filesystem_open_read(ecs_world_t* ecs, const char*
     if (service && service->api && service->api->open_read) {
         return service->api->open_read(ecs, virtual_path);
         
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Filesystem Module] Service not initialized!");
     }
     return (sandbox_file_handle_t){0};
 }
@@ -438,6 +444,8 @@ sandbox_file_handle_t sandbox_filesystem_open_write(ecs_world_t* ecs, const char
     if (service && service->api && service->api->open_write) {
         return service->api->open_write(ecs, virtual_path, append, force_path);
         
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Filesystem Module] Service not initialized!");
     }
     return (sandbox_file_handle_t){0};
 }
@@ -452,6 +460,8 @@ size_t sandbox_filesystem_read(ecs_world_t* ecs, sandbox_file_handle_t handle, v
     if (service && service->api && service->api->read) {
         return service->api->read(ecs, handle, buffer, bytes_to_read);
         
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Filesystem Module] Service not initialized!");
     }
     return 0;
 }
@@ -466,6 +476,8 @@ size_t sandbox_filesystem_write(ecs_world_t* ecs, sandbox_file_handle_t handle, 
     if (service && service->api && service->api->write) {
         return service->api->write(ecs, handle, buffer, bytes_to_write);
         
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Filesystem Module] Service not initialized!");
     }
     return 0;
 }
@@ -480,6 +492,8 @@ bool sandbox_filesystem_eof(ecs_world_t* ecs, sandbox_file_handle_t handle) {
     if (service && service->api && service->api->eof) {
         return service->api->eof(ecs, handle);
         
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Filesystem Module] Service not initialized!");
     }
     return false;
 }
@@ -494,6 +508,8 @@ size_t sandbox_filesystem_tell(ecs_world_t* ecs, sandbox_file_handle_t handle) {
     if (service && service->api && service->api->tell) {
         return service->api->tell(ecs, handle);
         
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Filesystem Module] Service not initialized!");
     }
     return 0;
 }
@@ -508,6 +524,8 @@ bool sandbox_filesystem_seek(ecs_world_t* ecs, sandbox_file_handle_t handle, siz
     if (service && service->api && service->api->seek) {
         return service->api->seek(ecs, handle, position);
         
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Filesystem Module] Service not initialized!");
     }
     return false;
 }
@@ -522,6 +540,8 @@ size_t sandbox_filesystem_size(ecs_world_t* ecs, sandbox_file_handle_t handle) {
     if (service && service->api && service->api->size) {
         return service->api->size(ecs, handle);
         
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Filesystem Module] Service not initialized!");
     }
     return 0;
 }
@@ -536,6 +556,8 @@ void sandbox_filesystem_close_handle(ecs_world_t* ecs, sandbox_file_handle_t han
     if (service && service->api && service->api->close_handle) {
         service->api->close_handle(ecs, handle);
         return;
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Filesystem Module] Service not initialized!");
     }
     
 }
@@ -550,6 +572,8 @@ bool sandbox_filesystem_create_file(ecs_world_t* ecs, const char* virtual_path, 
     if (service && service->api && service->api->create_file) {
         return service->api->create_file(ecs, virtual_path, force_path);
         
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Filesystem Module] Service not initialized!");
     }
     return false;
 }
@@ -564,6 +588,8 @@ bool sandbox_filesystem_remove_file(ecs_world_t* ecs, const char* virtual_path) 
     if (service && service->api && service->api->remove_file) {
         return service->api->remove_file(ecs, virtual_path);
         
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Filesystem Module] Service not initialized!");
     }
     return false;
 }
@@ -578,6 +604,8 @@ bool sandbox_filesystem_copy(ecs_world_t* ecs, const char* source_virtual_path, 
     if (service && service->api && service->api->copy) {
         return service->api->copy(ecs, source_virtual_path, dest_virtual_path, overwrite, force_path);
         
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Filesystem Module] Service not initialized!");
     }
     return false;
 }
@@ -592,6 +620,8 @@ bool sandbox_filesystem_move(ecs_world_t* ecs, const char* source_virtual_path, 
     if (service && service->api && service->api->move) {
         return service->api->move(ecs, source_virtual_path, dest_virtual_path, overwrite, force_path);
         
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Filesystem Module] Service not initialized!");
     }
     return false;
 }
@@ -606,6 +636,8 @@ bool sandbox_filesystem_create_directory(ecs_world_t* ecs, const char* virtual_p
     if (service && service->api && service->api->create_directory) {
         return service->api->create_directory(ecs, virtual_path, force_path);
         
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Filesystem Module] Service not initialized!");
     }
     return false;
 }
@@ -620,6 +652,8 @@ bool sandbox_filesystem_remove_directory(ecs_world_t* ecs, const char* virtual_p
     if (service && service->api && service->api->remove_directory) {
         return service->api->remove_directory(ecs, virtual_path);
         
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Filesystem Module] Service not initialized!");
     }
     return false;
 }
@@ -634,6 +668,8 @@ bool sandbox_filesystem_exists(ecs_world_t* ecs, const char* virtual_path) {
     if (service && service->api && service->api->exists) {
         return service->api->exists(ecs, virtual_path);
         
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Filesystem Module] Service not initialized!");
     }
     return false;
 }
@@ -648,6 +684,8 @@ bool sandbox_filesystem_is_file(ecs_world_t* ecs, const char* virtual_path) {
     if (service && service->api && service->api->is_file) {
         return service->api->is_file(ecs, virtual_path);
         
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Filesystem Module] Service not initialized!");
     }
     return false;
 }
@@ -662,6 +700,8 @@ bool sandbox_filesystem_is_directory(ecs_world_t* ecs, const char* virtual_path)
     if (service && service->api && service->api->is_directory) {
         return service->api->is_directory(ecs, virtual_path);
         
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Filesystem Module] Service not initialized!");
     }
     return false;
 }
@@ -676,6 +716,8 @@ bool sandbox_filesystem_is_readonly(ecs_world_t* ecs, const char* virtual_path) 
     if (service && service->api && service->api->is_readonly) {
         return service->api->is_readonly(ecs, virtual_path);
         
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Filesystem Module] Service not initialized!");
     }
     return false;
 }
@@ -690,6 +732,8 @@ size_t sandbox_filesystem_file_size(ecs_world_t* ecs, const char* virtual_path) 
     if (service && service->api && service->api->file_size) {
         return service->api->file_size(ecs, virtual_path);
         
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Filesystem Module] Service not initialized!");
     }
     return 0;
 }
@@ -704,6 +748,8 @@ int64_t sandbox_filesystem_last_modified(ecs_world_t* ecs, const char* virtual_p
     if (service && service->api && service->api->last_modified) {
         return service->api->last_modified(ecs, virtual_path);
         
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Filesystem Module] Service not initialized!");
     }
     return 0;
 }
@@ -718,6 +764,8 @@ bool sandbox_filesystem_list_files(ecs_world_t* ecs, const char* virtual_path, b
     if (service && service->api && service->api->list_files) {
         return service->api->list_files(ecs, virtual_path, recursive, out_files, out_count);
         
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Filesystem Module] Service not initialized!");
     }
     return false;
 }
@@ -732,6 +780,8 @@ void sandbox_filesystem_free_file_list(ecs_world_t* ecs, char** files, size_t co
     if (service && service->api && service->api->free_file_list) {
         service->api->free_file_list(ecs, files, count);
         return;
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Filesystem Module] Service not initialized!");
     }
     
 }
@@ -746,6 +796,8 @@ bool sandbox_filesystem_read_all_bytes(ecs_world_t* ecs, const char* virtual_pat
     if (service && service->api && service->api->read_all_bytes) {
         return service->api->read_all_bytes(ecs, virtual_path, out_data, out_size);
         
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Filesystem Module] Service not initialized!");
     }
     return false;
 }
@@ -760,6 +812,8 @@ void sandbox_filesystem_free_bytes(ecs_world_t* ecs, uint8_t* data) {
     if (service && service->api && service->api->free_bytes) {
         service->api->free_bytes(ecs, data);
         return;
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Filesystem Module] Service not initialized!");
     }
     
 }
@@ -770,6 +824,8 @@ bool filesystem::mount(flecs::world& entity_world, const char* physical_path, co
             const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
             if (service && service->api) {
                 return service->api->mount(entity_world.c_ptr(), physical_path, virtual_mount_point, read_only);
+            } else {
+                sandbox::modules::logs::error(entity_world, "[Filesystem Module] Service not initialized!");
             }
             return false;
         }
@@ -778,6 +834,8 @@ bool filesystem::unmount(flecs::world& entity_world, const char* mount_point) {
             const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
             if (service && service->api) {
                 return service->api->unmount(entity_world.c_ptr(), mount_point);
+            } else {
+                sandbox::modules::logs::error(entity_world, "[Filesystem Module] Service not initialized!");
             }
             return false;
         }
@@ -786,6 +844,8 @@ sandbox_file_handle_t filesystem::open_read(flecs::world& entity_world, const ch
             const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
             if (service && service->api) {
                 return service->api->open_read(entity_world.c_ptr(), virtual_path);
+            } else {
+                sandbox::modules::logs::error(entity_world, "[Filesystem Module] Service not initialized!");
             }
             return {0};
         }
@@ -794,6 +854,8 @@ sandbox_file_handle_t filesystem::open_write(flecs::world& entity_world, const c
             const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
             if (service && service->api) {
                 return service->api->open_write(entity_world.c_ptr(), virtual_path, append, force_path);
+            } else {
+                sandbox::modules::logs::error(entity_world, "[Filesystem Module] Service not initialized!");
             }
             return {0};
         }
@@ -802,6 +864,8 @@ size_t filesystem::read(flecs::world& entity_world, sandbox_file_handle_t handle
             const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
             if (service && service->api) {
                 return service->api->read(entity_world.c_ptr(), handle, buffer, bytes_to_read);
+            } else {
+                sandbox::modules::logs::error(entity_world, "[Filesystem Module] Service not initialized!");
             }
             return 0;
         }
@@ -810,6 +874,8 @@ size_t filesystem::write(flecs::world& entity_world, sandbox_file_handle_t handl
             const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
             if (service && service->api) {
                 return service->api->write(entity_world.c_ptr(), handle, buffer, bytes_to_write);
+            } else {
+                sandbox::modules::logs::error(entity_world, "[Filesystem Module] Service not initialized!");
             }
             return 0;
         }
@@ -818,6 +884,8 @@ bool filesystem::eof(flecs::world& entity_world, sandbox_file_handle_t handle) {
             const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
             if (service && service->api) {
                 return service->api->eof(entity_world.c_ptr(), handle);
+            } else {
+                sandbox::modules::logs::error(entity_world, "[Filesystem Module] Service not initialized!");
             }
             return false;
         }
@@ -826,6 +894,8 @@ size_t filesystem::tell(flecs::world& entity_world, sandbox_file_handle_t handle
             const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
             if (service && service->api) {
                 return service->api->tell(entity_world.c_ptr(), handle);
+            } else {
+                sandbox::modules::logs::error(entity_world, "[Filesystem Module] Service not initialized!");
             }
             return 0;
         }
@@ -834,6 +904,8 @@ bool filesystem::seek(flecs::world& entity_world, sandbox_file_handle_t handle, 
             const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
             if (service && service->api) {
                 return service->api->seek(entity_world.c_ptr(), handle, position);
+            } else {
+                sandbox::modules::logs::error(entity_world, "[Filesystem Module] Service not initialized!");
             }
             return false;
         }
@@ -842,6 +914,8 @@ size_t filesystem::size(flecs::world& entity_world, sandbox_file_handle_t handle
             const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
             if (service && service->api) {
                 return service->api->size(entity_world.c_ptr(), handle);
+            } else {
+                sandbox::modules::logs::error(entity_world, "[Filesystem Module] Service not initialized!");
             }
             return 0;
         }
@@ -850,6 +924,8 @@ void filesystem::close_handle(flecs::world& entity_world, sandbox_file_handle_t 
             const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
             if (service && service->api) {
                 service->api->close_handle(entity_world.c_ptr(), handle);
+            } else {
+                sandbox::modules::logs::error(entity_world, "[Filesystem Module] Service not initialized!");
             }
         }
 
@@ -857,6 +933,8 @@ bool filesystem::create_file(flecs::world& entity_world, const char* virtual_pat
             const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
             if (service && service->api) {
                 return service->api->create_file(entity_world.c_ptr(), virtual_path, force_path);
+            } else {
+                sandbox::modules::logs::error(entity_world, "[Filesystem Module] Service not initialized!");
             }
             return false;
         }
@@ -865,6 +943,8 @@ bool filesystem::remove_file(flecs::world& entity_world, const char* virtual_pat
             const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
             if (service && service->api) {
                 return service->api->remove_file(entity_world.c_ptr(), virtual_path);
+            } else {
+                sandbox::modules::logs::error(entity_world, "[Filesystem Module] Service not initialized!");
             }
             return false;
         }
@@ -873,6 +953,8 @@ bool filesystem::copy(flecs::world& entity_world, const char* source_virtual_pat
             const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
             if (service && service->api) {
                 return service->api->copy(entity_world.c_ptr(), source_virtual_path, dest_virtual_path, overwrite, force_path);
+            } else {
+                sandbox::modules::logs::error(entity_world, "[Filesystem Module] Service not initialized!");
             }
             return false;
         }
@@ -881,6 +963,8 @@ bool filesystem::move(flecs::world& entity_world, const char* source_virtual_pat
             const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
             if (service && service->api) {
                 return service->api->move(entity_world.c_ptr(), source_virtual_path, dest_virtual_path, overwrite, force_path);
+            } else {
+                sandbox::modules::logs::error(entity_world, "[Filesystem Module] Service not initialized!");
             }
             return false;
         }
@@ -889,6 +973,8 @@ bool filesystem::create_directory(flecs::world& entity_world, const char* virtua
             const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
             if (service && service->api) {
                 return service->api->create_directory(entity_world.c_ptr(), virtual_path, force_path);
+            } else {
+                sandbox::modules::logs::error(entity_world, "[Filesystem Module] Service not initialized!");
             }
             return false;
         }
@@ -897,6 +983,8 @@ bool filesystem::remove_directory(flecs::world& entity_world, const char* virtua
             const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
             if (service && service->api) {
                 return service->api->remove_directory(entity_world.c_ptr(), virtual_path);
+            } else {
+                sandbox::modules::logs::error(entity_world, "[Filesystem Module] Service not initialized!");
             }
             return false;
         }
@@ -905,6 +993,8 @@ bool filesystem::exists(flecs::world& entity_world, const char* virtual_path) {
             const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
             if (service && service->api) {
                 return service->api->exists(entity_world.c_ptr(), virtual_path);
+            } else {
+                sandbox::modules::logs::error(entity_world, "[Filesystem Module] Service not initialized!");
             }
             return false;
         }
@@ -913,6 +1003,8 @@ bool filesystem::is_file(flecs::world& entity_world, const char* virtual_path) {
             const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
             if (service && service->api) {
                 return service->api->is_file(entity_world.c_ptr(), virtual_path);
+            } else {
+                sandbox::modules::logs::error(entity_world, "[Filesystem Module] Service not initialized!");
             }
             return false;
         }
@@ -921,6 +1013,8 @@ bool filesystem::is_directory(flecs::world& entity_world, const char* virtual_pa
             const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
             if (service && service->api) {
                 return service->api->is_directory(entity_world.c_ptr(), virtual_path);
+            } else {
+                sandbox::modules::logs::error(entity_world, "[Filesystem Module] Service not initialized!");
             }
             return false;
         }
@@ -929,6 +1023,8 @@ bool filesystem::is_readonly(flecs::world& entity_world, const char* virtual_pat
             const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
             if (service && service->api) {
                 return service->api->is_readonly(entity_world.c_ptr(), virtual_path);
+            } else {
+                sandbox::modules::logs::error(entity_world, "[Filesystem Module] Service not initialized!");
             }
             return false;
         }
@@ -937,6 +1033,8 @@ size_t filesystem::file_size(flecs::world& entity_world, const char* virtual_pat
             const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
             if (service && service->api) {
                 return service->api->file_size(entity_world.c_ptr(), virtual_path);
+            } else {
+                sandbox::modules::logs::error(entity_world, "[Filesystem Module] Service not initialized!");
             }
             return 0;
         }
@@ -945,6 +1043,8 @@ int64_t filesystem::last_modified(flecs::world& entity_world, const char* virtua
             const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
             if (service && service->api) {
                 return service->api->last_modified(entity_world.c_ptr(), virtual_path);
+            } else {
+                sandbox::modules::logs::error(entity_world, "[Filesystem Module] Service not initialized!");
             }
             return 0;
         }

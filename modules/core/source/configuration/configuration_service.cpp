@@ -1,4 +1,5 @@
 #include <sandbox/sdk/configuration.hpp>
+#include <sandbox/sdk/logs.hpp>
 #include "sandbox/services/configuration_service.h"
 #include "configuration_module.h"
 #include <flecs.h>
@@ -34,6 +35,8 @@ sandbox_properties_handle_t sandbox_configuration_get_properties(ecs_world_t* ec
 #endif
     if (service && service->api && service->api->get_properties) {
         return service->api->get_properties(ecs);
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Configuration Module] Service not initialized!");
     }
     sandbox_properties_handle_t invalid = {0};
     return invalid;

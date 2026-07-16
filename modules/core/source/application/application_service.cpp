@@ -1,4 +1,5 @@
 #include <sandbox/sdk/application.hpp>
+#include <sandbox/sdk/logs.hpp>
 #include "sandbox/services/application_service.h"
 #include "application_module.h"
 #include <flecs.h>
@@ -31,6 +32,8 @@ bool sandbox_application_is_running(ecs_world_t* ecs) {
     if (service && service->api && service->api->is_running) {
         return service->api->is_running(ecs);
         
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Application Module] Service not initialized!");
     }
     return false;
 }

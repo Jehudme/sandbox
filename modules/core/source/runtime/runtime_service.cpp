@@ -1,4 +1,5 @@
 #include <sandbox/sdk/runtime.hpp>
+#include <sandbox/sdk/logs.hpp>
 #include "sandbox/services/runtime_service.h"
 #include "runtime_module.h"
 #include <flecs.h>
@@ -73,6 +74,8 @@ void sandbox_runtime_run(ecs_world_t* ecs) {
     if (service && service->api && service->api->run) {
         service->api->run(ecs);
         return;
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Runtime Module] Service not initialized!");
     }
     
 }
@@ -92,6 +95,8 @@ void sandbox_runtime_start(ecs_world_t* ecs) {
     if (service && service->api && service->api->start) {
         service->api->start(ecs);
         return;
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Runtime Module] Service not initialized!");
     }
     
 }
@@ -111,6 +116,8 @@ void sandbox_runtime_stop(ecs_world_t* ecs) {
     if (service && service->api && service->api->stop) {
         service->api->stop(ecs);
         return;
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Runtime Module] Service not initialized!");
     }
     
 }
@@ -130,6 +137,8 @@ void sandbox_runtime_pause(ecs_world_t* ecs) {
     if (service && service->api && service->api->pause) {
         service->api->pause(ecs);
         return;
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Runtime Module] Service not initialized!");
     }
     
 }
@@ -149,6 +158,8 @@ void sandbox_runtime_resume(ecs_world_t* ecs) {
     if (service && service->api && service->api->resume) {
         service->api->resume(ecs);
         return;
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Runtime Module] Service not initialized!");
     }
     
 }
