@@ -40,7 +40,7 @@ static void runtime_stop(ecs_world_t* entity_world) {
     if (!entity_world) return;
     flecs::world flecs_world(entity_world);
     auto* runtime = flecs_world.try_get_mut<sandbox::modules::runtime_t>();
-    if (runtime) runtime->stop();
+    if (runtime) runtime->stop(flecs_world);
 }
 
 static void runtime_pause(ecs_world_t* entity_world) {

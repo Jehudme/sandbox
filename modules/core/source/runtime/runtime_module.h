@@ -49,8 +49,9 @@ namespace sandbox::modules {
          */
 /**
          * @brief Stops the runtime.
+         * @param entity_world The flecs world.
          */
-        void stop();
+        void stop(flecs::world& entity_world);
         /**
          * @brief Pauses the engine loop.
          */
@@ -77,5 +78,6 @@ namespace sandbox::modules {
         std::shared_ptr<std::mutex> m_mutex = std::make_shared<std::mutex>();
         std::shared_ptr<std::condition_variable> m_cv = std::make_shared<std::condition_variable>();
         std::shared_ptr<std::atomic<bool>> m_paused = std::make_shared<std::atomic<bool>>(false);
+        std::shared_ptr<std::atomic<bool>> m_running = std::make_shared<std::atomic<bool>>(false);
     };
 }

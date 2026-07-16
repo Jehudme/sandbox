@@ -6,17 +6,21 @@
 namespace sandbox::modules {
 
     runtime_t::~runtime_t() {
-        stop();
+        m_running->store(false);
+        resume();
+        if (m_thread && m_thread->joinable()) {
+            m_thread->join();
+        }
     }
 
     void runtime_t::main_loop(flecs::world& entity_world) {
         sandbox::modules::logs::info(entity_world, "Runtime loop started");
 
-        while (entity_world.progress()) {
+        while (m_running->load() && entity_world.progress()) {
             if (m_paused->load()) {
                 std::unique_lock<std::mutex> lock(*m_mutex);
                 sandbox::modules::logs::info(entity_world, "Runtime paused");
-                m_cv->wait(lock, [this]() { return !m_paused->load(); });
+                m_cv->wait(lock, [this]() { return !m_paused->load() || !m_running->load(); });
                 sandbox::modules::logs::info(entity_world, "Runtime resumed");
             }
         }
@@ -29,6 +33,7 @@ namespace sandbox::modules {
             sandbox::modules::logs::warn(entity_world, "Runtime is already running in a thread.");
             return;
         }
+        m_running->store(true);
         main_loop(entity_world);
     }
 
@@ -38,14 +43,17 @@ namespace sandbox::modules {
             return;
         }
         
+        m_running->store(true);
         m_thread = std::make_shared<std::thread>([this, entity_world]() mutable {
             main_loop(entity_world);
         });
     }
 
-    void runtime_t::stop() {
+    void runtime_t::stop(flecs::world& entity_world) {
+        m_running->store(false);
+        entity_world.quit();
+        resume(); // This notifies the condition variable in case it was paused
         if (m_thread && m_thread->joinable()) {
-            resume();
             m_thread->join();
             m_thread.reset();
         }
