@@ -152,6 +152,16 @@ SANDBOX_API bool sandbox_bootstrapper_boot(sandbox_bootstrapper_t* bootstrapper,
  * @param IModuleType The API type name.
  * @param ... The service info initialization list.
  */
+#ifdef SANDBOX_FFI_GENERATION
+#define SANDBOX_DECLARE_SERVICE(ServiceClass, IModuleType, ...) \
+    typedef struct ServiceClass { \
+        IModuleType* api; \
+        const sandbox_service_info_t* info; \
+    } ServiceClass; \
+    \
+    extern ECS_COMPONENT_DECLARE(ServiceClass); \
+    extern sandbox_service_info_t ServiceClass##_info;
+#else
 #define SANDBOX_DECLARE_SERVICE(ServiceClass, IModuleType, ...) \
     typedef struct ServiceClass { \
         IModuleType* api; \
@@ -161,6 +171,7 @@ SANDBOX_API bool sandbox_bootstrapper_boot(sandbox_bootstrapper_t* bootstrapper,
     extern ECS_COMPONENT_DECLARE(ServiceClass); \
     static const sandbox_service_info_t ServiceClass##_info_decl = __VA_ARGS__; \
     extern sandbox_service_info_t ServiceClass##_info;
+#endif
 
 /**
  * @brief Defines the initialization function for the service.
@@ -205,6 +216,9 @@ SANDBOX_API bool sandbox_bootstrapper_boot(sandbox_bootstrapper_t* bootstrapper,
  * @param ModuleClass The name of the module class.
  * @param ... The module info initialization list.
  */
+#ifdef SANDBOX_FFI_GENERATION
+#define SANDBOX_DECLARE_MODULE(ModuleClass, ...)
+#else
 #define SANDBOX_DECLARE_MODULE(ModuleClass, ...) \
     static sandbox_module_info_t ModuleClass##_info = __VA_ARGS__; \
     \
@@ -222,6 +236,7 @@ SANDBOX_API bool sandbox_bootstrapper_boot(sandbox_bootstrapper_t* bootstrapper,
         ModuleClass##_info.init_fn = ModuleClass##_init_fn; \
         sandbox_stage_module(&ModuleClass##_info); \
     }
+#endif
 
 /**
  * @brief Unified macro to fetch a service instance from the ECS world.
