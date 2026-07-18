@@ -385,6 +385,10 @@ extern "C" {
     SANDBOX_DEFINE_SERVICE(sandbox_filesystem_service_t, sandbox_filesystem_api_t, &filesystem_api);
 }
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // --- Public C API Implementations ---
 bool sandbox_filesystem_mount(ecs_world_t* ecs, const char* physical_path, const char* virtual_mount_point, bool read_only) {
 #ifdef __cplusplus
@@ -1062,3 +1066,7 @@ bool filesystem::write_all(flecs::world& entity_world, const char* virtual_path,
             return written == sz;
         }
 }
+
+#ifdef __cplusplus
+}
+#endif

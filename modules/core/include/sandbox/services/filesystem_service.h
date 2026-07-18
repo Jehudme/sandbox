@@ -63,6 +63,10 @@ extern "C" {
     });
 }
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // --- Public C API ---
 SANDBOX_API bool sandbox_filesystem_mount(ecs_world_t* ecs, const char* physical_path, const char* virtual_mount_point, bool read_only);
 SANDBOX_API bool sandbox_filesystem_unmount(ecs_world_t* ecs, const char* mount_point);
@@ -91,3 +95,7 @@ SANDBOX_API bool sandbox_filesystem_list_files(ecs_world_t* ecs, const char* vir
 SANDBOX_API void sandbox_filesystem_free_file_list(ecs_world_t* ecs, char** files, size_t count);
 SANDBOX_API bool sandbox_filesystem_read_all_bytes(ecs_world_t* ecs, const char* virtual_path, uint8_t** out_data, size_t* out_size);
 SANDBOX_API void sandbox_filesystem_free_bytes(ecs_world_t* ecs, uint8_t* data);
+
+#ifdef __cplusplus
+}
+#endif
