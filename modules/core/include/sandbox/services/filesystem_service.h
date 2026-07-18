@@ -1,9 +1,11 @@
 #pragma once
 #include "sandbox/abi/bootstrapper.h"
+#ifdef __cplusplus
 #include <vector>
 #include <string>
 #include <flecs/addons/cpp/flecs.hpp>
 #include <sandbox/sdk/properties.hpp>
+#endif
 #include <sandbox/abi/bootstrapper.h>
 #include <sandbox/abi/properties.h>
 #include <sandbox/abi/handle.h>

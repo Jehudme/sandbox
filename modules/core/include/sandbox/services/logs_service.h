@@ -1,7 +1,9 @@
 #pragma once
+#ifdef __cplusplus
 #include <utility>
 #include <string>
 #include <format>
+#endif
 #include <flecs.h>
 
 #include <sandbox/abi/bootstrapper.h>

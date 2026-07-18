@@ -1,10 +1,12 @@
 #pragma once
+#ifdef __cplusplus
 #include <type_traits>
 #include <vector>
 #include <optional>
 #include <string>
 #include <flecs/addons/cpp/flecs.hpp>
 #include <sandbox/sdk/properties.hpp>
+#endif
 #include <sandbox/abi/bootstrapper.h>
 #include <sandbox/abi/properties.h>
 
