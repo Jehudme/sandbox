@@ -352,6 +352,71 @@ extern "C" {
         if (data) delete[] data;
     }
 
+    static bool filesystem_list_directories(ecs_world_t* entity_world, const char* virtual_path, bool recursive, char*** out_dirs, size_t* out_count) {
+        if (!entity_world || !virtual_path || !out_dirs || !out_count) return false;
+        flecs::world flecs_world(entity_world);
+        auto* fs = flecs_world.try_get_mut<sandbox::modules::filesystem_t>();
+        if (fs) {
+            try {
+                auto dirs = fs->list_directories(virtual_path, recursive);
+                if (dirs.empty()) {
+                    *out_dirs = nullptr;
+                    *out_count = 0;
+                    return true;
+                }
+                *out_count = dirs.size();
+                *out_dirs = new char*[dirs.size()];
+                for (size_t i = 0; i < dirs.size(); ++i) {
+                    (*out_dirs)[i] = strdup(dirs[i].c_str());
+                }
+                return true;
+            } catch (const std::exception& e) {
+                sandbox::modules::logs::error(flecs_world, "ABI filesystem_list_directories error: {}", e.what());
+                return false;
+            } catch (...) {
+                return false;
+            }
+        }
+        return false;
+    }
+
+    static bool filesystem_resolve_physical_path(ecs_world_t* entity_world, const char* virtual_path, char** out_path) {
+        if (!entity_world || !virtual_path || !out_path) return false;
+        flecs::world flecs_world(entity_world);
+        const auto* fs = flecs_world.try_get<sandbox::modules::filesystem_t>();
+        if (fs) {
+            std::string res = fs->resolve_full_physical_path(virtual_path);
+            if (!res.empty()) {
+                *out_path = strdup(res.c_str());
+                return true;
+            }
+            *out_path = nullptr;
+            return true;
+        }
+        return false;
+    }
+
+    static void filesystem_free_string(ecs_world_t*, char* str) {
+        if (str) free(str);
+    }
+
+    static bool filesystem_write_all_bytes(ecs_world_t* entity_world, const char* virtual_path, const void* data, size_t size) {
+        if (!entity_world || !virtual_path || (!data && size > 0)) return false;
+        flecs::world flecs_world(entity_world);
+        auto* fs = flecs_world.try_get_mut<sandbox::modules::filesystem_t>();
+        if (fs) {
+            try {
+                return fs->write_all_bytes(virtual_path, data, size);
+            } catch (const std::exception& e) {
+                sandbox::modules::logs::error(flecs_world, "ABI filesystem_write_all_bytes error: {}", e.what());
+                return false;
+            } catch (...) {
+                return false;
+            }
+        }
+        return false;
+    }
+
     static sandbox_filesystem_api_t filesystem_api = {
         .mount = filesystem_mount,
         .unmount = filesystem_unmount,
@@ -377,9 +442,13 @@ extern "C" {
         .file_size = filesystem_file_size,
         .last_modified = filesystem_last_modified,
         .list_files = filesystem_list_files,
+        .list_directories = filesystem_list_directories,
         .free_file_list = filesystem_free_file_list,
         .read_all_bytes = filesystem_read_all_bytes,
+        .write_all_bytes = filesystem_write_all_bytes,
         .free_bytes = filesystem_free_bytes,
+        .resolve_physical_path = filesystem_resolve_physical_path,
+        .free_string = filesystem_free_string,
     };
 
     SANDBOX_DEFINE_SERVICE(sandbox_filesystem_service_t, sandbox_filesystem_api_t, &filesystem_api);
@@ -767,6 +836,22 @@ bool sandbox_filesystem_list_files(ecs_world_t* ecs, const char* virtual_path, b
 #endif
     if (service && service->api && service->api->list_files) {
         return service->api->list_files(ecs, virtual_path, recursive, out_files, out_count);
+        
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Filesystem Module] Service not initialized!");
+    }
+    return false;
+}
+
+bool sandbox_filesystem_list_directories(ecs_world_t* ecs, const char* virtual_path, bool recursive, char*** out_dirs, size_t* out_count) {
+#ifdef __cplusplus
+    flecs::world flecs_world(ecs);
+    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+#else
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
+#endif
+    if (service && service->api && service->api->list_directories) {
+        return service->api->list_directories(ecs, virtual_path, recursive, out_dirs, out_count);
         
     } else {
         sandbox::modules::logs::error(flecs_world, "[Filesystem Module] Service not initialized!");

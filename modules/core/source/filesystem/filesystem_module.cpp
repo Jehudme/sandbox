@@ -75,6 +75,18 @@ namespace sandbox::modules {
     }
 
     bool filesystem_t::unmount(const char* mount_point) { return false; }
+    std::string filesystem_t::resolve_full_physical_path(const char* virtual_path) const {
+        if (!virtual_path) return "";
+        std::string internal_path;
+        std::string res = resolve_physical_path(virtual_path, internal_path);
+        if (!res.empty()) {
+            std::filesystem::path p(res);
+            if (!internal_path.empty()) p /= internal_path;
+            return p.string();
+        }
+        return "";
+    }
+
     sandbox_file_handle_t filesystem_t::open_read(const char* virtual_path) { return {0}; }
     sandbox_file_handle_t filesystem_t::open_write(const char* virtual_path, bool append, bool force_path) { return {0}; }
     size_t filesystem_t::read(sandbox_file_handle_t handle, void* buffer, size_t bytes_to_read) { return 0; }
@@ -327,6 +339,78 @@ namespace sandbox::modules {
             }
         } catch (const std::exception& e) {
             sandbox::modules::logs::error(world_mut, "Filesystem error while listing files: {}", e.what());
+            throw sandbox::core::filesystem_error(e.what());
+        }
+        
+        return results;
+    }
+
+    std::vector<std::string> filesystem_t::list_directories(const char* virtual_path, bool recursive) const {
+        flecs::world world_mut = m_entity_world;
+        if (!virtual_path) {
+            sandbox::modules::logs::error(world_mut, "list_directories failed: null virtual path");
+            throw sandbox::core::filesystem_error("Null virtual path provided to list_directories");
+        }
+        
+        sandbox::modules::logs::trace(world_mut, "Listing directories for virtual path: {} (recursive: {})", virtual_path, recursive);
+        std::vector<std::string> results;
+        std::string v_path_str = virtual_path;
+        
+        // Find matching mount point
+        std::string matched_mount;
+        std::string physical_base;
+        for (const auto& [mount_pt, phys_pt] : m_physical_mounts) {
+            // Prefix matching
+            if (v_path_str.find(mount_pt) == 0) {
+                if (mount_pt.length() > matched_mount.length()) {
+                    matched_mount = mount_pt;
+                    physical_base = phys_pt;
+                }
+            }
+        }
+        
+        if (matched_mount.empty()) {
+            sandbox::modules::logs::warn(world_mut, "No physical mount found for virtual path: {}", virtual_path);
+            return results;
+        }
+        
+        // Construct physical path
+        std::string relative = v_path_str.substr(matched_mount.length());
+        if (!relative.empty() && relative[0] == '/') relative = relative.substr(1);
+        
+        std::filesystem::path phys_target = std::filesystem::path(physical_base) / relative;
+        
+        try {
+            if (!std::filesystem::exists(phys_target) || !std::filesystem::is_directory(phys_target)) {
+                sandbox::modules::logs::warn(world_mut, "Path does not exist or is not a directory: {}", phys_target.string());
+                return results;
+            }
+            
+            if (recursive) {
+                for (const auto& entry : std::filesystem::recursive_directory_iterator(phys_target)) {
+                    if (entry.is_directory()) {
+                        std::string rel_to_base = std::filesystem::relative(entry.path(), physical_base).string();
+                        std::replace(rel_to_base.begin(), rel_to_base.end(), '\\', '/');
+                        std::string virt = matched_mount;
+                        if (virt.back() != '/') virt += '/';
+                        virt += rel_to_base;
+                        results.push_back(virt);
+                    }
+                }
+            } else {
+                for (const auto& entry : std::filesystem::directory_iterator(phys_target)) {
+                    if (entry.is_directory()) {
+                        std::string rel_to_base = std::filesystem::relative(entry.path(), physical_base).string();
+                        std::replace(rel_to_base.begin(), rel_to_base.end(), '\\', '/');
+                        std::string virt = matched_mount;
+                        if (virt.back() != '/') virt += '/';
+                        virt += rel_to_base;
+                        results.push_back(virt);
+                    }
+                }
+            }
+        } catch (const std::exception& e) {
+            sandbox::modules::logs::error(world_mut, "Filesystem error while listing directories: {}", e.what());
             throw sandbox::core::filesystem_error(e.what());
         }
         
