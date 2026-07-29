@@ -44,9 +44,13 @@ extern "C" {
         size_t (*file_size)(ecs_world_t* ecs, const char* virtual_path);
         int64_t (*last_modified)(ecs_world_t* ecs, const char* virtual_path);
         bool (*list_files)(ecs_world_t* ecs, const char* virtual_path, bool recursive, char*** out_files, size_t* out_count);
+        bool (*list_directories)(ecs_world_t* ecs, const char* virtual_path, bool recursive, char*** out_dirs, size_t* out_count);
         void (*free_file_list)(ecs_world_t* ecs, char** files, size_t count);
         bool (*read_all_bytes)(ecs_world_t* ecs, const char* virtual_path, uint8_t** out_data, size_t* out_size);
+        bool (*write_all_bytes)(ecs_world_t* ecs, const char* virtual_path, const void* data, size_t size);
         void (*free_bytes)(ecs_world_t* ecs, uint8_t* data);
+        bool (*resolve_physical_path)(ecs_world_t* ecs, const char* virtual_path, char** out_path);
+        void (*free_string)(ecs_world_t* ecs, char* str);
     } sandbox_filesystem_api_t;
 
     /**
@@ -92,9 +96,13 @@ SANDBOX_API bool sandbox_filesystem_is_readonly(ecs_world_t* ecs, const char* vi
 SANDBOX_API size_t sandbox_filesystem_file_size(ecs_world_t* ecs, const char* virtual_path);
 SANDBOX_API int64_t sandbox_filesystem_last_modified(ecs_world_t* ecs, const char* virtual_path);
 SANDBOX_API bool sandbox_filesystem_list_files(ecs_world_t* ecs, const char* virtual_path, bool recursive, char*** out_files, size_t* out_count);
+SANDBOX_API bool sandbox_filesystem_list_directories(ecs_world_t* ecs, const char* virtual_path, bool recursive, char*** out_dirs, size_t* out_count);
 SANDBOX_API void sandbox_filesystem_free_file_list(ecs_world_t* ecs, char** files, size_t count);
 SANDBOX_API bool sandbox_filesystem_read_all_bytes(ecs_world_t* ecs, const char* virtual_path, uint8_t** out_data, size_t* out_size);
+SANDBOX_API bool sandbox_filesystem_write_all_bytes(ecs_world_t* ecs, const char* virtual_path, const void* data, size_t size);
 SANDBOX_API void sandbox_filesystem_free_bytes(ecs_world_t* ecs, uint8_t* data);
+SANDBOX_API bool sandbox_filesystem_resolve_physical_path(ecs_world_t* ecs, const char* virtual_path, char** out_path);
+SANDBOX_API void sandbox_filesystem_free_string(ecs_world_t* ecs, char* str);
 
 #ifdef __cplusplus
 }

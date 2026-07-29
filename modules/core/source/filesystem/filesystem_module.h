@@ -122,6 +122,7 @@ namespace sandbox::modules {
          * @return File contents.
          */
         std::vector<uint8_t> read_all_bytes(const char* virtual_path);
+        bool write_all_bytes(const char* virtual_path, const void* data, size_t size);
 /**
          * @brief Reads entire file into string.
          * @param virtual_path The virtual file path.
@@ -196,6 +197,13 @@ namespace sandbox::modules {
          * @return List of file paths relative to the virtual path.
          */
         std::vector<std::string> list_files(const char* virtual_path, bool recursive) const;
+/**
+         * @brief Lists all directories inside a directory, optionally recursive.
+         * @param virtual_path The directory path.
+         * @param recursive True to search subdirectories recursively.
+         * @return List of directory paths relative to the virtual path.
+         */
+        std::vector<std::string> list_directories(const char* virtual_path, bool recursive) const;
 
 
 /**
@@ -234,6 +242,13 @@ namespace sandbox::modules {
          * @return Timestamp.
          */
         int64_t last_modified(const char* virtual_path) const;
+
+/**
+         * @brief Resolves a virtual path to a full physical path on disk.
+         * @param virtual_path The virtual path.
+         * @return The physical path, or empty if not found.
+         */
+        std::string resolve_full_physical_path(const char* virtual_path) const;
 
     private:
         flecs::world m_entity_world;

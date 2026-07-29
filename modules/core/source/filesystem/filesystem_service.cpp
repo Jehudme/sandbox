@@ -822,6 +822,52 @@ void sandbox_filesystem_free_bytes(ecs_world_t* ecs, uint8_t* data) {
     
 }
 
+bool sandbox_filesystem_write_all_bytes(ecs_world_t* ecs, const char* virtual_path, const void* data, size_t size) {
+#ifdef __cplusplus
+    flecs::world flecs_world(ecs);
+    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+#else
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
+#endif
+    if (service && service->api && service->api->write_all_bytes) {
+        return service->api->write_all_bytes(ecs, virtual_path, data, size);
+        
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Filesystem Module] Service not initialized!");
+    }
+    return false;
+}
+
+bool sandbox_filesystem_resolve_physical_path(ecs_world_t* ecs, const char* virtual_path, char** out_path) {
+#ifdef __cplusplus
+    flecs::world flecs_world(ecs);
+    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+#else
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
+#endif
+    if (service && service->api && service->api->resolve_physical_path) {
+        return service->api->resolve_physical_path(ecs, virtual_path, out_path);
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Filesystem Module] Service not initialized!");
+    }
+    return false;
+}
+
+void sandbox_filesystem_free_string(ecs_world_t* ecs, char* str) {
+#ifdef __cplusplus
+    flecs::world flecs_world(ecs);
+    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+#else
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
+#endif
+    if (service && service->api && service->api->free_string) {
+        service->api->free_string(ecs, str);
+        return;
+    } else {
+        sandbox::modules::logs::error(flecs_world, "[Filesystem Module] Service not initialized!");
+    }
+}
+
 // --- SDK Implementations ---
 namespace sandbox::modules {
 bool filesystem::mount(flecs::world& entity_world, const char* physical_path, const char* virtual_mount_point, bool read_only) {

@@ -178,6 +178,50 @@ namespace sandbox::modules {
             }
         }
     }
+
+    bool filesystem_t::write_all_bytes(const char* virtual_path, const void* data, size_t size) {
+        flecs::world world_mut = m_entity_world;
+        if (!virtual_path) {
+            sandbox::modules::logs::error(world_mut, "write_all_bytes failed: null virtual path");
+            return false;
+        }
+
+        std::string internal_path;
+        std::string physical_base = resolve_physical_path(virtual_path, internal_path);
+
+        if (physical_base.empty()) {
+            sandbox::modules::logs::error(world_mut, "Failed to resolve virtual path to physical mount: {}", virtual_path);
+            return false;
+        }
+
+        if (physical_base.length() >= 4 && physical_base.substr(physical_base.length() - 4) == ".zip") {
+            sandbox::modules::logs::error(world_mut, "Cannot write directly to zip archive: {}", physical_base);
+            return false;
+        }
+
+        std::filesystem::path full_path = std::filesystem::path(physical_base) / internal_path;
+        
+        // Ensure directory exists
+        if (full_path.has_parent_path()) {
+            std::error_code ec;
+            std::filesystem::create_directories(full_path.parent_path(), ec);
+        }
+
+        std::ofstream file(full_path, std::ios::binary | std::ios::trunc);
+        if (!file) {
+            sandbox::modules::logs::error(world_mut, "Failed to open file for writing: {}", full_path.string());
+            return false;
+        }
+
+        file.write(reinterpret_cast<const char*>(data), size);
+        if (!file.good()) {
+            sandbox::modules::logs::error(world_mut, "Failed to write data to file: {}", full_path.string());
+            return false;
+        }
+        
+        sandbox::modules::logs::trace(world_mut, "Successfully wrote {} bytes to physical file: {}", size, virtual_path);
+        return true;
+    }
     
     std::string filesystem_t::read_all_text(const char* virtual_path) {
         std::vector<uint8_t> bytes = read_all_bytes(virtual_path);
