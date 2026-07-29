@@ -98,6 +98,54 @@ namespace sandbox::modules {
             }
             return result;
         }
+
+        static std::vector<std::string> list_directories(flecs::world& entity_world, const std::string& virtual_path, bool recursive = false) {
+            std::vector<std::string> result;
+            const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
+            if (service && service->api && service->api->list_directories) {
+                char** dirs = nullptr;
+                size_t count = 0;
+                if (service->api->list_directories(entity_world.c_ptr(), virtual_path.c_str(), recursive, &dirs, &count)) {
+                    for (size_t i = 0; i < count; ++i) {
+                        if (dirs[i]) {
+                            result.emplace_back(dirs[i]);
+                        }
+                    }
+                    if (service->api->free_file_list) {
+                        service->api->free_file_list(entity_world.c_ptr(), dirs, count);
+                    }
+                }
+            }
+            return result;
+        }
+
+        static std::string resolve_physical_path(flecs::world& entity_world, const std::string& virtual_path) {
+            std::string result;
+            const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
+            if (service && service->api && service->api->resolve_physical_path) {
+                char* path = nullptr;
+                if (service->api->resolve_physical_path(entity_world.c_ptr(), virtual_path.c_str(), &path)) {
+                    if (path) {
+                        result = path;
+                        if (service->api->free_string) {
+                            service->api->free_string(entity_world.c_ptr(), path);
+                        } else {
+                            free(path);
+                        }
+                    }
+                }
+            }
+            return result;
+        }
+
+        static bool write_all_bytes(flecs::world& entity_world, const std::string& virtual_path, const std::vector<uint8_t>& data) {
+            const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
+            if (service && service->api && service->api->write_all_bytes) {
+                return service->api->write_all_bytes(entity_world.c_ptr(), virtual_path.c_str(), data.data(), data.size());
+            }
+            return false;
+        }
+
     };
 }
 #endif
