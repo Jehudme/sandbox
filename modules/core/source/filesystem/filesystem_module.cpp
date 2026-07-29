@@ -239,13 +239,102 @@ namespace sandbox::modules {
         std::vector<uint8_t> bytes = read_all_bytes(virtual_path);
         return std::string(bytes.begin(), bytes.end());
     }
-    bool filesystem_t::write_all(const char* virtual_path, const void* data, size_t size, bool force_path) { return false; }
-    bool filesystem_t::create_file(const char* virtual_path, bool force_path) { return false; }
-    bool filesystem_t::remove_file(const char* virtual_path) { return false; }
-    bool filesystem_t::copy(const char* source_virtual_path, const char* dest_virtual_path, bool overwrite, bool force_path) { return false; }
-    bool filesystem_t::move(const char* source_virtual_path, const char* dest_virtual_path, bool overwrite, bool force_path) { return false; }
-    bool filesystem_t::create_directory(const char* virtual_path, bool force_path) { return false; }
-    bool filesystem_t::remove_directory(const char* virtual_path) { return false; }
+    bool filesystem_t::write_all(const char* virtual_path, const void* data, size_t size, bool force_path) { return write_all_bytes(virtual_path, data, size); }
+    
+    bool filesystem_t::create_file(const char* virtual_path, bool force_path) { 
+        if (!virtual_path) return false;
+        std::string internal_path;
+        std::string physical_base = resolve_physical_path(virtual_path, internal_path);
+        if (physical_base.empty() || (physical_base.length() >= 4 && physical_base.substr(physical_base.length() - 4) == ".zip")) return false;
+        
+        std::filesystem::path full_path = std::filesystem::path(physical_base) / internal_path;
+        if (force_path && full_path.has_parent_path()) {
+            std::error_code ec;
+            std::filesystem::create_directories(full_path.parent_path(), ec);
+        }
+        std::ofstream f(full_path);
+        return f.good();
+    }
+    
+    bool filesystem_t::remove_file(const char* virtual_path) { 
+        if (!virtual_path) return false;
+        std::string internal_path;
+        std::string physical_base = resolve_physical_path(virtual_path, internal_path);
+        if (physical_base.empty() || (physical_base.length() >= 4 && physical_base.substr(physical_base.length() - 4) == ".zip")) return false;
+        
+        std::error_code ec;
+        return std::filesystem::remove(std::filesystem::path(physical_base) / internal_path, ec);
+    }
+    
+    bool filesystem_t::copy(const char* source_virtual_path, const char* dest_virtual_path, bool overwrite, bool force_path) { 
+        if (!source_virtual_path || !dest_virtual_path) return false;
+        std::string src_internal, dest_internal;
+        std::string src_base = resolve_physical_path(source_virtual_path, src_internal);
+        std::string dest_base = resolve_physical_path(dest_virtual_path, dest_internal);
+        if (src_base.empty() || dest_base.empty() || 
+           (dest_base.length() >= 4 && dest_base.substr(dest_base.length() - 4) == ".zip")) return false;
+        
+        // If source is a zip, we would need to extract it to memory and write it, but for now let's just support physical to physical copy
+        if (src_base.length() >= 4 && src_base.substr(src_base.length() - 4) == ".zip") {
+            try {
+                auto data = read_all_bytes(source_virtual_path);
+                return write_all_bytes(dest_virtual_path, data.data(), data.size());
+            } catch (...) { return false; }
+        }
+
+        std::filesystem::path src_full = std::filesystem::path(src_base) / src_internal;
+        std::filesystem::path dest_full = std::filesystem::path(dest_base) / dest_internal;
+        
+        if (force_path && dest_full.has_parent_path()) {
+            std::error_code ec;
+            std::filesystem::create_directories(dest_full.parent_path(), ec);
+        }
+        
+        std::error_code ec;
+        auto options = overwrite ? std::filesystem::copy_options::overwrite_existing : std::filesystem::copy_options::none;
+        options |= std::filesystem::copy_options::recursive;
+        std::filesystem::copy(src_full, dest_full, options, ec);
+        return !ec;
+    }
+    
+    bool filesystem_t::move(const char* source_virtual_path, const char* dest_virtual_path, bool overwrite, bool force_path) { 
+        if (!source_virtual_path || !dest_virtual_path) return false;
+        if (copy(source_virtual_path, dest_virtual_path, overwrite, force_path)) {
+            std::string src_internal;
+            std::string src_base = resolve_physical_path(source_virtual_path, src_internal);
+            if (src_base.length() >= 4 && src_base.substr(src_base.length() - 4) == ".zip") return false; // can't remove from zip
+            
+            std::error_code ec;
+            return std::filesystem::remove_all(std::filesystem::path(src_base) / src_internal, ec) > 0;
+        }
+        return false;
+    }
+    
+    bool filesystem_t::create_directory(const char* virtual_path, bool force_path) { 
+        if (!virtual_path) return false;
+        std::string internal_path;
+        std::string physical_base = resolve_physical_path(virtual_path, internal_path);
+        if (physical_base.empty() || (physical_base.length() >= 4 && physical_base.substr(physical_base.length() - 4) == ".zip")) return false;
+        
+        std::filesystem::path full_path = std::filesystem::path(physical_base) / internal_path;
+        std::error_code ec;
+        if (force_path) {
+            return std::filesystem::create_directories(full_path, ec) || std::filesystem::exists(full_path);
+        } else {
+            return std::filesystem::create_directory(full_path, ec) || std::filesystem::exists(full_path);
+        }
+    }
+    
+    bool filesystem_t::remove_directory(const char* virtual_path) { 
+        if (!virtual_path) return false;
+        std::string internal_path;
+        std::string physical_base = resolve_physical_path(virtual_path, internal_path);
+        if (physical_base.empty() || (physical_base.length() >= 4 && physical_base.substr(physical_base.length() - 4) == ".zip")) return false;
+        
+        std::error_code ec;
+        return std::filesystem::remove_all(std::filesystem::path(physical_base) / internal_path, ec) > 0;
+    }
+    
     std::vector<std::string> filesystem_t::list_contents(const char* virtual_path) const { return {}; }
     bool filesystem_t::exists(const char* virtual_path) const {
         if (!virtual_path) return false;

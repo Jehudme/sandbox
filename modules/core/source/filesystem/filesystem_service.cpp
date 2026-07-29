@@ -1190,11 +1190,11 @@ std::string filesystem::read_all_text(flecs::world& entity_world, const char* vi
         }
 
 bool filesystem::write_all(flecs::world& entity_world, const char* virtual_path, const void* data, size_t sz, bool force_path) {
-            sandbox_file_handle_t handle = open_write(entity_world, virtual_path, false, force_path);
-            if (!SANDBOX_HANDLE_IS_VALID(handle)) return false;
-            size_t written = write(entity_world, handle, data, sz);
-            close_handle(entity_world, handle);
-            return written == sz;
+            const auto* service = SANDBOX_GET_SERVICE(entity_world, sandbox_filesystem_service_t);
+            if (service && service->api && service->api->write_all_bytes) {
+                return service->api->write_all_bytes(entity_world.c_ptr(), virtual_path, data, sz);
+            }
+            return false;
         }
 }
 
