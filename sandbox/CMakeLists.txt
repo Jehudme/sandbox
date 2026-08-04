@@ -79,6 +79,15 @@ set_target_properties(sandbox_library PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 add_library(sandbox::library ALIAS sandbox_library)
 
+add_library(sandbox_headers INTERFACE)
+target_include_directories(sandbox_headers INTERFACE
+    $<TARGET_PROPERTY:sandbox::plugins,INTERFACE_INCLUDE_DIRECTORIES>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(sandbox_headers INTERFACE flecs_headers)
+add_library(sandbox::headers ALIAS sandbox_headers)
+
 target_compile_definitions(sandbox_library PRIVATE SANDBOX_BUILD_SHARED)
 target_compile_features(sandbox_library PUBLIC cxx_std_23)
 

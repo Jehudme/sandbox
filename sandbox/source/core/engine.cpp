@@ -10,6 +10,8 @@
 #include <sandbox/sdk/logs.hpp>
 #include <iostream>
 
+extern "C" void sandbox_library_loader_service_register(ecs_world_t* ecs);
+
 namespace sandbox::core {
     engine_t::engine_t() = default;
     engine_t::~engine_t() = default;
@@ -23,6 +25,9 @@ namespace sandbox::core {
         sandbox_properties_handle_t properties_handle;
         properties_handle.token = reinterpret_cast<uintptr_t>(m_arguments.get());
         entity_world.entity("::sandbox::configuration::handle").set<uint64_t>(properties_handle.token);
+        
+        // Register the library loader service so plugins can use it via the SDK wrapper
+        sandbox_library_loader_service_register(entity_world.c_ptr());
 
         save_bootstrapper();
 

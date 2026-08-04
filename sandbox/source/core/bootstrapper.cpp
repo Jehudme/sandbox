@@ -1,4 +1,7 @@
 #include "bootstrapper.h"
+#include <iostream>
+#include <queue>
+#include <string>
 #include <algorithm>
 #include <cstring>
 #include <stdexcept>
@@ -9,6 +12,7 @@
 #include <charconv>
 #include <sandbox/sdk/logs.hpp>
 #include "exceptions.h"
+#include <iostream>
 
 namespace sandbox::core {
     auto safe_view = [](const char* str) { return str ? std::string_view(str) : std::string_view(); };
@@ -31,6 +35,7 @@ namespace sandbox::core {
     void bootstrapper_t::stage_service(const service_info_t& info) {
         auto it = std::find_if(m_services.begin(), m_services.end(), [&](const service_info_t& service) {
             return std::strcmp(service.name, info.name) == 0
+                && std::strcmp(service.architecture, info.architecture) == 0
                 && service.version_major == info.version_major
                 && service.version_minor == info.version_minor;
         });
@@ -42,6 +47,7 @@ namespace sandbox::core {
     void bootstrapper_t::stage_module(const module_info_t &info) {
         auto it = std::find_if(m_modules.begin(), m_modules.end(), [&](const module_info_t& module) {
             return std::strcmp(module.name, info.name) == 0
+                && std::strcmp(module.architecture, info.architecture) == 0
                 && module.version_major == info.version_major
                 && module.version_minor == info.version_minor
                 && module.version_patch == info.version_patch;
@@ -167,6 +173,8 @@ namespace sandbox::core {
                 sandbox::modules::logs::trace(entity_world, "Module staged for activation: {} v{}.{} (arch: {})", name, version_major, version_minor, architecture);
             }
         } else {
+            std::string error_message = std::format("No matching module found to activate: {} v{}.{} (arch: {})", name, version_major, version_minor, architecture);
+            //sandbox::modules::logs::error(entity_world, error_message);
             throw module_activation_error(std::format("No matching module found to activate: {} v{}.{} (arch: {})", name, version_major, version_minor, architecture));
         }
     }
@@ -397,8 +405,8 @@ namespace sandbox::core {
                 }
             }
 
-            // Using a stack instead of a queue yields depth-first dependency initialization
-            std::stack<size_t> s;
+            // Using a queue yields breadth-first dependency initialization
+            std::queue<size_t> s;
             for (size_t i = 0; i < current_batch.size(); ++i) {
                 if (in_degree[i] == 0) {
                     s.push(i);
@@ -406,10 +414,11 @@ namespace sandbox::core {
             }
 
             while (!s.empty()) {
-                size_t curr = s.top();
+                size_t curr = s.front();
                 s.pop();
 
                 if (current_batch[curr].init_fn) {
+                    std::cout << "[Bootstrapper] Booting module: " << current_batch[curr].name << "\n";
                     current_batch[curr].init_fn(entity_world.c_ptr());
                 }
                 m_booted_modules.push_back(current_batch[curr]);

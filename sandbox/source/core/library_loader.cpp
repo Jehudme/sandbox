@@ -149,4 +149,8 @@ extern "C" {
     };
     
     SANDBOX_DEFINE_SERVICE(sandbox_library_loader_service_t, sandbox_library_loader_api_t, &library_loader_api);
+    
+    void sandbox_library_loader_service_register(ecs_world_t* ecs) {
+        sandbox_library_loader_service_t_init_fn(ecs);
+    }
 }

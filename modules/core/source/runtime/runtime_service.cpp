@@ -3,6 +3,7 @@
 #include "sandbox/services/runtime_service.h"
 #include "runtime_module.h"
 #include <flecs.h>
+#include <iostream>
 
 // C-ABI Endpoints
 // ==========================================
@@ -71,6 +72,17 @@ void sandbox_runtime_run(ecs_world_t* ecs) {
     const sandbox_runtime_service_t* service = (const sandbox_runtime_service_t*)ecs_singleton_get(ecs, sandbox_runtime_service_t);
 #endif
 #endif
+
+    std::cout << "[Sandbox Launcher] Debug: sandbox_runtime_run called. ecs_id(sandbox_runtime_service_t) = " << ecs_id(sandbox_runtime_service_t) << "\n";
+    if (service) {
+        std::cout << "[Sandbox Launcher] Debug: service is NOT NULL. api = " << (void*)service->api << "\n";
+        if (service->api) {
+            std::cout << "[Sandbox Launcher] Debug: api->run = " << (void*)service->api->run << "\n";
+        }
+    } else {
+        std::cout << "[Sandbox Launcher] Debug: service IS NULL\n";
+    }
+
     if (service && service->api && service->api->run) {
         service->api->run(ecs);
         return;
