@@ -29,7 +29,7 @@ static sandbox_properties_handle_t config_get_properties(ecs_world_t* entity_wor
 sandbox_properties_handle_t sandbox_configuration_get_properties(ecs_world_t* ecs) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_configuration_service_t* service = flecs_world.try_get<sandbox_configuration_service_t>();
+    const sandbox_configuration_service_t* service = (const sandbox_configuration_service_t*)ecs_singleton_get(ecs, sandbox_configuration_service_t);
 #else
     const sandbox_configuration_service_t* service = (const sandbox_configuration_service_t*)ecs_singleton_get(ecs, sandbox_configuration_service_t);
 #endif

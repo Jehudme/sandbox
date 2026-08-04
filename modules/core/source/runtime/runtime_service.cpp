@@ -62,11 +62,11 @@ static void runtime_resume(ecs_world_t* entity_world) {
 void sandbox_runtime_run(ecs_world_t* ecs) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_runtime_service_t* service = flecs_world.try_get<sandbox_runtime_service_t>();
+    const sandbox_runtime_service_t* service = (const sandbox_runtime_service_t*)ecs_singleton_get(ecs, sandbox_runtime_service_t);
 #else
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_runtime_service_t* service = flecs_world.try_get<sandbox_runtime_service_t>();
+    const sandbox_runtime_service_t* service = (const sandbox_runtime_service_t*)ecs_singleton_get(ecs, sandbox_runtime_service_t);
 #else
     const sandbox_runtime_service_t* service = (const sandbox_runtime_service_t*)ecs_singleton_get(ecs, sandbox_runtime_service_t);
 #endif
@@ -83,11 +83,11 @@ void sandbox_runtime_run(ecs_world_t* ecs) {
 void sandbox_runtime_start(ecs_world_t* ecs) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_runtime_service_t* service = flecs_world.try_get<sandbox_runtime_service_t>();
+    const sandbox_runtime_service_t* service = (const sandbox_runtime_service_t*)ecs_singleton_get(ecs, sandbox_runtime_service_t);
 #else
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_runtime_service_t* service = flecs_world.try_get<sandbox_runtime_service_t>();
+    const sandbox_runtime_service_t* service = (const sandbox_runtime_service_t*)ecs_singleton_get(ecs, sandbox_runtime_service_t);
 #else
     const sandbox_runtime_service_t* service = (const sandbox_runtime_service_t*)ecs_singleton_get(ecs, sandbox_runtime_service_t);
 #endif
@@ -104,11 +104,11 @@ void sandbox_runtime_start(ecs_world_t* ecs) {
 void sandbox_runtime_stop(ecs_world_t* ecs) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_runtime_service_t* service = flecs_world.try_get<sandbox_runtime_service_t>();
+    const sandbox_runtime_service_t* service = (const sandbox_runtime_service_t*)ecs_singleton_get(ecs, sandbox_runtime_service_t);
 #else
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_runtime_service_t* service = flecs_world.try_get<sandbox_runtime_service_t>();
+    const sandbox_runtime_service_t* service = (const sandbox_runtime_service_t*)ecs_singleton_get(ecs, sandbox_runtime_service_t);
 #else
     const sandbox_runtime_service_t* service = (const sandbox_runtime_service_t*)ecs_singleton_get(ecs, sandbox_runtime_service_t);
 #endif
@@ -125,11 +125,11 @@ void sandbox_runtime_stop(ecs_world_t* ecs) {
 void sandbox_runtime_pause(ecs_world_t* ecs) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_runtime_service_t* service = flecs_world.try_get<sandbox_runtime_service_t>();
+    const sandbox_runtime_service_t* service = (const sandbox_runtime_service_t*)ecs_singleton_get(ecs, sandbox_runtime_service_t);
 #else
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_runtime_service_t* service = flecs_world.try_get<sandbox_runtime_service_t>();
+    const sandbox_runtime_service_t* service = (const sandbox_runtime_service_t*)ecs_singleton_get(ecs, sandbox_runtime_service_t);
 #else
     const sandbox_runtime_service_t* service = (const sandbox_runtime_service_t*)ecs_singleton_get(ecs, sandbox_runtime_service_t);
 #endif
@@ -146,11 +146,11 @@ void sandbox_runtime_pause(ecs_world_t* ecs) {
 void sandbox_runtime_resume(ecs_world_t* ecs) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_runtime_service_t* service = flecs_world.try_get<sandbox_runtime_service_t>();
+    const sandbox_runtime_service_t* service = (const sandbox_runtime_service_t*)ecs_singleton_get(ecs, sandbox_runtime_service_t);
 #else
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_runtime_service_t* service = flecs_world.try_get<sandbox_runtime_service_t>();
+    const sandbox_runtime_service_t* service = (const sandbox_runtime_service_t*)ecs_singleton_get(ecs, sandbox_runtime_service_t);
 #else
     const sandbox_runtime_service_t* service = (const sandbox_runtime_service_t*)ecs_singleton_get(ecs, sandbox_runtime_service_t);
 #endif

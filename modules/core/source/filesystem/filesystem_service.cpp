@@ -462,7 +462,7 @@ extern "C" {
 bool sandbox_filesystem_mount(ecs_world_t* ecs, const char* physical_path, const char* virtual_mount_point, bool read_only) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #else
     const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #endif
@@ -478,7 +478,7 @@ bool sandbox_filesystem_mount(ecs_world_t* ecs, const char* physical_path, const
 bool sandbox_filesystem_unmount(ecs_world_t* ecs, const char* mount_point) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #else
     const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #endif
@@ -494,7 +494,7 @@ bool sandbox_filesystem_unmount(ecs_world_t* ecs, const char* mount_point) {
 sandbox_file_handle_t sandbox_filesystem_open_read(ecs_world_t* ecs, const char* virtual_path) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #else
     const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #endif
@@ -510,7 +510,7 @@ sandbox_file_handle_t sandbox_filesystem_open_read(ecs_world_t* ecs, const char*
 sandbox_file_handle_t sandbox_filesystem_open_write(ecs_world_t* ecs, const char* virtual_path, bool append, bool force_path) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #else
     const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #endif
@@ -526,7 +526,7 @@ sandbox_file_handle_t sandbox_filesystem_open_write(ecs_world_t* ecs, const char
 size_t sandbox_filesystem_read(ecs_world_t* ecs, sandbox_file_handle_t handle, void* buffer, size_t bytes_to_read) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #else
     const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #endif
@@ -542,7 +542,7 @@ size_t sandbox_filesystem_read(ecs_world_t* ecs, sandbox_file_handle_t handle, v
 size_t sandbox_filesystem_write(ecs_world_t* ecs, sandbox_file_handle_t handle, const void* buffer, size_t bytes_to_write) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #else
     const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #endif
@@ -558,7 +558,7 @@ size_t sandbox_filesystem_write(ecs_world_t* ecs, sandbox_file_handle_t handle, 
 bool sandbox_filesystem_eof(ecs_world_t* ecs, sandbox_file_handle_t handle) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #else
     const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #endif
@@ -574,7 +574,7 @@ bool sandbox_filesystem_eof(ecs_world_t* ecs, sandbox_file_handle_t handle) {
 size_t sandbox_filesystem_tell(ecs_world_t* ecs, sandbox_file_handle_t handle) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #else
     const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #endif
@@ -590,7 +590,7 @@ size_t sandbox_filesystem_tell(ecs_world_t* ecs, sandbox_file_handle_t handle) {
 bool sandbox_filesystem_seek(ecs_world_t* ecs, sandbox_file_handle_t handle, size_t position) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #else
     const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #endif
@@ -606,7 +606,7 @@ bool sandbox_filesystem_seek(ecs_world_t* ecs, sandbox_file_handle_t handle, siz
 size_t sandbox_filesystem_size(ecs_world_t* ecs, sandbox_file_handle_t handle) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #else
     const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #endif
@@ -622,7 +622,7 @@ size_t sandbox_filesystem_size(ecs_world_t* ecs, sandbox_file_handle_t handle) {
 void sandbox_filesystem_close_handle(ecs_world_t* ecs, sandbox_file_handle_t handle) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #else
     const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #endif
@@ -638,7 +638,7 @@ void sandbox_filesystem_close_handle(ecs_world_t* ecs, sandbox_file_handle_t han
 bool sandbox_filesystem_create_file(ecs_world_t* ecs, const char* virtual_path, bool force_path) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #else
     const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #endif
@@ -654,7 +654,7 @@ bool sandbox_filesystem_create_file(ecs_world_t* ecs, const char* virtual_path, 
 bool sandbox_filesystem_remove_file(ecs_world_t* ecs, const char* virtual_path) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #else
     const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #endif
@@ -670,7 +670,7 @@ bool sandbox_filesystem_remove_file(ecs_world_t* ecs, const char* virtual_path) 
 bool sandbox_filesystem_copy(ecs_world_t* ecs, const char* source_virtual_path, const char* dest_virtual_path, bool overwrite, bool force_path) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #else
     const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #endif
@@ -686,7 +686,7 @@ bool sandbox_filesystem_copy(ecs_world_t* ecs, const char* source_virtual_path, 
 bool sandbox_filesystem_move(ecs_world_t* ecs, const char* source_virtual_path, const char* dest_virtual_path, bool overwrite, bool force_path) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #else
     const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #endif
@@ -702,7 +702,7 @@ bool sandbox_filesystem_move(ecs_world_t* ecs, const char* source_virtual_path, 
 bool sandbox_filesystem_create_directory(ecs_world_t* ecs, const char* virtual_path, bool force_path) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #else
     const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #endif
@@ -718,7 +718,7 @@ bool sandbox_filesystem_create_directory(ecs_world_t* ecs, const char* virtual_p
 bool sandbox_filesystem_remove_directory(ecs_world_t* ecs, const char* virtual_path) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #else
     const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #endif
@@ -734,7 +734,7 @@ bool sandbox_filesystem_remove_directory(ecs_world_t* ecs, const char* virtual_p
 bool sandbox_filesystem_exists(ecs_world_t* ecs, const char* virtual_path) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #else
     const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #endif
@@ -750,7 +750,7 @@ bool sandbox_filesystem_exists(ecs_world_t* ecs, const char* virtual_path) {
 bool sandbox_filesystem_is_file(ecs_world_t* ecs, const char* virtual_path) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #else
     const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #endif
@@ -766,7 +766,7 @@ bool sandbox_filesystem_is_file(ecs_world_t* ecs, const char* virtual_path) {
 bool sandbox_filesystem_is_directory(ecs_world_t* ecs, const char* virtual_path) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #else
     const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #endif
@@ -782,7 +782,7 @@ bool sandbox_filesystem_is_directory(ecs_world_t* ecs, const char* virtual_path)
 bool sandbox_filesystem_is_readonly(ecs_world_t* ecs, const char* virtual_path) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #else
     const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #endif
@@ -798,7 +798,7 @@ bool sandbox_filesystem_is_readonly(ecs_world_t* ecs, const char* virtual_path) 
 size_t sandbox_filesystem_file_size(ecs_world_t* ecs, const char* virtual_path) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #else
     const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #endif
@@ -814,7 +814,7 @@ size_t sandbox_filesystem_file_size(ecs_world_t* ecs, const char* virtual_path) 
 int64_t sandbox_filesystem_last_modified(ecs_world_t* ecs, const char* virtual_path) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #else
     const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #endif
@@ -830,7 +830,7 @@ int64_t sandbox_filesystem_last_modified(ecs_world_t* ecs, const char* virtual_p
 bool sandbox_filesystem_list_files(ecs_world_t* ecs, const char* virtual_path, bool recursive, char*** out_files, size_t* out_count) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #else
     const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #endif
@@ -846,7 +846,7 @@ bool sandbox_filesystem_list_files(ecs_world_t* ecs, const char* virtual_path, b
 bool sandbox_filesystem_list_directories(ecs_world_t* ecs, const char* virtual_path, bool recursive, char*** out_dirs, size_t* out_count) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #else
     const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #endif
@@ -862,7 +862,7 @@ bool sandbox_filesystem_list_directories(ecs_world_t* ecs, const char* virtual_p
 void sandbox_filesystem_free_file_list(ecs_world_t* ecs, char** files, size_t count) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #else
     const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #endif
@@ -878,7 +878,7 @@ void sandbox_filesystem_free_file_list(ecs_world_t* ecs, char** files, size_t co
 bool sandbox_filesystem_read_all_bytes(ecs_world_t* ecs, const char* virtual_path, uint8_t** out_data, size_t* out_size) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #else
     const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #endif
@@ -894,7 +894,7 @@ bool sandbox_filesystem_read_all_bytes(ecs_world_t* ecs, const char* virtual_pat
 void sandbox_filesystem_free_bytes(ecs_world_t* ecs, uint8_t* data) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #else
     const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #endif
@@ -910,7 +910,7 @@ void sandbox_filesystem_free_bytes(ecs_world_t* ecs, uint8_t* data) {
 bool sandbox_filesystem_write_all_bytes(ecs_world_t* ecs, const char* virtual_path, const void* data, size_t size) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #else
     const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #endif
@@ -926,7 +926,7 @@ bool sandbox_filesystem_write_all_bytes(ecs_world_t* ecs, const char* virtual_pa
 bool sandbox_filesystem_resolve_physical_path(ecs_world_t* ecs, const char* virtual_path, char** out_path) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #else
     const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #endif
@@ -941,7 +941,7 @@ bool sandbox_filesystem_resolve_physical_path(ecs_world_t* ecs, const char* virt
 void sandbox_filesystem_free_string(ecs_world_t* ecs, char* str) {
 #ifdef __cplusplus
     flecs::world flecs_world(ecs);
-    const sandbox_filesystem_service_t* service = flecs_world.try_get<sandbox_filesystem_service_t>();
+    const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #else
     const sandbox_filesystem_service_t* service = (const sandbox_filesystem_service_t*)ecs_singleton_get(ecs, sandbox_filesystem_service_t);
 #endif

@@ -24,11 +24,14 @@ add_executable(sandbox_launcher source/main.cpp
 add_executable(sandbox::launcher ALIAS sandbox_launcher)
 
 set_target_properties(sandbox_launcher PROPERTIES ENABLE_EXPORTS ON)
+add_dependencies(sandbox_launcher sandbox_plugin_static flecs_static)
 
 target_link_libraries(sandbox_launcher PRIVATE
         sandbox::library
-        sandbox::plugins_static
         CLI11::CLI11
+        -Wl,--whole-archive $<TARGET_FILE:sandbox_plugin_static> -Wl,--no-whole-archive
+        spdlog::spdlog
+        miniz
         -Wl,--whole-archive $<TARGET_FILE:flecs_static> -Wl,--no-whole-archive
 )
 
