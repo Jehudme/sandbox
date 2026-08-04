@@ -74,6 +74,9 @@ add_library(sandbox_library
         include/sandbox/abi/handle.h
 )
 
+set_target_properties(sandbox_library PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
+set_target_properties(sandbox_library PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
 add_library(sandbox::library ALIAS sandbox_library)
 
 target_compile_definitions(sandbox_library PRIVATE SANDBOX_BUILD_SHARED)

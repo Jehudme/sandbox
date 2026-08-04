@@ -80,8 +80,13 @@ application_t::application_t(flecs::world &ecs) {
     ingest_configuration(ecs);
     orchestrate_modules(ecs);
 
-    sandbox::bootstrapper bootstrapper_api(ecs.c_ptr());
-    bootstrapper_api.boot();
+    std::vector<std::string> modules;
+    sandbox::bootstrapper bootstrapper(ecs);
+    sandbox::modules::configuration::get_properties(ecs).get_array<std::string>("engine/sandbox", modules);
+
+    for (const auto& module : modules) {
+      bootstrapper.activate(module);
+    }
 
     sandbox::modules::logs::info(ecs, "Application Module Initialized");
   } catch (const std::exception &e) {
