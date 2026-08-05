@@ -6,7 +6,7 @@
 #include <sandbox/sdk/filesystem.hpp>
 #include <sandbox/sdk/filesystem.hpp>
 #include <sandbox/abi/bootstrapper.h>
-#include "core/bootstrapper.h"
+#include "../../test_accessor.h"
 #include "core/exceptions.h"
 #include <fstream>
 #include <string>
@@ -17,7 +17,6 @@
 using namespace sandbox::core;
 
 TEST_CASE("Filesystem Module: URI Mounting and Reading", "[filesystem][uri]") {
-    bootstrapper_t::reset();
 
     // 1. Setup test physical files and zip
     std::filesystem::create_directories("test_physical_dir");
@@ -37,8 +36,8 @@ TEST_CASE("Filesystem Module: URI Mounting and Reading", "[filesystem][uri]") {
 
     // 2. Setup properties with mounts
     properties_t engine_props;
-    engine_props.set<std::vector<std::string>>({"engine", "libraries"}, {"./sandbox_plugin.so"});
-    engine_props.set<std::vector<std::string>>({"engine", "sandbox"}, {"sandbox-configuration@1.0.0", "sandbox-logs@1.0.0", "sandbox-filesystem@1.0.0", "sandbox-runtime@1.0.0"});
+    engine_props.set<std::vector<std::string>>({"booting-configuration", "libraries"}, {"./cmake-build-debug/bin/sandbox_plugin.so"});
+    engine_props.set<std::vector<std::string>>({"booting-configuration", "modules"}, {"sandbox-configuration@1.0.0", "sandbox-logs@1.0.0", "sandbox-filesystem@1.0.0", "sandbox-runtime@1.0.0"});
     
     // Add filesystem mount config
     engine_props.set<std::string>({"filesystem", "mounts", "app", "physical"}, "./test_archive.zip");
@@ -87,17 +86,15 @@ TEST_CASE("Filesystem Module: URI Mounting and Reading", "[filesystem][uri]") {
         REQUIRE_THROWS_AS(sandbox::modules::filesystem::read_all_text(world, "unknown://test_file.txt"), std::runtime_error);
     }
 
-    bootstrapper_t::reset();
 }
 
 TEST_CASE("Filesystem Module: Mutations (Create/Copy/Move/Directories)", "[filesystem][mutation]") {
-    bootstrapper_t::reset();
     std::filesystem::remove_all("test_mutations_dir");
     std::filesystem::create_directories("test_mutations_dir");
 
     properties_t engine_props;
-    engine_props.set<std::vector<std::string>>({"engine", "libraries"}, {"./sandbox_plugin.so"});
-    engine_props.set<std::vector<std::string>>({"engine", "sandbox"}, {"sandbox-configuration@1.0.0", "sandbox-logs@1.0.0", "sandbox-filesystem@1.0.0", "sandbox-runtime@1.0.0"});
+    engine_props.set<std::vector<std::string>>({"booting-configuration", "libraries"}, {"./cmake-build-debug/bin/sandbox_plugin.so"});
+    engine_props.set<std::vector<std::string>>({"booting-configuration", "modules"}, {"sandbox-configuration@1.0.0", "sandbox-logs@1.0.0", "sandbox-filesystem@1.0.0", "sandbox-runtime@1.0.0"});
     
     engine_props.set<std::string>({"filesystem", "mounts", "test", "physical"}, "./test_mutations_dir");
     engine_props.set<bool>({"filesystem", "mounts", "test", "readonly"}, false);
@@ -139,5 +136,4 @@ TEST_CASE("Filesystem Module: Mutations (Create/Copy/Move/Directories)", "[files
         REQUIRE(sandbox::modules::filesystem::remove_file(world, "test://moved.txt"));
     }
 
-    bootstrapper_t::reset();
 }

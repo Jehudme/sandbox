@@ -3,7 +3,7 @@
 
 #include <catch2/catch_all.hpp>
 #include "../../../../sandbox/include/sandbox/abi/bootstrapper.h"
-#include "core/bootstrapper.h"
+#include "../../test_accessor.h"
 #include "../../../../sandbox/include/sandbox/abi/platform.h"
 
 #include <flecs.h>
@@ -67,7 +67,7 @@ TEST_CASE("BootABI: C staging functions", "[bootstrapper][abi][staging]")
 {
     flecs::world ecs;
     SECTION("sandbox_stage_service returns true on success") {
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
         sandbox_service_info_t svc{};
         svc.name = "MySvc";
         svc.architecture = "test::arch";
@@ -75,17 +75,17 @@ TEST_CASE("BootABI: C staging functions", "[bootstrapper][abi][staging]")
         svc.version_minor = 0;
         svc.init_fn = nullptr;
         REQUIRE(sandbox_stage_service(&svc) == true);
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
     }
 
     SECTION("sandbox_stage_service with null is safe and returns false") {
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
         REQUIRE(sandbox_stage_service(nullptr) == false);
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
     }
 
     SECTION("sandbox_stage_module registers and allows activate") {
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
         sandbox_module_info_t mod{};
         mod.name = "MyMod";
         mod.architecture = "test::arch";
@@ -96,13 +96,13 @@ TEST_CASE("BootABI: C staging functions", "[bootstrapper][abi][staging]")
         REQUIRE(sandbox_stage_module(&mod) == true);
         bootstrapper_t b;
         REQUIRE_NOTHROW(b.activate(ecs, "test::arch", "MyMod", 1, 0, 0));
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
     }
 
     SECTION("sandbox_stage_module with null is safe and returns false") {
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
         REQUIRE(sandbox_stage_module(nullptr) == false);
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
     }
 }
 
@@ -110,11 +110,11 @@ TEST_CASE("BootABI: C indexing functions", "[bootstrapper][abi][indexing]")
 {
     flecs::world ecs;
     SECTION("sandbox_index_library with null is safe") {
-        REQUIRE_NOTHROW(sandbox_index_library(ecs.c_ptr(), nullptr));
+        REQUIRE_NOTHROW(sandbox_load_library(ecs.c_ptr(), nullptr));
     }
 
-    SECTION("sandbox_index_library with nonexistent path doesn't crash") {
-        REQUIRE_NOTHROW(sandbox_index_library(ecs.c_ptr(), "nonexistent_c_lib.so"));
+    SECTION("sandbox_load_library with nonexistent path doesn't crash") {
+        REQUIRE_NOTHROW(sandbox_load_library(ecs.c_ptr(), "nonexistent_c_lib.so"));
     }
 }
 
@@ -130,14 +130,14 @@ TEST_CASE("BootABI: SANDBOX_DECLARE_MODULE struct metadata", "[bootstrapper][abi
     }
 
     SECTION("module can be staged and activated") {
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
         sandbox_module_info_t stageable = TestMacroModule_manual_info;
         stageable.init_fn = [](ecs_world_t*) {};
         bootstrapper_t::stage_module(stageable);
         bootstrapper_t b;
         REQUIRE_NOTHROW(b.activate(ecs, "sandbox::system", "TestMacroModule", 1, 0, 0));
         REQUIRE_NOTHROW(b.boot(ecs));
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
     }
 }
 
@@ -154,7 +154,7 @@ TEST_CASE("BootABI: SANDBOX_DECLARE_SERVICE struct metadata", "[bootstrapper][ab
 TEST_CASE("BootABI: service component accessible via Flecs", "[bootstrapper][abi][get_service]")
 {
     flecs::world ecs;
-    bootstrapper_t::reset();
+    bootstrapper_test_accessor::reset();
 
     sandbox_module_info_t mod{};
     mod.name = "CounterModule"; mod.description = "Counter provider";
@@ -199,5 +199,5 @@ TEST_CASE("BootABI: service component accessible via Flecs", "[bootstrapper][abi
         REQUIRE(std::string(retrieved->info->name) == "ISimpleCounter");
     }
 
-    bootstrapper_t::reset();
+    bootstrapper_test_accessor::reset();
 }

@@ -3,7 +3,7 @@
 
 #include <catch2/catch_all.hpp>
 #include "../../../sandbox/include/sandbox/abi/bootstrapper.h"
-#include "core/bootstrapper.h"
+#include "../../test_accessor.h"
 
 #include <flecs.h>
 #include <string>
@@ -35,7 +35,7 @@ static module_info_t make_mod(const char* name, int major, int minor, int patch,
 TEST_CASE("Suite: Service collision — winner selection", "[suite][collision]")
 {
     SECTION("two-way: higher module version wins") {
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
         static int winner = 0, loser = 0;
         winner = loser = 0;
         service_info_t svc = make_svc("IPhysicsEngine", 1, 0);
@@ -50,11 +50,11 @@ TEST_CASE("Suite: Service collision — winner selection", "[suite][collision]")
         REQUIRE_NOTHROW(b.boot(w));
         REQUIRE(winner == 1);
         REQUIRE(loser  == 0);
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
     }
 
     SECTION("three-way: highest version among three wins") {
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
         static int calls[3] = {0, 0, 0};
         calls[0] = calls[1] = calls[2] = 0;
         service_info_t svc = make_svc("IAudioEngine", 1, 0);
@@ -74,11 +74,11 @@ TEST_CASE("Suite: Service collision — winner selection", "[suite][collision]")
         REQUIRE(calls[1] == 1);                          // OpenAL v2 wins
         REQUIRE(calls[0] == 0);
         REQUIRE(calls[2] == 0);
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
     }
 
     SECTION("auto-resolved provider loses to explicit higher-version provider") {
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
         static int explicit_calls = 0, auto_calls = 0;
         explicit_calls = auto_calls = 0;
         service_info_t svc = make_svc("INetworkEngine", 1, 0);
@@ -104,13 +104,13 @@ TEST_CASE("Suite: Service collision — winner selection", "[suite][collision]")
         REQUIRE(explicit_calls + auto_calls == 1);
         REQUIRE(explicit_calls == 1);
         REQUIRE(auto_calls     == 0);
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
     }
 }
 
 TEST_CASE("Suite: No collision between different services", "[suite][collision]")
 {
-    bootstrapper_t::reset();
+    bootstrapper_test_accessor::reset();
     static bool renderer_init = false, audio_init = false;
     renderer_init = audio_init = false;
 
@@ -135,5 +135,5 @@ TEST_CASE("Suite: No collision between different services", "[suite][collision]"
         REQUIRE(audio_init == true);
     }
 
-    bootstrapper_t::reset();
+    bootstrapper_test_accessor::reset();
 }

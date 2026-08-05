@@ -2,13 +2,13 @@
 #include "core/engine.h"
 #include "../../../../sandbox/include/sandbox/abi/engine.h"
 #include "sandbox/abi/bootstrapper.h"
-#include "core/bootstrapper.h"
+#include "../../test_accessor.h"
 #include <string>
 
 using namespace sandbox::core;
 
 TEST_CASE("Engine Bootstrapper C API", "[engine][bootstrapper]") {
-    bootstrapper_t::reset();
+    bootstrapper_test_accessor::reset();
 
     properties_t props;
     props.set<std::vector<std::string>>({"engine", "sandbox"}, {});
@@ -50,11 +50,11 @@ TEST_CASE("Engine Bootstrapper C API", "[engine][bootstrapper]") {
         REQUIRE_NOTHROW(sandbox_bootstrapper_boot(b, ecs));
     }
     
-    bootstrapper_t::reset();
+    bootstrapper_test_accessor::reset();
 }
 
 TEST_CASE("Engine Auto-Bootstrapping Sequence", "[engine][bootstrapper][auto]") {
-    bootstrapper_t::reset();
+    bootstrapper_test_accessor::reset();
     static bool init_called = false;
     init_called = false;
 
@@ -67,17 +67,17 @@ TEST_CASE("Engine Auto-Bootstrapping Sequence", "[engine][bootstrapper][auto]") 
     bootstrapper_t::stage_module(m1);
 
     properties_t props;
-    props.set<std::vector<std::string>>({"engine", "sandbox"}, {"test::sys-AutoMod@1.0.0"});
+    props.set<std::vector<std::string>>({"booting-configuration", "modules"}, {"test::sys-AutoMod@1.0.0"});
 
     engine_t engine;
     REQUIRE_NOTHROW(engine.initialize(props));
 
     REQUIRE(init_called == true);
-    bootstrapper_t::reset();
+    bootstrapper_test_accessor::reset();
 }
 
 TEST_CASE("Engine C-ABI Wrapper", "[engine][c_abi]") {
-    bootstrapper_t::reset();
+    bootstrapper_test_accessor::reset();
 
     SECTION("create and destroy") {
         sandbox_engine_t* engine = sandbox_engine_create();
@@ -104,5 +104,5 @@ TEST_CASE("Engine C-ABI Wrapper", "[engine][c_abi]") {
         REQUIRE_NOTHROW(sandbox_engine_destroy(nullptr));
     }
     
-    bootstrapper_t::reset();
+    bootstrapper_test_accessor::reset();
 }

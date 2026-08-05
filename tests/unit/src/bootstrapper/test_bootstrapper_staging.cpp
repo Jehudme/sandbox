@@ -2,7 +2,7 @@
 // Tests for bootstrapper_t staging: stage_service, stage_module, reset.
 
 #include <catch2/catch_all.hpp>
-#include "core/bootstrapper.h"
+#include "../../test_accessor.h"
 #include "core/exceptions.h"
 
 using sandbox::core::bootstrapper_t;
@@ -29,18 +29,18 @@ TEST_CASE("Boot: stage_service and stage_module", "[bootstrapper][staging]")
 {
     flecs::world ecs;
     SECTION("staged service lets its module be activated") {
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
         service_info_t svc = make_service("IRenderer", 1, 0);
         module_info_t  mod = make_module("OpenGLRenderer", 1, 0, 0, &svc);
         bootstrapper_t::stage_service(svc);
         bootstrapper_t::stage_module(mod);
         bootstrapper_t b;
         REQUIRE_NOTHROW(b.activate(ecs, "test_arch", "OpenGLRenderer", 1, 0, 0));
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
     }
 
     SECTION("duplicate service staging is deduped") {
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
         service_info_t svc = make_service("IPhysics", 2, 0);
         bootstrapper_t::stage_service(svc);
         bootstrapper_t::stage_service(svc);  // second call should be a no-op
@@ -48,26 +48,26 @@ TEST_CASE("Boot: stage_service and stage_module", "[bootstrapper][staging]")
         bootstrapper_t::stage_module(mod);
         bootstrapper_t b;
         REQUIRE_NOTHROW(b.activate(ecs, "test_arch", "BulletPhysics", 2, 0, 0));
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
     }
 
     SECTION("staged module is activatable") {
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
         module_info_t mod = make_module("AudioEngine", 1, 0, 0);
         bootstrapper_t::stage_module(mod);
         bootstrapper_t b;
         REQUIRE_NOTHROW(b.activate(ecs, "test_arch", "AudioEngine", 1, 0, 0));
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
     }
 
     SECTION("duplicate module staging is deduped") {
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
         module_info_t mod = make_module("NetworkModule", 1, 2, 3);
         bootstrapper_t::stage_module(mod);
         bootstrapper_t::stage_module(mod);  // second call should be a no-op
         bootstrapper_t b;
         REQUIRE_NOTHROW(b.activate(ecs, "test_arch", "NetworkModule", 1, 2, 3));
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
     }
 }
 
@@ -78,15 +78,15 @@ TEST_CASE("Boot: reset() clears the registry", "[bootstrapper][staging]")
         module_info_t  mod = make_module("DummyModule", 1, 0, 0, &svc);
         bootstrapper_t::stage_service(svc);
         bootstrapper_t::stage_module(mod);
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
         bootstrapper_t b;
         flecs::world ecs;
         REQUIRE_THROWS_AS(b.activate(ecs, "test_arch", "DummyModule", 1, 0, 0), sandbox::core::module_activation_error);
     }
 
     SECTION("reset is safe to call multiple times on empty registry") {
-        bootstrapper_t::reset();
-        REQUIRE_NOTHROW(bootstrapper_t::reset());
-        REQUIRE_NOTHROW(bootstrapper_t::reset());
+        bootstrapper_test_accessor::reset();
+        REQUIRE_NOTHROW(bootstrapper_test_accessor::reset());
+        REQUIRE_NOTHROW(bootstrapper_test_accessor::reset());
     }
 }

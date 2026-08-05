@@ -5,6 +5,7 @@
 #include <sandbox/sdk/logs.hpp>
 #include <fstream>
 #include <sstream>
+#include "../../test_accessor.h"
 
 using namespace sandbox;
 using namespace sandbox::core;
@@ -23,10 +24,10 @@ TEST_CASE("Logs module end-to-end", "[logs][module]") {
     engine_props.set<bool>({"logs", "file", "truncate"}, true);
     
     // Tell engine to load our plugins dynamically
-    std::vector<std::string> libs = {"./sandbox_plugin.so"};
+    std::vector<std::string> libs = {"./cmake-build-debug/bin/sandbox_plugin.so"};
     std::vector<std::string> mods = {"sandbox-configuration@1.0.0", "sandbox-logs@1.0.0"};
-    engine_props.set<std::vector<std::string>>({"engine", "libraries"}, libs);
-    engine_props.set<std::vector<std::string>>({"engine", "sandbox"}, mods);
+    engine_props.set<std::vector<std::string>>({"booting-configuration", "libraries"}, libs);
+    engine_props.set<std::vector<std::string>>({"booting-configuration", "modules"}, mods);
 
     // 2. Initialize engine (block scope to ensure it destroys correctly)
     {

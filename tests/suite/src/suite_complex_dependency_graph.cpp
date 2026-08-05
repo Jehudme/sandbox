@@ -3,7 +3,7 @@
 
 #include <catch2/catch_all.hpp>
 #include "../../../sandbox/include/sandbox/abi/bootstrapper.h"
-#include "core/bootstrapper.h"
+#include "../../test_accessor.h"
 
 #include <flecs.h>
 #include <vector>
@@ -32,7 +32,7 @@ static module_info_t make_mod(const char* name, int major, int minor, int patch,
 // ---------------------------------------------------------------------------
 TEST_CASE("Suite: Diamond dependency — correct order, no duplicates", "[suite][complex_dep]")
 {
-    bootstrapper_t::reset();
+    bootstrapper_test_accessor::reset();
     g_init_order.clear();
 
     // Foundation → Math → {Physics, AI} → GameWorld
@@ -105,7 +105,7 @@ TEST_CASE("Suite: Diamond dependency — correct order, no duplicates", "[suite]
         REQUIRE(g_init_order.back() == "GameWorld");
     }
 
-    bootstrapper_t::reset();
+    bootstrapper_test_accessor::reset();
 }
 
 // ---------------------------------------------------------------------------
@@ -129,7 +129,7 @@ TEST_CASE("Suite: Optional dependency — present and absent", "[suite][complex_
         app_reqs, 2);
 
     SECTION("optional dep present — all three sandbox initialize") {
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
         g_init_order.clear();
         bootstrapper_t::stage_module(core_mod);
         bootstrapper_t::stage_module(debug_mod);
@@ -140,11 +140,11 @@ TEST_CASE("Suite: Optional dependency — present and absent", "[suite][complex_
         REQUIRE_NOTHROW(b.boot(w));
         REQUIRE(g_init_order.size() == 3);
         REQUIRE(std::find(g_init_order.begin(), g_init_order.end(), "DebugModule") != g_init_order.end());
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
     }
 
     SECTION("optional dep absent — only sdk and app initialize") {
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
         g_init_order.clear();
         bootstrapper_t::stage_module(core_mod);
         // DebugModule NOT staged
@@ -155,6 +155,6 @@ TEST_CASE("Suite: Optional dependency — present and absent", "[suite][complex_
         REQUIRE_NOTHROW(b.boot(w));
         REQUIRE(g_init_order.size() == 2);
         REQUIRE(std::find(g_init_order.begin(), g_init_order.end(), "DebugModule") == g_init_order.end());
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
     }
 }

@@ -5,6 +5,7 @@
 #include <flecs.h>
 #include "sandbox/abi/bootstrapper.h"
 #include "library_loader.h"
+struct bootstrapper_test_accessor;
 
 namespace sandbox::core {
     using service_info_t = sandbox_service_info_t;
@@ -39,16 +40,11 @@ namespace sandbox::core {
         static void stage_module(const module_info_t& module_info);
 
         /**
-         * @brief Resets the global registry by clearing test and mock plugins.
-         */
-        static void reset();
-
-        /**
-         * @brief Indexes a dynamic library by loading it and executing its staged constructors.
+         * @brief Loads a dynamic library by loading it and executing its staged constructors.
          * @param entity_world The flecs world used for logging.
          * @param library_path The filesystem path to the dynamic library.
          */
-        static void index_library(flecs::world& entity_world, const std::filesystem::path& library_path);
+        static void load_library(flecs::world& entity_world, const std::filesystem::path& library_path);
 
         /**
          * @brief Activates a module by its explicit architecture, name, and version.
@@ -81,6 +77,7 @@ namespace sandbox::core {
         static library_loader_t& get_loader() { return m_loader; }
 
     private:
+        friend struct ::bootstrapper_test_accessor;
         std::vector<module_info_t> m_active_modules;
         std::vector<module_info_t> m_booted_modules;
 

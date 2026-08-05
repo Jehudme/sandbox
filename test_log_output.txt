@@ -1,0 +1,5 @@
+[2026-08-04 23:41:15.108] [test_logger] [trace] Test trace message
+[2026-08-04 23:41:15.108] [test_logger] [debug] Test debug message
+[2026-08-04 23:41:15.108] [test_logger] [info] Test info message
+[2026-08-04 23:41:15.108] [test_logger] [warning] Test warn message
+[2026-08-04 23:41:15.108] [test_logger] [error] Test error message

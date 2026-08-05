@@ -9,6 +9,7 @@
 #include <sandbox/sdk/filesystem.hpp>
 #include "sandbox/sdk/properties.hpp"
 #include <sandbox/sdk/configuration.hpp>
+#include "../../test_accessor.h"
 
 namespace fs = std::filesystem;
 
@@ -39,8 +40,8 @@ TEST_CASE("Application Module: Initialization and Orchestration", "[application]
         props.set("filesystem/mounts/app/physical", temp_app_dir.string());
         props.set("filesystem/mounts/app/readonly", true);
 
-        std::vector<std::string> library_paths = {"./sandbox_plugin.so"};
-        props.set_array("engine/libraries", library_paths);
+        std::vector<std::string> library_paths = {"./cmake-build-debug/bin/sandbox_plugin.so"};
+        props.set_array("booting-configuration/libraries", library_paths);
 
         // Add modules
         std::vector<std::string> modules = {
@@ -50,7 +51,7 @@ TEST_CASE("Application Module: Initialization and Orchestration", "[application]
             "sandbox-runtime@1.0.0",
             "sandbox-application@1.0.0"
         };
-        props.set_array("engine/sandbox", modules);
+        props.set_array("booting-configuration/modules", modules);
 
         // Initialize engine (this will boot all modules including application)
         REQUIRE(e.initialize(props) == true);

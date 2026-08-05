@@ -3,7 +3,7 @@
 
 #include <catch2/catch_all.hpp>
 #include "../../../sandbox/include/sandbox/abi/bootstrapper.h"
-#include "core/bootstrapper.h"
+#include "../../test_accessor.h"
 
 #include <flecs.h>
 #include <vector>
@@ -122,7 +122,7 @@ TEST_CASE("Suite: Boot via top-level module auto-pulls providers", "[suite][full
         REQUIRE(a->api == &global_audio_singleton);
     }
 
-    bootstrapper_t::reset();
+    bootstrapper_test_accessor::reset();
 }
 
 TEST_CASE("Suite: Explicit activate of all providers is valid", "[suite][full_boot]")
@@ -143,7 +143,7 @@ TEST_CASE("Suite: Explicit activate of all providers is valid", "[suite][full_bo
         REQUIRE(SANDBOX_GET_SERVICE(w, InputService)    != nullptr);
     }
 
-    bootstrapper_t::reset();
+    bootstrapper_test_accessor::reset();
 }
 
 TEST_CASE("Suite: Multi-Boot capability", "[suite][full_boot][multi_boot]")
@@ -172,5 +172,5 @@ TEST_CASE("Suite: Multi-Boot capability", "[suite][full_boot][multi_boot]")
         REQUIRE(SANDBOX_GET_SERVICE(w, InputService)    != nullptr);
     }
 
-    bootstrapper_t::reset();
+    bootstrapper_test_accessor::reset();
 }

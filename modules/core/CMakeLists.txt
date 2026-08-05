@@ -104,6 +104,7 @@ target_link_libraries(sandbox_plugin PRIVATE
     spdlog::spdlog
     miniz
 )
+target_compile_definitions(sandbox_plugin PRIVATE SANDBOX_BUILD_SHARED)
 
 target_link_libraries(sandbox_plugin_static PRIVATE
     flecs_headers

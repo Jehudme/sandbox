@@ -96,7 +96,7 @@ SANDBOX_API bool sandbox_stage_module(const sandbox_module_info_t* info);
  * @param ecs The entity component system world.
  * @param library_path The path to the library.
  */
-SANDBOX_API void sandbox_index_library(ecs_world_t* ecs, const char* library_path);
+SANDBOX_API void sandbox_load_library(ecs_world_t* ecs, const char* library_path);
 
 
 typedef struct sandbox_bootstrapper sandbox_bootstrapper_t;
@@ -159,7 +159,7 @@ SANDBOX_API bool sandbox_bootstrapper_boot(sandbox_bootstrapper_t* bootstrapper,
         const sandbox_service_info_t* info; \
     } ServiceClass; \
     \
-    extern ECS_COMPONENT_DECLARE(ServiceClass); \
+    SANDBOX_API extern ECS_COMPONENT_DECLARE(ServiceClass); \
     extern sandbox_service_info_t ServiceClass##_info;
 #else
 #define SANDBOX_DECLARE_SERVICE(ServiceClass, IModuleType, ...) \
@@ -168,7 +168,7 @@ SANDBOX_API bool sandbox_bootstrapper_boot(sandbox_bootstrapper_t* bootstrapper,
         const sandbox_service_info_t* info; \
     } ServiceClass; \
     \
-    extern ECS_COMPONENT_DECLARE(ServiceClass); \
+    SANDBOX_API extern ECS_COMPONENT_DECLARE(ServiceClass); \
     static const sandbox_service_info_t ServiceClass##_info_decl = __VA_ARGS__; \
     extern sandbox_service_info_t ServiceClass##_info;
 #endif
@@ -180,7 +180,7 @@ SANDBOX_API bool sandbox_bootstrapper_boot(sandbox_bootstrapper_t* bootstrapper,
  * @param api_ptr The pointer to the API instance.
  */
 #define SANDBOX_DEFINE_SERVICE(ServiceClass, IModuleType, api_ptr) \
-    ECS_COMPONENT_DECLARE(ServiceClass); \
+    SANDBOX_API ECS_COMPONENT_DECLARE(ServiceClass); \
     sandbox_service_info_t ServiceClass##_info = ServiceClass##_info_decl; \
     \
     static void ServiceClass##_init_fn(ecs_world_t* ecs) { \

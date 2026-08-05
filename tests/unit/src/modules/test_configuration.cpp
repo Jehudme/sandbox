@@ -19,10 +19,10 @@ TEST_CASE("Configuration module initializes and provides SDK access", "[configur
     engine_props.set<std::string>({"logs", "level"}, "trace");
     
     // Tell engine to load our module dynamically
-    std::vector<std::string> libs = {"./sandbox_plugin.so"};
+    std::vector<std::string> libs = {"./cmake-build-debug/bin/sandbox_plugin.so"};
     std::vector<std::string> mods = {"sandbox-logs@1.0.0", "sandbox-configuration@1.0.0"};
-    engine_props.set<std::vector<std::string>>({"engine", "libraries"}, libs);
-    engine_props.set<std::vector<std::string>>({"engine", "sandbox"}, mods);
+    engine_props.set<std::vector<std::string>>({"booting-configuration", "libraries"}, libs);
+    engine_props.set<std::vector<std::string>>({"booting-configuration", "modules"}, mods);
 
     // 2. Initialize engine
     engine_t engine;

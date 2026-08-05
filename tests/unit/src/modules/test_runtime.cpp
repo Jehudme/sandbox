@@ -1,7 +1,7 @@
 #include <catch2/catch_all.hpp>
 #include <flecs.h>
 #include <sandbox/abi/bootstrapper.h>
-#include "core/bootstrapper.h"
+#include "../../test_accessor.h"
 #include <sandbox/sdk/runtime.hpp>
 #include <sandbox/sdk/runtime.hpp>
 #include <thread>
@@ -10,12 +10,11 @@
 using namespace sandbox::core;
 
 TEST_CASE("Runtime Module", "[runtime]") {
-    bootstrapper_t::reset();
 
     bootstrapper_t b;
     flecs::world w;
 
-    b.index_library(w, "./sandbox_plugin.so");
+    bootstrapper_t::load_library(w, "./cmake-build-debug/bin/sandbox_plugin.so");
     
     
     REQUIRE_NOTHROW(b.activate(w, "sandbox", "logs", 1, 0, 0));
@@ -34,5 +33,4 @@ TEST_CASE("Runtime Module", "[runtime]") {
         REQUIRE(true);
     }
 
-    bootstrapper_t::reset();
 }

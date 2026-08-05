@@ -2,7 +2,7 @@
 // Tests for bootstrapper_t::boot() — dependency resolution and error cases.
 
 #include <catch2/catch_all.hpp>
-#include "core/bootstrapper.h"
+#include "../../test_accessor.h"
 
 #include <vector>
 #include <string>
@@ -32,7 +32,7 @@ TEST_CASE("Boot: boot() initializes sandbox", "[bootstrapper][boot]")
 {
     flecs::world ecs;
     SECTION("sandbox with no dependencies are all initialized") {
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
         static int a_calls = 0, b_calls = 0;
         a_calls = b_calls = 0;
         auto alpha = make_mod("Alpha", 1, 0, 0, [](ecs_world_t*) { a_calls++; });
@@ -46,11 +46,11 @@ TEST_CASE("Boot: boot() initializes sandbox", "[bootstrapper][boot]")
         b.boot(w);
         REQUIRE(a_calls == 1);
         REQUIRE(b_calls == 1);
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
     }
 
     SECTION("required service dependency is auto-pulled") {
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
         static std::vector<std::string> order;
         order.clear();
 
@@ -81,11 +81,11 @@ TEST_CASE("Boot: boot() initializes sandbox", "[bootstrapper][boot]")
         REQUIRE(prov_pos != order.end());
         REQUIRE(cons_pos != order.end());
         REQUIRE(prov_pos < cons_pos);
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
     }
 
     SECTION("required module dependency is auto-pulled") {
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
         static bool dep_init = false, cons_init = false;
         dep_init = cons_init = false;
 
@@ -106,11 +106,11 @@ TEST_CASE("Boot: boot() initializes sandbox", "[bootstrapper][boot]")
         REQUIRE_NOTHROW(b.boot(w));
         REQUIRE(dep_init == true);
         REQUIRE(cons_init == true);
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
     }
 
     SECTION("optional (expected) dep is skipped when absent") {
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
         static bool initialized = false;
         initialized = false;
 
@@ -128,11 +128,11 @@ TEST_CASE("Boot: boot() initializes sandbox", "[bootstrapper][boot]")
         flecs::world w;
         REQUIRE_NOTHROW(b.boot(w));
         REQUIRE(initialized == true);
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
     }
 
     SECTION("service collision evicts the lower-version provider") {
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
         static int winner = 0, loser = 0;
         winner = loser = 0;
 
@@ -153,7 +153,7 @@ TEST_CASE("Boot: boot() initializes sandbox", "[bootstrapper][boot]")
         REQUIRE_NOTHROW(b.boot(w));
         REQUIRE(winner == 1);
         REQUIRE(loser == 0);
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
     }
 }
 
@@ -161,7 +161,7 @@ TEST_CASE("Boot: boot() error cases", "[bootstrapper][boot]")
 {
     flecs::world ecs;
     SECTION("missing required service throws") {
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
         sandbox_requirement_info_t req[1];
         req[0] = { SANDBOX_REQUIREMENT_KIND_SERVICE, SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED,
                    "INonExistent", "sandbox::system", 1, 0, -1 };
@@ -173,11 +173,11 @@ TEST_CASE("Boot: boot() error cases", "[bootstrapper][boot]")
         b.activate(ecs, "sandbox::system", "Needy", 1, 0, 0);
         flecs::world w;
         REQUIRE_THROWS_AS(b.boot(w), std::runtime_error);
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
     }
 
     SECTION("cyclic dependency throws") {
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
         sandbox_requirement_info_t req_b[1], req_a[1];
         req_b[0] = { SANDBOX_REQUIREMENT_KIND_MODULE, SANDBOX_REQUIREMENT_STRICTNESS_REQUIRED,
                      "ModuleB", "sandbox::system", 0, 0, -1 };
@@ -196,11 +196,11 @@ TEST_CASE("Boot: boot() error cases", "[bootstrapper][boot]")
         b.activate(ecs, "sandbox::system", "ModuleB", 1, 0, 0);
         flecs::world w;
         REQUIRE_THROWS_AS(b.boot(w), std::runtime_error);
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
     }
 
     SECTION("consumers disagreeing on service major version throws") {
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
         service_info_t svc_v1 = make_service("ILogger", 1, 0);
         service_info_t svc_v2 = make_service("ILogger", 2, 0);
 
@@ -228,6 +228,6 @@ TEST_CASE("Boot: boot() error cases", "[bootstrapper][boot]")
         b.activate(ecs, "sandbox::system", "ConsumerB", 1, 0, 0);
         flecs::world w;
         REQUIRE_THROWS_AS(b.boot(w), std::runtime_error);
-        bootstrapper_t::reset();
+        bootstrapper_test_accessor::reset();
     }
 }
