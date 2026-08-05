@@ -37,8 +37,7 @@ TEST_CASE("Application Module: Initialization and Orchestration", "[application]
 
         // Create properties simulating CLI parser
         sandbox::properties props;
-        props.set("filesystem/mounts/app/physical", temp_app_dir.string());
-        props.set("filesystem/mounts/app/readonly", true);
+        props.set("booting-configuration/mount-path", temp_app_dir.string());
 
         std::vector<std::string> library_paths = {"./cmake-build-debug/bin/sandbox_plugin.so"};
         props.set_array("booting-configuration/libraries", library_paths);

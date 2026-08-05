@@ -8,13 +8,9 @@ TEST_CASE("CLI Parser Suite: Application Mounting", "[cli_parser][suite]") {
         auto props = sandbox::launcher::parse_cli(args.size(), const_cast<char**>(args.data()));
         REQUIRE(props.has_value());
 
-        auto physical = props->get<std::string>("filesystem/mounts/app/physical");
+        auto physical = props->get<std::string>("booting-configuration/mount-path");
         REQUIRE(physical.has_value());
         REQUIRE(physical.value() == "my_app");
-        
-        auto readonly = props->get<bool>("filesystem/mounts/app/readonly");
-        REQUIRE(readonly.has_value());
-        REQUIRE(readonly.value() == true);
     }
     
     SECTION("Parses dev flag correctly") {
@@ -23,24 +19,28 @@ TEST_CASE("CLI Parser Suite: Application Mounting", "[cli_parser][suite]") {
         auto props = sandbox::launcher::parse_cli(args.size(), const_cast<char**>(args.data()));
         REQUIRE(props.has_value());
 
-        auto physical = props->get<std::string>("filesystem/mounts/app/physical");
+        auto physical = props->get<std::string>("booting-configuration/mount-path");
         REQUIRE(physical.has_value());
         REQUIRE(physical.value() == "my_app");
-        
-        auto readonly = props->get<bool>("filesystem/mounts/app/readonly");
-        REQUIRE(readonly.has_value());
-        REQUIRE(readonly.value() == false);
     }
 
     SECTION("Parses logs flag correctly") {
-        std::vector<const char*> args = {"sandbox_launcher", "my_app", "--logs", "trace"};
+        std::vector<const char*> args = {"sandbox_launcher", "my_app", "--logs-level", "trace", "--logs-console", "--logs-file-max-size", "1024"};
         
         auto props = sandbox::launcher::parse_cli(args.size(), const_cast<char**>(args.data()));
         REQUIRE(props.has_value());
 
-        auto logs = props->get<std::string>("logs/level");
-        REQUIRE(logs.has_value());
-        REQUIRE(logs.value() == "trace");
+        auto logs_level = props->get<std::string>("booting-configuration/logs-level");
+        REQUIRE(logs_level.has_value());
+        REQUIRE(logs_level.value() == "trace");
+
+        auto console_enabled = props->get<bool>("booting-configuration/logs-console_enabled");
+        REQUIRE(console_enabled.has_value());
+        REQUIRE(console_enabled.value() == true);
+
+        auto file_max_size = props->get<int64_t>("booting-configuration/logs-file_max_size");
+        REQUIRE(file_max_size.has_value());
+        REQUIRE(file_max_size.value() == 1024);
     }
     
     SECTION("Fails without app path") {

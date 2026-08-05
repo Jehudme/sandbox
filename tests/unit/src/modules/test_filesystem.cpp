@@ -19,8 +19,8 @@ using namespace sandbox::core;
 TEST_CASE("Filesystem Module: URI Mounting and Reading", "[filesystem][uri]") {
 
     // 1. Setup test physical files and zip
-    std::filesystem::create_directories("test_physical_dir");
-    std::ofstream dummy("test_physical_dir/test_file.txt");
+    std::filesystem::create_directories("cache");
+    std::ofstream dummy("cache/test_file.txt");
     dummy << "Hello from physical directory!";
     dummy.close();
 
@@ -40,11 +40,7 @@ TEST_CASE("Filesystem Module: URI Mounting and Reading", "[filesystem][uri]") {
     engine_props.set<std::vector<std::string>>({"booting-configuration", "modules"}, {"sandbox-configuration@1.0.0", "sandbox-logs@1.0.0", "sandbox-filesystem@1.0.0", "sandbox-runtime@1.0.0"});
     
     // Add filesystem mount config
-    engine_props.set<std::string>({"filesystem", "mounts", "app", "physical"}, "./test_archive.zip");
-    engine_props.set<bool>({"filesystem", "mounts", "app", "readonly"}, true);
-
-    engine_props.set<std::string>({"filesystem", "mounts", "cache", "physical"}, "./test_physical_dir");
-    engine_props.set<bool>({"filesystem", "mounts", "cache", "readonly"}, false);
+    engine_props.set<std::string>({"booting-configuration", "mount-path"}, "./test_archive.zip");
 
     // 3. Initialize engine
     engine_t engine;
@@ -96,44 +92,43 @@ TEST_CASE("Filesystem Module: Mutations (Create/Copy/Move/Directories)", "[files
     engine_props.set<std::vector<std::string>>({"booting-configuration", "libraries"}, {"./cmake-build-debug/bin/sandbox_plugin.so"});
     engine_props.set<std::vector<std::string>>({"booting-configuration", "modules"}, {"sandbox-configuration@1.0.0", "sandbox-logs@1.0.0", "sandbox-filesystem@1.0.0", "sandbox-runtime@1.0.0"});
     
-    engine_props.set<std::string>({"filesystem", "mounts", "test", "physical"}, "./test_mutations_dir");
-    engine_props.set<bool>({"filesystem", "mounts", "test", "readonly"}, false);
+    engine_props.set<std::string>({"booting-configuration", "mount-path"}, "./test_mutations_dir");
 
     engine_t engine;
     REQUIRE_NOTHROW(engine.initialize(engine_props));
     flecs::world& world = engine.entity_world;
 
     SECTION("Create and remove file") {
-        REQUIRE(sandbox::modules::filesystem::create_file(world, "test://new_file.txt", false));
-        REQUIRE(std::filesystem::exists("test_mutations_dir/new_file.txt"));
-        REQUIRE(sandbox::modules::filesystem::remove_file(world, "test://new_file.txt"));
-        REQUIRE(!std::filesystem::exists("test_mutations_dir/new_file.txt"));
+        REQUIRE(sandbox::modules::filesystem::create_file(world, "cache://new_file.txt", false));
+        REQUIRE(std::filesystem::exists("test_mutations_dir/cache/new_file.txt"));
+        REQUIRE(sandbox::modules::filesystem::remove_file(world, "cache://new_file.txt"));
+        REQUIRE(!std::filesystem::exists("test_mutations_dir/cache/new_file.txt"));
     }
 
     SECTION("Create directory and file with force_path") {
-        REQUIRE(sandbox::modules::filesystem::create_directory(world, "test://dir1", false));
-        REQUIRE(std::filesystem::exists("test_mutations_dir/dir1"));
+        REQUIRE(sandbox::modules::filesystem::create_directory(world, "cache://dir1", false));
+        REQUIRE(std::filesystem::exists("test_mutations_dir/cache/dir1"));
         
-        REQUIRE(sandbox::modules::filesystem::create_file(world, "test://dir2/file.txt", true));
-        REQUIRE(std::filesystem::exists("test_mutations_dir/dir2/file.txt"));
+        REQUIRE(sandbox::modules::filesystem::create_file(world, "cache://dir2/file.txt", true));
+        REQUIRE(std::filesystem::exists("test_mutations_dir/cache/dir2/file.txt"));
         
-        REQUIRE(sandbox::modules::filesystem::remove_directory(world, "test://dir1"));
-        REQUIRE(sandbox::modules::filesystem::remove_directory(world, "test://dir2"));
+        REQUIRE(sandbox::modules::filesystem::remove_directory(world, "cache://dir1"));
+        REQUIRE(sandbox::modules::filesystem::remove_directory(world, "cache://dir2"));
     }
 
     SECTION("Copy and move files") {
-        REQUIRE(sandbox::modules::filesystem::create_file(world, "test://src.txt", false));
-        REQUIRE(sandbox::modules::filesystem::write_all(world, "test://src.txt", "hello", 5, false));
+        REQUIRE(sandbox::modules::filesystem::create_file(world, "cache://src.txt", false));
+        REQUIRE(sandbox::modules::filesystem::write_all(world, "cache://src.txt", "hello", 5, false));
         
-        REQUIRE(sandbox::modules::filesystem::copy(world, "test://src.txt", "test://copied.txt", false, false));
-        REQUIRE(std::filesystem::exists("test_mutations_dir/copied.txt"));
+        REQUIRE(sandbox::modules::filesystem::copy(world, "cache://src.txt", "cache://copied.txt", false, false));
+        REQUIRE(std::filesystem::exists("test_mutations_dir/cache/copied.txt"));
         
-        REQUIRE(sandbox::modules::filesystem::move(world, "test://copied.txt", "test://moved.txt", false, false));
-        REQUIRE(!std::filesystem::exists("test_mutations_dir/copied.txt"));
-        REQUIRE(std::filesystem::exists("test_mutations_dir/moved.txt"));
+        REQUIRE(sandbox::modules::filesystem::move(world, "cache://copied.txt", "cache://moved.txt", false, false));
+        REQUIRE(!std::filesystem::exists("test_mutations_dir/cache/copied.txt"));
+        REQUIRE(std::filesystem::exists("test_mutations_dir/cache/moved.txt"));
         
-        REQUIRE(sandbox::modules::filesystem::remove_file(world, "test://src.txt"));
-        REQUIRE(sandbox::modules::filesystem::remove_file(world, "test://moved.txt"));
+        REQUIRE(sandbox::modules::filesystem::remove_file(world, "cache://src.txt"));
+        REQUIRE(sandbox::modules::filesystem::remove_file(world, "cache://moved.txt"));
     }
 
 }
