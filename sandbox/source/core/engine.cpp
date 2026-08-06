@@ -19,6 +19,8 @@ engine_t::~engine_t() = default;
 void engine_t::initialize(properties_t &properties) {
   entity_world.reset();
 
+  printf("Initializing engine with properties: %s\n", properties.dump(properties_t::JSON).c_str());
+
   m_arguments = std::make_unique<properties_t>(properties);
   m_bootstrapper = std::make_unique<bootstrapper_t>();
 
@@ -47,15 +49,17 @@ void engine_t::register_bootstrapper() {
 }
 
 void engine_t::boot() {
+  printf("Booting engine with arguments: %s\n", m_arguments->dump(properties_t::JSON).c_str());
+
   if (!m_arguments || !m_bootstrapper) {
     std::cerr << "Engine arguments or bootstrapper is null\n";
     sandbox::modules::logs::error(entity_world, "Engine arguments or bootstrapper is null");
     return;
   }
 
-  if (m_arguments->has({"booting-configuration", "libraries"})) {
+  if (m_arguments->has({"booting-configuration", "additional-libraries"})) {
     if (auto libraries = m_arguments->get<std::vector<std::string>>(
-            {"booting-configuration", "libraries"})) {
+            {"booting-configuration", "additional-libraries"})) {
       for (const auto &library_path : *libraries) {
         try {
           bootstrapper_t::load_library(entity_world, library_path);
@@ -74,9 +78,9 @@ void engine_t::boot() {
     }
   }
 
-  if (m_arguments->has({"booting-configuration", "modules"})) {
+  if (m_arguments->has({"booting-configuration", "additional-modules"})) {
     if (auto modules =
-            m_arguments->get<std::vector<std::string>>({"booting-configuration", "modules"})) {
+      m_arguments->get<std::vector<std::string>>({"booting-configuration", "additional-modules"})) {
       for (const auto &module_name : *modules) {
         try {
           m_bootstrapper->activate(entity_world, module_name);
@@ -96,6 +100,9 @@ void engine_t::boot() {
       }
     }
   }
+
+  if (!m_arguments->has({"booting-configuration", "clean"}))
+    m_bootstrapper->activate(entity_world, "sandbox-application@1.0.0");
 
   try {
     m_bootstrapper->boot(entity_world);

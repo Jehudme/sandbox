@@ -85,10 +85,6 @@ std::optional<sandbox::properties> parse_cli(int argc, char **argv) {
 
   sandbox::properties engine_properties;
 
-  if (!clean_mode) {
-    additional_modules.emplace_back("sandbox-application@1.0.0");
-  }
-
   engine_properties.set("booting-configuration/mount-path", mount_path);
   if (logs_name) engine_properties.set("booting-configuration/logs-name", *logs_name);
   if (logs_level) engine_properties.set("booting-configuration/logs-level", *logs_level);
@@ -109,6 +105,10 @@ std::optional<sandbox::properties> parse_cli(int argc, char **argv) {
                               additional_libraries);
   engine_properties.set_array("booting-configuration/additional-modules",
                               additional_modules);
+
+  if (clean_mode) {
+    engine_properties.set("booting-configuration/clean", true);
+  }
 
   for (const auto &arg : additional_arguments) {
     size_t pos = arg.find('=');

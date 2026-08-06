@@ -82,7 +82,7 @@ application_t::application_t(flecs::world &ecs) {
 
     std::vector<std::string> modules;
     sandbox::bootstrapper bootstrapper(ecs);
-    sandbox::modules::configuration::get_properties(ecs).get_array<std::string>("engine/sandbox", modules);
+    sandbox::modules::configuration::get_properties(ecs).get_array<std::string>("modules", modules);
 
     for (const auto& module : modules) {
       bootstrapper.activate(module);
